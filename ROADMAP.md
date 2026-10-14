@@ -1,6 +1,6 @@
 # ROADMAP
 
-## Current Milestone: Phase 1 — Reliable Local Foundation
+## Current Milestone: Phase 2 — Memory and Knowledge
 
 ## Phase 0: Discovery and Baseline ✅
 - [x] Inspect repository and environment
@@ -9,7 +9,7 @@
 - [x] Initial project scaffolding
 - [x] Continuity documents created
 
-## Phase 1: Reliable Local Foundation 🔄 (Active)
+## Phase 1: Reliable Local Foundation ✅
 - [x] Reproducible project setup (pyproject.toml, .env, .venv)
 - [x] Application configuration module
 - [x] Logging infrastructure
@@ -18,16 +18,16 @@
 - [x] Ollama backend integration
 - [x] CLI entry point
 - [x] Database initialization (SQLite)
-- [ ] Persistent conversations (SQLite-backed)
-- [ ] Basic API server (FastAPI)
-- [ ] Health check endpoint
-- [ ] End-to-end test: model answers a question
-- [ ] Conversation survives application restart
-- [ ] Initial documentation complete
+- [x] Persistent conversations (SQLite-backed)
+- [x] Basic API server (FastAPI)
+- [x] Health check endpoint
+- [x] End-to-end test: model answers a question (qwen2.5:7b on RTX 2000 Ada GPU)
+- [x] Conversation survives application restart
+- [x] Initial documentation complete
 
-**Acceptance criterion:** A real local model can answer a message and the conversation survives an application restart.
+**Acceptance criterion:** Verified (40/40 tests passing, real model answers and conversation survives restart).
 
-## Phase 2: Memory and Knowledge ⏳
+## Phase 2: Memory and Knowledge 🔄 (Active)
 - [ ] Persistent structured memory (CRUD)
 - [ ] Memory categories and metadata
 - [ ] Retrieval with relevance scoring

@@ -2,6 +2,17 @@
 
 All notable changes to Project Genesis will be documented in this file.
 
+## [0.2.0] — 2026-10-14
+
+### Added
+- Local Ollama v0.40.4 runtime installed and configured with persistent background daemon.
+- Configured dedicated model storage on NVMe D: drive (`D:\project_genesis\data\models\ollama`).
+- Downloaded and verified default reasoning model: `qwen2.5:7b` (4.7 GB) with 100% GPU offloading on RTX 2000 Ada (8 GB VRAM).
+- Downloaded and verified embedding model: `nomic-embed-text` (274 MB).
+- End-to-end integration tests (`tests/test_integration_e2e.py`) validating live GPU inference and conversation persistence across simulated application restarts.
+- Chat API tests (`tests/test_api_chat.py`) covering conversation listing, message history, and error recovery.
+- Full test suite passing (40/40 tests).
+
 ## [0.1.0] — 2026-10-14
 
 ### Added
