@@ -16,7 +16,7 @@ def create_app() -> FastAPI:
     from genesis import __version__
     from genesis.core import get_settings
     from genesis.core.logging import setup_logging
-    from genesis.api.routes import health, chat, memory, models, knowledge, backup, tools, tasks, evaluation, training, research, deployment, meta, agents
+    from genesis.api.routes import health, chat, memory, models, knowledge, backup, tools, tasks, evaluation, training, research, deployment, meta, agents, graph, multimodal, papers
 
     settings = get_settings()
     setup_logging(level=settings.log_level, log_dir=settings.data_dir / "logs")
@@ -53,6 +53,9 @@ def create_app() -> FastAPI:
     app.include_router(deployment.router, prefix="/api", tags=["Deployment"])
     app.include_router(meta.router, prefix="/api", tags=["Meta-Improvement"])
     app.include_router(agents.router, prefix="/api", tags=["Multi-Agent & Campaigns"])
+    app.include_router(graph.router, prefix="/api", tags=["Knowledge Graph"])
+    app.include_router(multimodal.router, prefix="/api", tags=["Multi-Modal Vision"])
+    app.include_router(papers.router, prefix="/api", tags=["Autonomous Research Daemon"])
 
 
     # Static Web UI Assets

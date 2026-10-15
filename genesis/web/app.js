@@ -37,6 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (target === 'backups') loadBackups();
       if (target === 'meta') loadMetaData();
       if (target === 'agents') loadAgentsData();
+      if (target === 'graph') loadGraphData();
     });
   });
 
@@ -2676,6 +2677,388 @@ document.addEventListener('DOMContentLoaded', () => {
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = '🚀 Launch Research Campaign';
+      }
+    });
+  }
+
+  // ── Phase 10: Knowledge Graph & Autonomous Research Controller ──
+  const btnRefreshGraph = document.getElementById('btn-refresh-graph');
+  const btnSearchGraph = document.getElementById('btn-search-graph');
+  const graphSearchInput = document.getElementById('graph-search-input');
+  const graphTypeFilter = document.getElementById('graph-type-filter');
+  const graphNodesContainer = document.getElementById('graph-nodes-container');
+  const graphNodesCount = document.getElementById('graph-nodes-count');
+  const graphEdgesCount = document.getElementById('graph-edges-count');
+  const btnFindPath = document.getElementById('btn-find-path');
+  const graphPathSource = document.getElementById('graph-path-source');
+  const graphPathTarget = document.getElementById('graph-path-target');
+  const graphPathResult = document.getElementById('graph-path-result');
+  const btnExtractSubgraph = document.getElementById('btn-extract-subgraph');
+  const graphSubgraphCenter = document.getElementById('graph-subgraph-center');
+  const btnSyncCampaignsGraph = document.getElementById('btn-sync-campaigns-graph');
+
+  const btnRefreshPapers = document.getElementById('btn-refresh-papers');
+  const papersTableBody = document.getElementById('papers-table-body');
+  const paperDetailCard = document.getElementById('paper-detail-card');
+  const paperDetailTitle = document.getElementById('paper-detail-title');
+  const paperDetailAbstract = document.getElementById('paper-detail-abstract');
+  const paperDetailContent = document.getElementById('paper-detail-content');
+  const btnClosePaperDetail = document.getElementById('btn-close-paper-detail');
+
+  const btnRefreshInspections = document.getElementById('btn-refresh-inspections');
+  const inspectionsTableBody = document.getElementById('inspections-table-body');
+  const inspectionDetailCard = document.getElementById('inspection-detail-card');
+  const inspectionDetailName = document.getElementById('inspection-detail-name');
+  const inspectionDetailBadge = document.getElementById('inspection-detail-badge');
+  const inspectionDetailReport = document.getElementById('inspection-detail-report');
+
+  const btnOpenDaemonModal = document.getElementById('btn-open-daemon-modal');
+  const daemonModal = document.getElementById('daemon-modal');
+  const btnCloseDaemonModal = document.getElementById('btn-close-daemon-modal');
+  const btnCancelDaemon = document.getElementById('btn-cancel-daemon');
+  const launchDaemonForm = document.getElementById('launch-daemon-form');
+
+  const btnOpenVisionModal = document.getElementById('btn-open-vision-modal');
+  const visionModal = document.getElementById('vision-modal');
+  const btnCloseVisionModal = document.getElementById('btn-close-vision-modal');
+  const btnCancelVision = document.getElementById('btn-cancel-vision');
+  const inspectVisionForm = document.getElementById('inspect-vision-form');
+
+  async function loadGraphData() {
+    await Promise.all([loadGraphStats(), loadKnowledgeNodes(), loadPapers(), loadInspections()]);
+  }
+
+  async function loadGraphStats() {
+    try {
+      const res = await fetch('/api/graph/export');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (graphNodesCount && data.stats) {
+        graphNodesCount.textContent = `${data.stats.total_nodes} Nodes`;
+      }
+      if (graphEdgesCount && data.stats) {
+        graphEdgesCount.textContent = `${data.stats.total_edges} Edges`;
+      }
+    } catch (e) {
+      console.warn('Failed to load graph stats:', e);
+    }
+  }
+
+  async function loadKnowledgeNodes() {
+    if (!graphNodesContainer) return;
+    try {
+      const type = graphTypeFilter ? graphTypeFilter.value : '';
+      const url = type ? `/api/graph/nodes?node_type=${encodeURIComponent(type)}` : '/api/graph/nodes';
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(await res.text());
+      const nodes = await res.json();
+
+      const search = graphSearchInput ? graphSearchInput.value.trim().toLowerCase() : '';
+      const filtered = search
+        ? nodes.filter(n => (n.label || '').toLowerCase().includes(search) || (n.id || '').toLowerCase().includes(search))
+        : nodes;
+
+      if (!filtered.length) {
+        graphNodesContainer.innerHTML = '<div class="text-center text-muted" style="padding:40px;">No matching knowledge nodes found.</div>';
+        return;
+      }
+
+      graphNodesContainer.innerHTML = `
+        <div class="graph-nodes-grid">
+          ${filtered.map(node => {
+            const propsStr = node.properties && Object.keys(node.properties).length
+              ? Object.entries(node.properties).map(([k, v]) => `${k}: ${v}`).join(' | ')
+              : 'No custom properties';
+            return `
+              <div class="graph-node-card node-type-${escapeHtml(node.node_type || 'concept')}">
+                <div class="node-header">
+                  <div class="node-label">${escapeHtml(node.label || node.id)}</div>
+                  <span class="badge badge-secondary">${escapeHtml(node.node_type || 'node')}</span>
+                </div>
+                <div class="node-id">${escapeHtml(node.id)}</div>
+                <div class="node-props">${escapeHtml(propsStr)}</div>
+                <div class="node-actions">
+                  <button class="btn btn-xs btn-secondary" onclick="window.setPathNode('${escapeHtml(node.id)}', 'source')">Src</button>
+                  <button class="btn btn-xs btn-secondary" onclick="window.setPathNode('${escapeHtml(node.id)}', 'target')">Dst</button>
+                  <button class="btn btn-xs btn-secondary" onclick="window.setPathNode('${escapeHtml(node.id)}', 'center')">Center</button>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    } catch (err) {
+      graphNodesContainer.innerHTML = `<div class="text-danger" style="padding:20px;">Error loading nodes: ${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  window.setPathNode = function(id, role) {
+    if (role === 'source' && graphPathSource) graphPathSource.value = id;
+    if (role === 'target' && graphPathTarget) graphPathTarget.value = id;
+    if (role === 'center' && graphSubgraphCenter) graphSubgraphCenter.value = id;
+  };
+
+  async function loadPapers() {
+    if (!papersTableBody) return;
+    try {
+      const res = await fetch('/api/research/daemon/papers');
+      if (!res.ok) throw new Error(await res.text());
+      const papers = await res.json();
+      if (!papers.length) {
+        papersTableBody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No publications synthesized yet. Launch a research cycle to begin.</td></tr>';
+        return;
+      }
+
+      papersTableBody.innerHTML = papers.map(p => `
+        <tr>
+          <td><strong>${escapeHtml(p.title)}</strong><br><small style="color:var(--text-muted);">${escapeHtml((p.abstract || '').slice(0, 80))}...</small></td>
+          <td><span class="badge badge-success">${escapeHtml(p.status || 'published')}</span></td>
+          <td><small>${escapeHtml((p.created_at || '').slice(0, 16).replace('T', ' '))}</small></td>
+          <td><button class="btn btn-xs btn-primary" onclick="window.viewPaperDetails('${escapeHtml(p.id)}')">📖 Read IMRaD</button></td>
+        </tr>
+      `).join('');
+    } catch (err) {
+      papersTableBody.innerHTML = `<tr><td colspan="4" class="text-danger">Failed to load papers: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  window.viewPaperDetails = async function(id) {
+    try {
+      const res = await fetch(`/api/research/daemon/papers/${id}`);
+      if (!res.ok) throw new Error(await res.text());
+      const paper = await res.json();
+      if (paperDetailTitle) paperDetailTitle.textContent = paper.title || id;
+      if (paperDetailAbstract) paperDetailAbstract.textContent = paper.abstract || 'No abstract.';
+      if (paperDetailContent) paperDetailContent.textContent = paper.content_markdown || 'No content.';
+      if (paperDetailCard) paperDetailCard.style.display = 'block';
+      paperDetailCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (e) {
+      alert('Error fetching paper details: ' + e.message);
+    }
+  };
+
+  async function loadInspections() {
+    if (!inspectionsTableBody) return;
+    try {
+      const res = await fetch('/api/multimodal/inspections');
+      if (!res.ok) throw new Error(await res.text());
+      const inspections = await res.json();
+      if (!inspections.length) {
+        inspectionsTableBody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No visual artifacts inspected yet.</td></tr>';
+        return;
+      }
+
+      inspectionsTableBody.innerHTML = inspections.map(i => {
+        const passedBadge = i.passed
+          ? '<span class="badge badge-success">PASSED</span>'
+          : '<span class="badge badge-danger">FAILED</span>';
+        const detected = Array.isArray(i.elements_detected) ? i.elements_detected.join(', ') : 'None';
+        return `
+          <tr>
+            <td><strong>${escapeHtml(i.artifact_name)}</strong></td>
+            <td><span class="badge badge-secondary">${escapeHtml(i.artifact_type)}</span></td>
+            <td><code>${escapeHtml(i.format || 'unknown')}</code></td>
+            <td>${passedBadge}</td>
+            <td><small>${escapeHtml(detected)}</small></td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      inspectionsTableBody.innerHTML = `<tr><td colspan="5" class="text-danger">Failed to load inspections: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  // Wire Graph Event Listeners
+  if (btnRefreshGraph) btnRefreshGraph.addEventListener('click', loadGraphData);
+  if (btnSearchGraph) btnSearchGraph.addEventListener('click', loadKnowledgeNodes);
+  if (graphTypeFilter) graphTypeFilter.addEventListener('change', loadKnowledgeNodes);
+  if (btnRefreshPapers) btnRefreshPapers.addEventListener('click', loadPapers);
+  if (btnClosePaperDetail && paperDetailCard) {
+    btnClosePaperDetail.addEventListener('click', () => {
+      paperDetailCard.style.display = 'none';
+    });
+  }
+  if (btnRefreshInspections) btnRefreshInspections.addEventListener('click', loadInspections);
+
+  if (btnFindPath) {
+    btnFindPath.addEventListener('click', async () => {
+      const s = graphPathSource ? graphPathSource.value.trim() : '';
+      const t = graphPathTarget ? graphPathTarget.value.trim() : '';
+      if (!s || !t) {
+        alert('Please specify both source and target node IDs.');
+        return;
+      }
+      btnFindPath.disabled = true;
+      btnFindPath.textContent = 'Searching path...';
+      try {
+        const res = await fetch(`/api/graph/path?source_id=${encodeURIComponent(s)}&target_id=${encodeURIComponent(t)}`);
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        if (graphPathResult) {
+          if (!data.path || !data.path.length) {
+            graphPathResult.innerHTML = '<span class="text-muted">No connecting path found.</span>';
+          } else {
+            graphPathResult.innerHTML = `
+              <strong>Path (${data.length} steps):</strong><br>
+              ${data.path.map(step => `<span class="path-pill">${escapeHtml(step)}</span>`).join(' &rarr; ')}
+            `;
+          }
+        }
+      } catch (err) {
+        if (graphPathResult) graphPathResult.innerHTML = `<span class="text-danger">Path search failed: ${escapeHtml(err.message)}</span>`;
+      } finally {
+        btnFindPath.disabled = false;
+        btnFindPath.textContent = '🧭 Find Shortest Path';
+      }
+    });
+  }
+
+  if (btnExtractSubgraph) {
+    btnExtractSubgraph.addEventListener('click', async () => {
+      const center = graphSubgraphCenter ? graphSubgraphCenter.value.trim() : '';
+      if (!center) {
+        alert('Please enter a center node ID for the subgraph.');
+        return;
+      }
+      btnExtractSubgraph.disabled = true;
+      try {
+        const res = await fetch(`/api/graph/subgraph?centers=${encodeURIComponent(center)}&depth=1`);
+        if (!res.ok) throw new Error(await res.text());
+        const sub = await res.json();
+        if (graphPathResult) {
+          graphPathResult.innerHTML = `
+            <strong>Subgraph around ${escapeHtml(center)}:</strong><br>
+            <span class="badge badge-info">${sub.nodes.length} Nodes</span>
+            <span class="badge badge-success">${sub.edges.length} Edges</span>
+          `;
+        }
+      } catch (err) {
+        if (graphPathResult) graphPathResult.innerHTML = `<span class="text-danger">Subgraph error: ${escapeHtml(err.message)}</span>`;
+      } finally {
+        btnExtractSubgraph.disabled = false;
+      }
+    });
+  }
+
+  if (btnSyncCampaignsGraph) {
+    btnSyncCampaignsGraph.addEventListener('click', async () => {
+      btnSyncCampaignsGraph.disabled = true;
+      btnSyncCampaignsGraph.textContent = 'Syncing...';
+      try {
+        const res = await fetch('/api/graph/sync/campaigns', { method: 'POST' });
+        if (!res.ok) throw new Error(await res.text());
+        const result = await res.json();
+        alert(`Graph synchronized successfully! (${result.campaigns_synced} campaigns, ${result.nodes_created} nodes created, ${result.edges_created} edges created)`);
+        await loadGraphData();
+      } catch (err) {
+        alert('Campaign sync failed: ' + err.message);
+      } finally {
+        btnSyncCampaignsGraph.disabled = false;
+        btnSyncCampaignsGraph.textContent = '🔄 Sync from Campaigns';
+      }
+    });
+  }
+
+  // Wire Daemon Cycle Modal & Form
+  if (btnOpenDaemonModal && daemonModal) {
+    btnOpenDaemonModal.addEventListener('click', () => { daemonModal.style.display = 'flex'; });
+  }
+  if (btnCloseDaemonModal && daemonModal) {
+    btnCloseDaemonModal.addEventListener('click', () => { daemonModal.style.display = 'none'; });
+  }
+  if (btnCancelDaemon && daemonModal) {
+    btnCancelDaemon.addEventListener('click', () => { daemonModal.style.display = 'none'; });
+  }
+  if (launchDaemonForm) {
+    launchDaemonForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('btn-submit-daemon');
+      const topic = document.getElementById('daemon-topic-input').value.trim();
+      const context = document.getElementById('daemon-context-input').value.trim();
+      const rounds = parseInt(document.getElementById('daemon-rounds-input').value || '2', 10);
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = '🔬 Executing Research Cycle...';
+
+      try {
+        const res = await fetch('/api/research/daemon/cycle', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ topic, context, rounds })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        daemonModal.style.display = 'none';
+        launchDaemonForm.reset();
+        await loadPapers();
+        await loadGraphStats();
+        if (data.paper_id) {
+          await window.viewPaperDetails(data.paper_id);
+        }
+      } catch (err) {
+        alert('Research cycle failed: ' + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🔬 Launch Closed-Loop Cycle';
+      }
+    });
+  }
+
+  // Wire Vision Inspector Modal & Form
+  if (btnOpenVisionModal && visionModal) {
+    btnOpenVisionModal.addEventListener('click', () => { visionModal.style.display = 'flex'; });
+  }
+  if (btnCloseVisionModal && visionModal) {
+    btnCloseVisionModal.addEventListener('click', () => { visionModal.style.display = 'none'; });
+  }
+  if (btnCancelVision && visionModal) {
+    btnCancelVision.addEventListener('click', () => { visionModal.style.display = 'none'; });
+  }
+  if (inspectVisionForm) {
+    inspectVisionForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('btn-submit-vision');
+      const artifactName = document.getElementById('vision-artifact-name').value.trim();
+      const artifactType = document.getElementById('vision-artifact-type').value;
+      const expectedStr = document.getElementById('vision-expected-elements').value.trim();
+      const expectedElements = expectedStr ? expectedStr.split(',').map(s => s.trim()).filter(Boolean) : [];
+      const imageData = document.getElementById('vision-image-payload').value.trim();
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = '👁️ Inspecting...';
+
+      try {
+        const res = await fetch('/api/multimodal/inspect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            artifact_name: artifactName,
+            artifact_type: artifactType,
+            expected_elements: expectedElements,
+            image_data: imageData
+          })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        visionModal.style.display = 'none';
+        inspectVisionForm.reset();
+        await loadInspections();
+        if (inspectionDetailCard) {
+          if (inspectionDetailName) inspectionDetailName.textContent = data.artifact_name || artifactName;
+          if (inspectionDetailBadge) {
+            inspectionDetailBadge.className = data.passed ? 'badge badge-success' : 'badge badge-danger';
+            inspectionDetailBadge.textContent = data.passed ? 'PASSED' : 'FAILED';
+          }
+          if (inspectionDetailReport) {
+            inspectionDetailReport.textContent = data.analysis_report || 'Inspection completed.';
+          }
+          inspectionDetailCard.style.display = 'block';
+        }
+      } catch (err) {
+        alert('Inspection failed: ' + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '👁️ Execute Inspection';
       }
     });
   }

@@ -117,6 +117,10 @@ class CodeSandbox:
                     error_type="system_error",
                 )
 
+    def run(self, code: str, tests: str = "") -> SandboxResult:
+        """Alias for execute to provide interface consistency."""
+        return self.execute(code, tests)
+
     def _categorize_error(self, stderr: str) -> str:
         """Categorize failure mode from stderr."""
         if not stderr:

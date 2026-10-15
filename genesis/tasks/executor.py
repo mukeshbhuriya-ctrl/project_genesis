@@ -9,14 +9,16 @@ import sqlite3
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from genesis.core import get_settings
 from genesis.core.database import get_db_path_from_url, get_sync_connection
 from genesis.core.logging import get_logger
 from genesis.tasks.models import StepStatus, Task, TaskStatus, TaskStep
-from genesis.tools.executor import ToolExecutor
-from genesis.tools.registry import ToolRegistry, default_registry
+
+if TYPE_CHECKING:
+    from genesis.tools.executor import ToolExecutor
+    from genesis.tools.registry import ToolRegistry
 
 log = get_logger("task_executor")
 
@@ -32,8 +34,18 @@ class TaskExecutor:
         tool_executor: ToolExecutor | None = None,
         db_path: Path | str | None = None,
     ):
-        self.registry = registry or default_registry
-        self.tool_executor = tool_executor or ToolExecutor()
+        if registry is None:
+            from genesis.tools.registry import default_registry
+            self.registry = default_registry
+        else:
+            self.registry = registry
+
+        if tool_executor is None:
+            from genesis.tools.executor import ToolExecutor
+            self.tool_executor = ToolExecutor()
+        else:
+            self.tool_executor = tool_executor
+
         if db_path is not None:
             self.db_path = Path(db_path)
         else:

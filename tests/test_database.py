@@ -57,6 +57,10 @@ class TestDatabaseInitialization:
             assert "debate_sessions" in tables
             assert "debate_turns" in tables
             assert "research_campaigns" in tables
+            assert "knowledge_nodes" in tables
+            assert "knowledge_edges" in tables
+            assert "research_papers" in tables
+            assert "visual_inspections" in tables
         finally:
             conn.close()
 

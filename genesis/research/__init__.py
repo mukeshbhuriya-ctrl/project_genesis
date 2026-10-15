@@ -21,6 +21,10 @@ from genesis.research.coding import (
     ReflectiveCodeSynthesizer,
     SandboxResult,
 )
+from genesis.research.daemon import (
+    AutonomousResearchDaemon,
+    ResearchPaper,
+)
 from genesis.research.meta import (
     CycleStage,
     MetaCycleRecord,
@@ -46,5 +50,7 @@ __all__ = [
     "CampaignManager",
     "ResearchCampaign",
     "ResearchMilestone",
+    "AutonomousResearchDaemon",
+    "ResearchPaper",
 ]
 

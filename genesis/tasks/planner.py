@@ -8,11 +8,15 @@ import json
 import re
 from typing import Any
 
+from typing import TYPE_CHECKING, Any
+
 from genesis.core.logging import get_logger
 from genesis.models import GenerationRequest
 from genesis.models.ollama_backend import OllamaProvider
 from genesis.tasks.models import StepStatus, Task, TaskStatus, TaskStep
-from genesis.tools.registry import ToolRegistry, default_registry
+
+if TYPE_CHECKING:
+    from genesis.tools.registry import ToolRegistry
 
 log = get_logger("task_planner")
 
@@ -28,7 +32,11 @@ class TaskPlanner:
         model_provider: OllamaProvider | None = None,
         max_steps: int = 10,
     ):
-        self.registry = registry or default_registry
+        if registry is None:
+            from genesis.tools.registry import default_registry
+            self.registry = default_registry
+        else:
+            self.registry = registry
         self.provider = model_provider or OllamaProvider()
         self.max_steps = max_steps
 

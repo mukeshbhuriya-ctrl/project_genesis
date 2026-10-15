@@ -498,6 +498,67 @@ VALUES (
 );
 """
 
+SCHEMA_V10 = """
+-- Knowledge Graph Nodes (concepts, hypotheses, debates, experiments, papers, findings)
+CREATE TABLE IF NOT EXISTS knowledge_nodes (
+    id TEXT PRIMARY KEY,
+    node_type TEXT NOT NULL CHECK (node_type IN ('concept', 'hypothesis', 'debate', 'experiment', 'campaign', 'metric', 'finding', 'paper', 'component')),
+    label TEXT NOT NULL,
+    properties_json TEXT NOT NULL DEFAULT '{}',
+    embedding BLOB,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_knowledge_nodes_type ON knowledge_nodes(node_type);
+CREATE INDEX IF NOT EXISTS idx_knowledge_nodes_label ON knowledge_nodes(label);
+
+-- Knowledge Graph Edges (semantic, causal, and developmental relationships)
+CREATE TABLE IF NOT EXISTS knowledge_edges (
+    id TEXT PRIMARY KEY,
+    source_id TEXT NOT NULL REFERENCES knowledge_nodes(id) ON DELETE CASCADE,
+    target_id TEXT NOT NULL REFERENCES knowledge_nodes(id) ON DELETE CASCADE,
+    relation_type TEXT NOT NULL CHECK (relation_type IN ('hypothesizes', 'debates', 'validates', 'contradicts', 'implements', 'refines', 'derived_from', 'measured_by', 'cites', 'relates_to')),
+    weight REAL NOT NULL DEFAULT 1.0,
+    metadata TEXT DEFAULT '{}',
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_knowledge_edges_source ON knowledge_edges(source_id);
+CREATE INDEX IF NOT EXISTS idx_knowledge_edges_target ON knowledge_edges(target_id);
+CREATE INDEX IF NOT EXISTS idx_knowledge_edges_relation ON knowledge_edges(relation_type);
+
+-- Autonomous Research Papers / Synthesis Publications
+CREATE TABLE IF NOT EXISTS research_papers (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    abstract TEXT NOT NULL,
+    content_markdown TEXT NOT NULL,
+    campaign_id TEXT REFERENCES research_campaigns(id) ON DELETE SET NULL,
+    cited_nodes_json TEXT NOT NULL DEFAULT '[]',
+    status TEXT NOT NULL CHECK (status IN ('draft', 'published', 'archived')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_research_papers_status ON research_papers(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_research_papers_campaign ON research_papers(campaign_id);
+
+-- Multimodal Visual Artifact Inspections
+CREATE TABLE IF NOT EXISTS visual_inspections (
+    id TEXT PRIMARY KEY,
+    artifact_name TEXT NOT NULL,
+    artifact_type TEXT NOT NULL CHECK (artifact_type IN ('diagram', 'ui_screenshot', 'chart', 'loss_curve', 'image')),
+    file_path TEXT,
+    prompt TEXT NOT NULL,
+    inspection_result TEXT NOT NULL,
+    passed INTEGER NOT NULL DEFAULT 1,
+    detected_elements_json TEXT NOT NULL DEFAULT '[]',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_visual_inspections_type ON visual_inspections(artifact_type, created_at DESC);
+"""
+
 
 def get_sync_connection(db_path: str | Path) -> sqlite3.Connection:
     """Create a synchronous SQLite connection with recommended pragmas."""
@@ -619,6 +680,16 @@ def initialize_database(db_path: str | Path) -> None:
             )
             conn.commit()
             log.info("Schema v9 applied successfully.")
+
+        if current_version < 10:
+            log.info("Applying schema v10...")
+            conn.executescript(SCHEMA_V10)
+            conn.execute(
+                "INSERT OR REPLACE INTO schema_migrations (version, description) "
+                "VALUES (10, 'Schema v10: knowledge graph nodes/edges, research papers, and visual inspections')"
+            )
+            conn.commit()
+            log.info("Schema v10 applied successfully.")
         else:
             log.info(f"Database schema is at version {current_version}, up to date.")
 

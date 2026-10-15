@@ -371,3 +371,20 @@ class MemoryStore:
         results.sort(key=lambda x: x[1], reverse=True)
         return results[:limit]
 
+
+from genesis.memory.graph import (
+    KnowledgeEdge,
+    KnowledgeNode,
+    MetaMemoryGraph,
+    Subgraph,
+)
+
+__all__ = [
+    "MemoryRecord",
+    "MemoryStore",
+    "KnowledgeNode",
+    "KnowledgeEdge",
+    "Subgraph",
+    "MetaMemoryGraph",
+]
+

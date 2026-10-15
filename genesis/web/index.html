@@ -58,6 +58,9 @@
         <button class="nav-tab" data-tab="agents" id="tab-agents-btn">
           <span class="tab-icon">🤖</span> Multi-Agent &amp; Campaigns
         </button>
+        <button class="nav-tab" data-tab="graph" id="tab-graph-btn">
+          <span class="tab-icon">🕸️</span> Meta-Graph &amp; Papers
+        </button>
         <button class="nav-tab" data-tab="hardware" id="tab-hardware-btn">
           <span class="tab-icon">⚡</span> System &amp; Hardware
         </button>
@@ -1244,6 +1247,168 @@
           </div>
         </div>
       </section>
+
+      <!-- 12. KNOWLEDGE GRAPH & PUBLICATIONS TAB -->
+      <section class="tab-content" id="pane-graph">
+        <div class="research-container">
+          <div class="section-header">
+            <div>
+              <h2>Cross-Campaign Meta-Graph &amp; Autonomous Publications</h2>
+              <p class="section-subtitle">Relational and semantic knowledge graph across hypotheses, campaigns, and debate consensus, paired with the Autonomous Background Research Daemon and Multi-Modal Vision Inspector.</p>
+            </div>
+            <div class="header-action-group">
+              <button class="btn btn-secondary" id="btn-sync-campaigns-graph">🔄 Sync from Campaigns</button>
+              <button class="btn btn-secondary" id="btn-open-vision-modal">👁️ Inspect Visual Artifact</button>
+              <button class="btn btn-primary" id="btn-open-daemon-modal">🔬 Launch Research Cycle</button>
+            </div>
+          </div>
+
+          <!-- Card 1: Knowledge Graph Overview & Metrics -->
+          <div class="card research-card" style="margin-bottom: 24px;">
+            <div class="card-header">
+              <div>
+                <h3>Meta-Memory Knowledge Graph Topology</h3>
+                <span class="card-subtext" style="color:var(--text-muted); font-size:0.85rem;">Bidirectional semantic network linking concepts, code artifacts, and empirical findings</span>
+              </div>
+              <div style="display:flex; gap:8px; align-items:center;">
+                <span class="badge badge-info" id="graph-nodes-count">0 Nodes</span>
+                <span class="badge badge-success" id="graph-edges-count">0 Edges</span>
+                <button class="btn btn-sm btn-secondary" id="btn-refresh-graph">🔄 Refresh</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <!-- Filter & Query Bar -->
+              <div style="display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap; align-items:center;">
+                <input type="text" id="graph-search-input" class="form-input" style="flex:1; min-width:200px;" placeholder="Search nodes by label or properties...">
+                <select id="graph-type-filter" class="form-select" style="width:180px;">
+                  <option value="">All Node Types</option>
+                  <option value="concept">Concepts</option>
+                  <option value="hypothesis">Hypotheses</option>
+                  <option value="debate">Debates</option>
+                  <option value="campaign">Campaigns</option>
+                  <option value="experiment">Experiments</option>
+                  <option value="finding">Findings</option>
+                  <option value="paper">Papers</option>
+                  <option value="component">Components</option>
+                </select>
+                <button class="btn btn-sm btn-primary" id="btn-search-graph">Filter</button>
+              </div>
+
+              <!-- Graph Visualization & Explorer Area -->
+              <div class="graph-explorer-grid" style="display:grid; grid-template-columns: 2fr 1fr; gap:16px;">
+                <div class="graph-canvas-container" id="graph-nodes-container" style="background:var(--bg-main); border:1px solid var(--border-color); border-radius:8px; padding:16px; min-height:300px; max-height:420px; overflow-y:auto;">
+                  <div class="text-center text-muted" style="padding:40px;">Loading graph topology...</div>
+                </div>
+
+                <div class="graph-tools-panel" style="background:var(--bg-main); border:1px solid var(--border-color); border-radius:8px; padding:16px;">
+                  <h4 style="margin-top:0; font-size:0.95rem; color:var(--text-main);">Path &amp; Subgraph Tools</h4>
+                  <div class="form-group" style="margin-bottom:10px;">
+                    <label for="graph-path-source" style="font-size:0.8rem;">Source Node:</label>
+                    <input type="text" id="graph-path-source" class="form-input form-input-sm" placeholder="e.g. concept-lora">
+                  </div>
+                  <div class="form-group" style="margin-bottom:10px;">
+                    <label for="graph-path-target" style="font-size:0.8rem;">Target Node:</label>
+                    <input type="text" id="graph-path-target" class="form-input form-input-sm" placeholder="e.g. experiment-quant">
+                  </div>
+                  <button class="btn btn-sm btn-secondary btn-block" id="btn-find-path" style="width:100%; margin-bottom:14px;">🧭 Find Shortest Path</button>
+                  <div id="graph-path-result" style="font-size:0.8rem; color:var(--text-muted); min-height:32px;"></div>
+
+                  <hr style="border:none; border-top:1px solid var(--border-color); margin:12px 0;">
+
+                  <div class="form-group" style="margin-bottom:10px;">
+                    <label for="graph-subgraph-center" style="font-size:0.8rem;">Subgraph Center Node:</label>
+                    <input type="text" id="graph-subgraph-center" class="form-input form-input-sm" placeholder="Node ID">
+                  </div>
+                  <button class="btn btn-sm btn-secondary btn-block" id="btn-extract-subgraph" style="width:100%;">🕸️ Extract Subgraph</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Grid: Publications & Visual Inspections -->
+          <div class="research-grid">
+            <!-- Card 2: Autonomous Research Papers -->
+            <div class="card research-card">
+              <div class="card-header">
+                <div>
+                  <h3>Autonomous Research Publications</h3>
+                  <span class="card-subtext" style="color:var(--text-muted); font-size:0.85rem;">Peer-structured IMRaD papers synthesized by the Background Research Daemon</span>
+                </div>
+                <button class="btn btn-sm btn-secondary" id="btn-refresh-papers" title="Refresh Publications">🔄 Refresh</button>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive" style="max-height: 340px; overflow-y: auto;">
+                  <table class="data-table" id="papers-table">
+                    <thead>
+                      <tr>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="papers-table-body">
+                      <tr>
+                        <td colspan="4" class="text-center text-muted">No publications synthesized yet. Launch a research cycle to begin.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Paper Detail Viewer -->
+                <div id="paper-detail-card" style="display:none; margin-top:16px; padding:16px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:8px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h4 id="paper-detail-title" style="margin:0; font-size:1rem; color:var(--text-main);">Paper Details</h4>
+                    <button class="btn btn-sm btn-secondary" id="btn-close-paper-detail">Close</button>
+                  </div>
+                  <div id="paper-detail-abstract" style="font-style:italic; font-size:0.85rem; color:var(--text-muted); margin-bottom:12px; padding:8px; background:var(--bg-main); border-radius:4px;"></div>
+                  <div id="paper-detail-content" class="code-preview-box" style="max-height:280px; overflow-y:auto; white-space:pre-wrap; font-size:0.85rem;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 3: Multi-Modal Visual Artifact Inspector -->
+            <div class="card research-card">
+              <div class="card-header">
+                <div>
+                  <h3>Multi-Modal Visual Artifact Inspector</h3>
+                  <span class="card-subtext" style="color:var(--text-muted); font-size:0.85rem;">Deterministic &amp; vision-verified inspection of diagrams, UI renders, and loss curves</span>
+                </div>
+                <button class="btn btn-sm btn-secondary" id="btn-refresh-inspections" title="Refresh Inspections">🔄 Refresh</button>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive" style="max-height: 340px; overflow-y: auto;">
+                  <table class="data-table" id="inspections-table">
+                    <thead>
+                      <tr>
+                        <th>Artifact Name</th>
+                        <th>Type</th>
+                        <th>Format</th>
+                        <th>Verdict</th>
+                        <th>Detected Elements</th>
+                      </tr>
+                    </thead>
+                    <tbody id="inspections-table-body">
+                      <tr>
+                        <td colspan="5" class="text-center text-muted">No visual artifacts inspected yet.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Last Inspection Result Details -->
+                <div id="inspection-detail-card" style="display:none; margin-top:16px; padding:16px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:8px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h4 id="inspection-detail-name" style="margin:0; font-size:1rem; color:var(--text-main);">Inspection Report</h4>
+                    <span id="inspection-detail-badge" class="badge"></span>
+                  </div>
+                  <div id="inspection-detail-report" class="code-preview-box" style="max-height:220px; overflow-y:auto; white-space:pre-wrap; font-size:0.85rem;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
   </div>
@@ -1502,6 +1667,74 @@
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" id="btn-cancel-campaign">Cancel</button>
           <button type="submit" class="btn btn-primary" id="btn-submit-campaign">🚀 Launch Research Campaign</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Launching Autonomous Research Cycle -->
+  <div class="modal-backdrop" id="daemon-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 640px;">
+      <div class="modal-header">
+        <h3>Launch Autonomous Research Cycle</h3>
+        <button class="modal-close-btn" id="btn-close-daemon-modal">&times;</button>
+      </div>
+      <form id="launch-daemon-form" class="standard-form">
+        <div class="form-group">
+          <label for="daemon-topic-input">Research Proposition / Topic:</label>
+          <input type="text" id="daemon-topic-input" class="form-input" placeholder="e.g. Asymmetric KV Cache Quantization with Outlier Preservation" required>
+        </div>
+        <div class="form-group">
+          <label for="daemon-context-input">Domain Context &amp; Hardware Constraints:</label>
+          <textarea id="daemon-context-input" class="form-textarea" rows="2" placeholder="Workstation: 8GB VRAM RTX 2000 Ada. Python 3.12+ AST and torch."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="daemon-rounds-input">Debate Deliberation Rounds:</label>
+          <input type="number" id="daemon-rounds-input" class="form-input" value="2" min="1" max="4">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-daemon">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-daemon">🔬 Launch Closed-Loop Cycle</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Multi-Modal Visual Artifact Inspection -->
+  <div class="modal-backdrop" id="vision-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3>Inspect Visual Artifact</h3>
+        <button class="modal-close-btn" id="btn-close-vision-modal">&times;</button>
+      </div>
+      <form id="inspect-vision-form" class="standard-form">
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="vision-artifact-name">Artifact Identifier / Name:</label>
+            <input type="text" id="vision-artifact-name" class="form-input" placeholder="e.g. genesis_architecture.svg" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="vision-artifact-type">Artifact Category:</label>
+            <select id="vision-artifact-type" class="form-select">
+              <option value="diagram" selected>Architecture Diagram (SVG/Image)</option>
+              <option value="ui_screenshot">Web Dashboard UI Layout</option>
+              <option value="loss_curve">Training Loss Curve</option>
+              <option value="chart">Evaluation Benchmark Chart</option>
+              <option value="image">General Image</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="vision-expected-elements">Expected Structural Elements (comma-separated):</label>
+          <input type="text" id="vision-expected-elements" class="form-input" placeholder="e.g. ModelRouter, CodeSandbox, KnowledgeGraph, SQLite">
+        </div>
+        <div class="form-group">
+          <label for="vision-image-payload">Visual Payload (Raw SVG XML text, Data URI, or Base64):</label>
+          <textarea id="vision-image-payload" class="form-textarea" rows="6" placeholder="<svg width=&quot;800&quot; height=&quot;600&quot;>&#10;  <text x=&quot;20&quot; y=&quot;40&quot;>ModelRouter</text>&#10;  <rect width=&quot;100&quot; height=&quot;50&quot; />&#10;</svg>" required></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-vision">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-vision">👁️ Execute Inspection</button>
         </div>
       </form>
     </div>

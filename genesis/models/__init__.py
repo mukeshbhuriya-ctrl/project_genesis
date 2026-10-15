@@ -93,6 +93,7 @@ class ModelProvider(ABC):
 from genesis.models.context import ContextBudget, ContextManager, ModelArchitecture
 from genesis.models.profiler import InferenceProfileResult, InferenceProfiler
 from genesis.models.router import ModelRoute, ModelRouter, RouteDecision, TASK_CATEGORIES
+from genesis.models.vision import VisionInspector, VisionRequest, VisionResponse
 
 __all__ = [
     "GenerationRequest",
@@ -108,6 +109,9 @@ __all__ = [
     "ModelRouter",
     "RouteDecision",
     "TASK_CATEGORIES",
+    "VisionInspector",
+    "VisionRequest",
+    "VisionResponse",
 ]
 
 

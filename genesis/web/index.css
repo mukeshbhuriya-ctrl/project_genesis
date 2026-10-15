@@ -1132,4 +1132,90 @@ body {
   color: var(--text-muted);
 }
 
+/* ── Phase 10: Knowledge Graph & Multimodal Styles ── */
+.graph-explorer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 900px) {
+  .graph-explorer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.graph-nodes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.graph-node-card {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+.graph-node-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 14px rgba(56, 189, 248, 0.15);
+  transform: translateY(-1px);
+}
+.graph-node-card.node-type-concept { border-left: 3px solid #06b6d4; }
+.graph-node-card.node-type-hypothesis { border-left: 3px solid #a855f7; }
+.graph-node-card.node-type-debate { border-left: 3px solid #f59e0b; }
+.graph-node-card.node-type-campaign { border-left: 3px solid #38bdf8; }
+.graph-node-card.node-type-experiment { border-left: 3px solid #22c55e; }
+.graph-node-card.node-type-finding { border-left: 3px solid #10b981; }
+.graph-node-card.node-type-paper { border-left: 3px solid #818cf8; }
+.graph-node-card.node-type-component { border-left: 3px solid #ec4899; }
+
+.node-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+.node-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-main);
+  word-break: break-word;
+}
+.node-id {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.node-props {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  line-height: 1.35;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 6px;
+  border-radius: 4px;
+  word-break: break-word;
+}
+.node-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 6px;
+}
+.path-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-family: var(--font-mono, monospace);
+  color: #38bdf8;
+  margin: 2px;
+}
+
 

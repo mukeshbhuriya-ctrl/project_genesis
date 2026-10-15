@@ -2,6 +2,19 @@
 
 All notable changes to Project Genesis will be documented in this file.
 
+## [0.11.0] — 2026-10-15
+
+### Added
+- **Multi-Modal Vision Processing, Cross-Campaign Meta-Memory Knowledge Graph, and Autonomous Research Daemon (Phase 10)**:
+  - **Multi-Modal Vision & Visual Artifact Inspector**: Local parsing and validation engine (`VisionRequest`, `VisionResponse`, `VisionInspector`) decoding raster headers (PNG IHDR, GIF, BMP, JPEG) and SVG viewports/text nodes without cloud dependencies. SQLite audit persistence into `visual_inspections` table (`genesis/models/vision.py`).
+  - **Cross-Campaign Meta-Memory Knowledge Graph**: Relational and semantic graph engine (`KnowledgeNode`, `KnowledgeEdge`, `Subgraph`, `MetaMemoryGraph`) supporting BFS shortest-path queries (`find_path`), neighborhood traversal, depth-bounded subgraph extraction, packed 768-dim vector embedding semantic search (`semantic_search_nodes`), and campaign artifact graph ingestion (`sync_from_campaign`) (`genesis/memory/graph.py`).
+  - **Autonomous Background Research Daemon**: Continuous closed-loop scientific research engine (`ResearchPaper`, `AutonomousResearchDaemon`) executing 5-stage cycles: hypothesis selection &rarr; dialectic consensus debate &rarr; sandboxed prototype verification (`CodeSandbox`) &rarr; formal IMRaD scientific paper synthesis &rarr; graph and memory persistence (`genesis/research/daemon.py`).
+  - **Database Schema V10**: Added `knowledge_nodes`, `knowledge_edges`, `research_papers`, and `visual_inspections` tables in SQLite WAL mode with index coverage and migration logic (`genesis/core/database.py`).
+  - **Phase 10 REST APIs**: Mounted `/api/graph/*` (nodes, edges, path, subgraph, export, sync), `/api/multimodal/*` (inspect, inspections), and `/api/research/daemon/*` (cycle, papers) in `genesis/api/app.py`.
+  - **Interactive Web Dashboard Module**: Dedicated "Meta-Graph & Papers" navigation tab, Knowledge Graph topology explorer with node filtering, pathfinder, and subgraph extractor, Autonomous Publications manager with IMRaD reader, and Multi-Modal Visual Artifact Inspector (`genesis/web/`).
+  - **Architecture Decision Record**: ADR-011 Multi-Modal Vision Inspection, Cross-Campaign Meta-Memory Knowledge Graph, and Autonomous Background Research Daemon.
+  - **Comprehensive Test Suite**: 17 new unit and API tests across vision inspection, knowledge graph, daemon, and API routes, expanding repository baseline to 228 passing tests (100% pass rate).
+
 ## [0.10.0] — 2026-10-15
 
 ### Added
