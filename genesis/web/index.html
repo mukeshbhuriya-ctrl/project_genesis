@@ -46,6 +46,9 @@
         <button class="nav-tab" data-tab="training" id="tab-training-btn">
           <span class="tab-icon">🎯</span> Datasets &amp; Fine-Tuning
         </button>
+        <button class="nav-tab" data-tab="research" id="tab-research-btn">
+          <span class="tab-icon">🔬</span> Research &amp; Capabilities
+        </button>
         <button class="nav-tab" data-tab="hardware" id="tab-hardware-btn">
           <span class="tab-icon">⚡</span> System &amp; Hardware
         </button>
@@ -605,6 +608,201 @@
                   <tr><td colspan="5" class="text-center">Loading backup snapshots...</td></tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 9. RESEARCH & CAPABILITIES TAB -->
+      <section class="tab-content" id="pane-research">
+        <div class="research-container">
+          <div class="section-header-row">
+            <div>
+              <h2>Research &amp; Capability Expansion</h2>
+              <p class="section-subtext">Inference profiling, KV-cache VRAM budgeting, reflective code synthesis with sandbox self-repair, and citation-verified adaptive knowledge synthesis.</p>
+            </div>
+            <div class="header-action-group">
+              <button class="btn btn-secondary" id="btn-refresh-research">↻ Refresh Data</button>
+            </div>
+          </div>
+
+          <!-- Top Grid: Context Budget & Inference Profiling -->
+          <div class="research-grid">
+            <!-- Card 1: Context Window & KV-Cache VRAM Budget -->
+            <div class="card research-card">
+              <div class="card-header">
+                <h3>Context Window &amp; KV-Cache VRAM Budget</h3>
+                <span class="badge" id="budget-safety-badge">Computing...</span>
+              </div>
+              <div class="card-body">
+                <div class="form-row">
+                  <div class="form-group flex-1">
+                    <label for="budget-model-select">Target Model:</label>
+                    <select id="budget-model-select" class="form-select">
+                      <option value="qwen2.5:7b" selected>Qwen 2.5 7B (28L / 4KVH)</option>
+                      <option value="qwen2.5-coder:7b">Qwen 2.5 Coder 7B (28L / 4KVH)</option>
+                      <option value="qwen2.5-coder:1.5b-base">Qwen 2.5 Coder 1.5B (28L / 2KVH)</option>
+                    </select>
+                  </div>
+                  <div class="form-group flex-1">
+                    <label for="budget-context-tokens">Context Tokens: <strong id="budget-tokens-val">4096</strong></label>
+                    <input type="range" id="budget-context-tokens" min="2048" max="32768" step="2048" value="4096">
+                  </div>
+                </div>
+
+                <div class="stat-metrics-grid">
+                  <div class="metric-box">
+                    <span class="metric-label">KV-Cache VRAM</span>
+                    <span class="metric-val text-primary" id="metric-kv-cache">-- MB</span>
+                  </div>
+                  <div class="metric-box">
+                    <span class="metric-label">Model Weights</span>
+                    <span class="metric-val" id="metric-weights">-- MB</span>
+                  </div>
+                  <div class="metric-box">
+                    <span class="metric-label">Total Allocated</span>
+                    <span class="metric-val" id="metric-total-vram">-- MB</span>
+                  </div>
+                  <div class="metric-box">
+                    <span class="metric-label">Safety Headroom</span>
+                    <span class="metric-val text-success" id="metric-headroom">-- MB</span>
+                  </div>
+                </div>
+
+                <div class="recommended-tokens-alert" id="budget-recommendation">
+                  Recommended Max Safe Tokens: <strong id="metric-rec-tokens">--</strong>
+                </div>
+
+                <hr class="divider">
+
+                <div class="profile-action-box">
+                  <h4>Live Inference Latency Profiler</h4>
+                  <div class="form-group">
+                    <input type="text" id="profile-prompt-input" class="form-input" value="Explain the QuickSort algorithm and its average time complexity in 3 short sentences.">
+                  </div>
+                  <button class="btn btn-primary btn-sm" id="btn-run-profile">⚡ Profile Inference Speed</button>
+                  <div class="profile-live-results" id="profile-live-results" style="display:none; margin-top: 10px;">
+                    <div class="badge-row">
+                      <span class="badge badge-info">TTFT: <strong id="live-ttft">-- ms</strong></span>
+                      <span class="badge badge-success">Throughput: <strong id="live-tps">-- tok/s</strong></span>
+                      <span class="badge badge-secondary">Inter-token: <strong id="live-itl">-- ms</strong></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 2: Reflective Code Synthesizer with Sandbox Self-Repair -->
+            <div class="card research-card">
+              <div class="card-header">
+                <h3>Reflective Code Synthesizer &amp; Sandbox</h3>
+                <span class="badge badge-success">Isolated Subprocess</span>
+              </div>
+              <div class="card-body">
+                <form id="code-synth-form" class="standard-form">
+                  <div class="form-group">
+                    <label for="code-objective">Task Objective:</label>
+                    <textarea id="code-objective" class="form-textarea" rows="2" placeholder="e.g. Implement an LRU Cache with get and put methods in Python" required>Implement binary search algorithm in Python with comprehensive tests</textarea>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group flex-1">
+                      <label for="code-max-iterations">Max Self-Repair Iterations:</label>
+                      <select id="code-max-iterations" class="form-select">
+                        <option value="1">1 (No repair)</option>
+                        <option value="2">2 Iterations</option>
+                        <option value="3" selected>3 Iterations (Recommended)</option>
+                        <option value="5">5 Iterations</option>
+                      </select>
+                    </div>
+                    <div class="form-group flex-1">
+                      <label for="code-export-dataset">Phase 5 Dataset Export:</label>
+                      <select id="code-export-dataset" class="form-select">
+                        <option value="">None (Standalone experiment)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <button type="submit" class="btn btn-primary" id="btn-submit-code-synth">⚡ Synthesize &amp; Sandbox Test</button>
+                </form>
+
+                <div class="code-result-panel" id="code-result-panel" style="display:none; margin-top: 15px;">
+                  <div class="card-header" style="padding: 6px 0;">
+                    <h4>Synthesis Outcome: <span id="code-outcome-badge" class="badge">--</span></h4>
+                    <span id="code-iterations-badge" class="badge badge-secondary">Iter: --</span>
+                  </div>
+                  <pre class="code-preview-box" id="code-preview-box"></pre>
+                  <div class="traceback-box" id="code-traceback-box" style="display:none;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Grid: Knowledge Synthesis & Experiment Histories -->
+          <div class="research-grid" style="margin-top: 20px;">
+            <!-- Card 3: Adaptive Knowledge Synthesis & Citations -->
+            <div class="card research-card">
+              <div class="card-header">
+                <h3>Adaptive Knowledge Synthesis &amp; Citations</h3>
+                <span class="badge badge-info">Citation Grounded</span>
+              </div>
+              <div class="card-body">
+                <form id="knowledge-synth-form" class="standard-form">
+                  <div class="form-group">
+                    <label for="synth-topic">Research Topic:</label>
+                    <input type="text" id="synth-topic" class="form-input" placeholder="e.g. Project Genesis Local Architecture and VRAM Bounds" value="Project Genesis Local Architecture and VRAM Bounds" required>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group flex-1">
+                      <label for="synth-max-sources">Max Sources: <strong id="synth-sources-val">4</strong></label>
+                      <input type="range" id="synth-max-sources" min="1" max="8" value="4">
+                    </div>
+                    <div class="form-group flex-1 checkbox-group" style="margin-top: 25px;">
+                      <label>
+                        <input type="checkbox" id="synth-save-memory" checked>
+                        Consolidate into Memory
+                      </label>
+                    </div>
+                  </div>
+                  <button type="submit" class="btn btn-primary" id="btn-submit-knowledge-synth">🔬 Synthesize Knowledge Brief</button>
+                </form>
+
+                <div class="synth-result-panel" id="synth-result-panel" style="display:none; margin-top: 15px;">
+                  <div class="card-header" style="padding: 6px 0;">
+                    <h4>Brief Summary: <span id="synth-grounded-badge" class="badge badge-success">Grounded 100%</span></h4>
+                  </div>
+                  <div class="markdown-preview-box" id="synth-markdown-preview"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 4: Historical Logs & Profiles -->
+            <div class="card research-card">
+              <div class="card-header">
+                <h3>Recent Inference Profiles &amp; Code Experiments</h3>
+              </div>
+              <div class="card-body">
+                <div class="tabs-subnav">
+                  <button class="btn btn-sm btn-secondary active" id="subtab-profiles-btn">Profiles</button>
+                  <button class="btn btn-sm btn-secondary" id="subtab-code-btn">Code Experiments</button>
+                  <button class="btn btn-sm btn-secondary" id="subtab-syntheses-btn">Syntheses</button>
+                </div>
+
+                <div class="table-responsive" style="margin-top: 10px; max-height: 280px; overflow-y: auto;">
+                  <table class="data-table" id="research-history-table">
+                    <thead id="research-history-thead">
+                      <tr>
+                        <th>Model</th>
+                        <th>TTFT</th>
+                        <th>Throughput</th>
+                        <th>KV VRAM</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="research-history-tbody">
+                      <tr><td colspan="5" class="text-center">Loading history...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         </div>

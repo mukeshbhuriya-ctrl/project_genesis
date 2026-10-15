@@ -2,6 +2,22 @@
 
 All notable changes to Project Genesis will be documented in this file.
 
+## [0.7.0] — 2026-10-15
+
+### Added
+- **Research & Capability Expansion Subsystem (Phase 6)**:
+  - **Hardware-Aware Context Management & KV-Cache Budgeting**: Exact FP16 attention memory modeling ($2 \times L \times H_{kv} \times D_{head} \times 2$ bytes), dynamic headroom validation against RTX 2000 Ada 8 GB VRAM, token estimation, clean boundary truncation, and `compact_dialogue` ensuring system prompt and latest user turn retention (`genesis/models/context.py`).
+  - **Inference Latency & Throughput Profiler**: Empirical execution profiling measuring Time-To-First-Token (TTFT), inter-token latency (ITL), generation throughput (tokens/second), total latency, and live GPU VRAM / KV-cache allocation with SQLite persistence (`genesis/models/profiler.py`).
+  - **Subprocess CodeSandbox**: Subprocess execution isolation in temporary workspaces with bounded timeouts (default: 8.0s), exit code tracking, stdout/stderr capture, and automated failure classification (`syntax_error`, `assertion_failure`, `timeout`, `runtime_error`) (`genesis/research/coding.py`).
+  - **Reflective Code Synthesizer with Self-Repair**: Autonomous decomposition of coding objectives, generation of implementations and unit test harnesses, sandbox verification, and multi-round reflective self-repair using execution tracebacks.
+  - **Autonomous Self-Improvement Loop**: Option to export verified code experiments directly to Phase 5 fine-tuning datasets (`data/datasets/<id>.jsonl`) as verified instruction pairs for subsequent LoRA adaptation.
+  - **Adaptive Multi-Source Knowledge Synthesis**: Multi-source retrieval across indexed document passages and semantic memory, prompt grounding with citation tags (`[1]`, `[2]`), deterministic citation verification, groundedness confidence scoring, and automatic consolidation into persistent memory under category `research_brief` (`genesis/research/synthesis.py`).
+  - **Database Schema V6**: Introduced `research_profiles`, `code_experiments`, and `research_synthesis` tables with indexes and migration tracking (`genesis/core/database.py`).
+  - **REST API Endpoints**: `/api/research/context-budget`, `/api/research/profile`, `/api/research/profiles`, `/api/research/coding/synthesize`, `/api/research/coding/experiments`, `/api/research/synthesize`, `/api/research/syntheses` (`genesis/api/routes/research.py`).
+  - **Interactive Web Dashboard Research Tab**: Live KV-cache calculator, one-click inference profiler, code synthesis runner with sandbox test and traceback visualizer, knowledge brief generator, and historical logs (`genesis/web/`).
+  - **Architecture Decision Record**: ADR-007 Hardware-Aware Context Management, Inference Profiling, Reflective Code Synthesis, and Adaptive Knowledge Synthesis.
+  - **Comprehensive Test Suite**: 19 new unit, API, and E2E integration tests (`test_context_profiler.py`, `test_research_coding.py`, `test_research_synthesis.py`, `test_api_research.py`, `test_research_e2e.py`), expanding total repository test baseline to 149 passing tests (100% pass rate).
+
 ## [0.6.0] — 2026-10-15
 
 ### Added

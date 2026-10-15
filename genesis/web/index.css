@@ -945,3 +945,82 @@ body {
   50% { opacity: 0.6; }
 }
 
+/* ── Phase 6: Research & Capabilities Styles ── */
+.research-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+  gap: 20px;
+}
+.research-card {
+  display: flex;
+  flex-direction: column;
+}
+.stat-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin: 16px 0;
+}
+.metric-box {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.metric-label {
+  font-size: 0.75rem;
+  color: var(--text-dim, #94a3b8);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.metric-val {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-main, #f8fafc);
+}
+.recommended-tokens-alert {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  color: #38bdf8;
+  margin-bottom: 12px;
+}
+.profile-action-box {
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  border-radius: 8px;
+  padding: 12px;
+}
+.code-preview-box {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 12px;
+  border-radius: 6px;
+  font-family: 'Fira Code', monospace;
+  font-size: 0.85rem;
+  overflow-x: auto;
+  max-height: 250px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.traceback-box {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  padding: 10px;
+  border-radius: 6px;
+  font-family: monospace;
+  font-size: 0.8rem;
+  margin-top: 8px;
+  white-space: pre-wrap;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+.tabs-subnav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+

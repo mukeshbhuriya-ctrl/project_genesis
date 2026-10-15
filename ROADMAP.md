@@ -1,6 +1,6 @@
 # ROADMAP
 
-## Current Milestone: Phase 6 — Research and Capability Expansion (Active)
+## Current Milestone: Phase 6 Complete ✅ → Phase 7: Hardware and Deployment Evolution (Next)
 
 ## Phase 0: Discovery and Baseline ✅
 - [x] Inspect repository and environment
@@ -70,12 +70,21 @@
 
 **Acceptance criterion:** Verified (The platform curates and preprocesses multi-format datasets, defends against evaluation contamination, executes VRAM-bounded LoRA adaptation, logs loss trajectories, exports Ollama Modelfiles, and triggers automatic rollback when regressions are detected).
 
-## Phase 6: Research and Capability Expansion ⏳
-- [ ] Improved inference (vLLM, TensorRT-LLM)
-- [ ] Stronger models as hardware permits
-- [ ] Multimodal capabilities
-- [ ] Advanced retrieval (hybrid search)
-- [ ] Coding-specific skills
+## Phase 6: Research and Capability Expansion ✅
+- [x] Hardware-aware context management and dynamic dialogue compaction (`genesis/models/context.py`)
+- [x] KV-cache VRAM budgeting and 8 GB VRAM headroom enforcement
+- [x] Empirical inference profiling measuring TTFT, throughput (tokens/sec), and inter-token latency (`genesis/models/profiler.py`)
+- [x] Subprocess Python CodeSandbox with strict timeout limits and error categorization (`genesis/research/coding.py`)
+- [x] Reflective code synthesizer with multi-round automated self-repair loops
+- [x] Closed-loop integration exporting verified code experiments directly to Phase 5 fine-tuning datasets
+- [x] Adaptive multi-source knowledge synthesis with deterministic citation verification (`genesis/research/synthesis.py`)
+- [x] Groundedness confidence scoring and automatic memory consolidation under `research_brief` category
+- [x] SQLite schema version 6 (`research_profiles`, `code_experiments`, `research_synthesis` tables)
+- [x] REST API endpoints (`/api/research/context-budget`, `/api/research/profile`, `/api/research/coding/synthesize`, `/api/research/synthesize`)
+- [x] Interactive Web Dashboard Research tab (`genesis/web/`): live budget calculator, inference profiler, code sandbox tester, and brief synthesizer
+- [x] Unit and end-to-end integration test suites in `tests/` covering all Phase 6 subsystems
+
+**Acceptance criterion:** Verified (The platform profiles inference latency and KV-cache VRAM consumption, autonomously synthesizes and verifies Python code in an isolated sandbox with self-repair, exports verified samples into Phase 5 datasets, and executes multi-source citation-verified knowledge synthesis consolidated into memory).
 
 ## Phase 7: Hardware and Deployment Evolution ⏳
 - [ ] Multi-GPU support

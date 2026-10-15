@@ -1,10 +1,10 @@
 # PROJECT STATE
 
-> Last updated: 2026-10-15 by Senior AI/ML Engineer (Phase 5 completion & Phase 6 activation)
+> Last updated: 2026-10-15 by Senior AI/ML Engineer (Phase 6 completion & Phase 7 activation)
 
 ## Current Phase
 
-**Phase 5 Complete (Verified) → Phase 6: Research and Capability Expansion (Active)**
+**Phase 6 Complete (Verified) → Phase 7: Hardware and Deployment Evolution (Active)**
 
 ## Implemented
 
@@ -71,11 +71,23 @@
 - [x] SQLite database schema v5 (`training_datasets`, `training_experiments`, `training_checkpoints` tables with foreign key cascades and indexes)
 - [x] REST API endpoints (`genesis/api/routes/training.py`): `/api/training/datasets`, `/api/training/datasets/create`, `/api/training/datasets/{id}`, `/api/training/datasets/{id}/preprocess`, `/api/training/experiments`, `/api/training/experiments/create`, `/api/training/experiments/{id}`, `/api/training/experiments/{id}/start`, `/api/training/experiments/{id}/checkpoints`, `/api/training/checkpoints/{id}/deploy`, `/api/training/experiments/{id}/rollback`
 - [x] Interactive Web Dashboard Datasets & Fine-Tuning tab (`genesis/web/`): dataset ingestion modal, preprocessing reports, experiment configuration, step loss trajectory table, checkpoint deployment, and rollback controls
-- [x] Comprehensive test suite in `tests/`: 130 tests covering all subsystems (100% passing)
+
+### Research and Capability Expansion Subsystem (Phase 6)
+- [x] Hardware-aware context management and dynamic dialogue compaction (`genesis/models/context.py`): exact FP16 KV-cache memory modeling, dynamic headroom validation against RTX 2000 Ada 8 GB VRAM, token estimation, and `compact_dialogue` ensuring system prompt and latest user turn retention
+- [x] Inference latency & throughput profiler (`genesis/models/profiler.py`): empirical execution profiling measuring TTFT, inter-token latency (ITL), generation throughput (tokens/second), total latency, and live GPU VRAM / KV-cache allocation with SQLite persistence
+- [x] Subprocess Python CodeSandbox (`genesis/research/coding.py`): isolated execution in temporary workspaces with bounded timeouts (default: 8.0s), exit code tracking, stdout/stderr capture, and automated failure classification (`syntax_error`, `assertion_failure`, `timeout`, `runtime_error`)
+- [x] Reflective code synthesizer with self-repair: autonomous decomposition of coding objectives, generation of implementations and unit test harnesses, sandbox verification, and multi-round reflective self-repair using execution tracebacks
+- [x] Closed-loop self-improvement: verified code experiments exported directly to Phase 5 fine-tuning datasets (`data/datasets/<id>.jsonl`) as verified instruction pairs for subsequent LoRA adaptation
+- [x] Adaptive multi-source knowledge synthesis (`genesis/research/synthesis.py`): multi-source retrieval across indexed document passages and semantic memory, prompt grounding with citation tags (`[1]`, `[2]`), deterministic citation verification, groundedness confidence scoring, and automatic consolidation into persistent memory under category `research_brief`
+- [x] Database Schema V6 (`genesis/core/database.py`): added `research_profiles`, `code_experiments`, and `research_synthesis` tables with indexes and migration tracking
+- [x] REST API endpoints (`genesis/api/routes/research.py`): `/api/research/context-budget`, `/api/research/profile`, `/api/research/profiles`, `/api/research/coding/synthesize`, `/api/research/coding/experiments`, `/api/research/synthesize`, `/api/research/syntheses`
+- [x] Interactive Web Dashboard Research Tab (`genesis/web/`): live KV-cache calculator, one-click inference profiler, code synthesis runner with sandbox test and traceback visualizer, knowledge brief generator, and historical logs
+- [x] Comprehensive test suite in `tests/`: 150 tests covering all subsystems (100% passing)
 
 ## Verified
 
-- [x] **130/130 unit and integration tests pass (100% passing)** across all modules
+- [x] **150/150 unit and integration tests pass (100% passing)** across all modules
+- [x] **Phase 6 Acceptance Criterion verified**: The platform profiles inference latency and KV-cache VRAM consumption, autonomously synthesizes and verifies Python code in an isolated sandbox with self-repair, exports verified samples into Phase 5 datasets, and executes multi-source citation-verified knowledge synthesis consolidated into memory
 - [x] **Phase 5 Acceptance Criterion verified**: The platform ingests and normalizes multi-format datasets, defends against evaluation benchmark contamination, executes VRAM-bounded LoRA fine-tuning under 4.8 GB, exports Ollama Modelfiles, and triggers automatic rollback when regressions are detected by Phase 4
 - [x] **Phase 4 Acceptance Criterion verified**: Repeatable benchmarks execute against local GPU model (`qwen2.5:7b`), failure modes categorized into error taxonomy, regressions detected against historical baselines, and structured reports generated
 - [x] **Local model responds** — `qwen2.5:7b` verified via Ollama API and Python `OllamaProvider`
@@ -111,9 +123,9 @@
 | Node.js | 24.17.0 |
 | Git | 2.54.0 |
 
-## Next Steps (Phase 6: Research and Capability Expansion)
+## Next Steps (Phase 7: Hardware and Deployment Evolution)
 
-1. **Inference Acceleration & Backend Profiling (`genesis/models/`):** Evaluate alternative local backends (e.g. `llama.cpp` direct bindings, vLLM, TensorRT-LLM) to maximize token throughput and minimize latency on RTX 2000 Ada.
-2. **Context Window Optimization:** Profile KV cache memory consumption across 4K, 8K, and 16K context lengths to prevent out-of-VRAM allocation during extended reasoning dialogues.
-3. **Domain Capability Modules:** Implement specialized coding and algorithmic generation toolchains with sandboxed test runners and automated code refactoring.
-4. **Adaptive Knowledge Synthesis:** Extend Phase 2 & Phase 3 memory/retrieval with iterative citation verification and active knowledge summarization loops.
+1. **Multi-GPU & Offload Topology:** Design abstract device orchestrator for multi-GPU workstations and heterogeneous compute topologies (CUDA, DirectML, CPU fallback).
+2. **Process Separation:** Isolate resource-heavy fine-tuning and long-running benchmark workers into decoupled daemon processes communicating via async IPC or SQLite queues.
+3. **Local Backend Evaluation:** Benchmark direct llama.cpp shared library C-bindings or vLLM versus Ollama runtime for peak generation throughput and lower memory overhead.
+4. **Autonomous Capability Orchestration:** Wire the reflective code synthesis and adaptive knowledge modules into the bounded task planner for autonomous multi-step problem solving.

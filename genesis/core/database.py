@@ -15,7 +15,7 @@ from genesis.core.logging import get_logger
 log = get_logger("database")
 
 # ── Schema version history ──
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 6
 
 SCHEMA_V1 = """
 -- Conversations
@@ -286,6 +286,67 @@ CREATE TABLE IF NOT EXISTS training_checkpoints (
 CREATE INDEX IF NOT EXISTS idx_training_checkpoints_exp ON training_checkpoints(experiment_id, step);
 """
 
+SCHEMA_V6 = """
+-- Hardware & Inference Profiling records
+CREATE TABLE IF NOT EXISTS research_profiles (
+    id TEXT PRIMARY KEY,
+    model_id TEXT NOT NULL,
+    backend TEXT NOT NULL DEFAULT 'ollama',
+    context_length INTEGER NOT NULL DEFAULT 4096,
+    prompt_tokens INTEGER NOT NULL DEFAULT 0,
+    completion_tokens INTEGER NOT NULL DEFAULT 0,
+    ttft_ms REAL NOT NULL DEFAULT 0.0,
+    tokens_per_second REAL NOT NULL DEFAULT 0.0,
+    inter_token_latency_ms REAL NOT NULL DEFAULT 0.0,
+    total_latency_ms REAL NOT NULL DEFAULT 0.0,
+    gpu_vram_allocated_mb REAL NOT NULL DEFAULT 0.0,
+    kv_cache_vram_mb REAL NOT NULL DEFAULT 0.0,
+    status TEXT NOT NULL CHECK (status IN ('pending', 'running', 'completed', 'failed')),
+    error TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_research_profiles_model ON research_profiles(model_id, created_at);
+
+-- Code synthesis and self-repair experiments
+CREATE TABLE IF NOT EXISTS code_experiments (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    objective TEXT NOT NULL,
+    language TEXT NOT NULL DEFAULT 'python',
+    initial_code TEXT,
+    final_code TEXT,
+    tests TEXT,
+    test_results TEXT DEFAULT '{}',
+    status TEXT NOT NULL CHECK (status IN ('pending', 'generating', 'verifying', 'repairing', 'passed', 'failed', 'error')),
+    iterations INTEGER NOT NULL DEFAULT 0,
+    max_iterations INTEGER NOT NULL DEFAULT 3,
+    duration_ms REAL NOT NULL DEFAULT 0.0,
+    error TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    completed_at TEXT,
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_code_experiments_status ON code_experiments(status, created_at);
+
+-- Multi-round adaptive knowledge synthesis briefs
+CREATE TABLE IF NOT EXISTS research_synthesis (
+    id TEXT PRIMARY KEY,
+    topic TEXT NOT NULL,
+    query TEXT NOT NULL,
+    sources_count INTEGER NOT NULL DEFAULT 0,
+    citations TEXT DEFAULT '[]',
+    brief_markdown TEXT,
+    confidence_score REAL NOT NULL DEFAULT 1.0,
+    status TEXT NOT NULL CHECK (status IN ('pending', 'synthesizing', 'completed', 'failed')),
+    error TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    completed_at TEXT,
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_research_synthesis_topic ON research_synthesis(topic);
+"""
+
 
 def get_sync_connection(db_path: str | Path) -> sqlite3.Connection:
     """Create a synchronous SQLite connection with recommended pragmas."""
@@ -367,6 +428,16 @@ def initialize_database(db_path: str | Path) -> None:
             )
             conn.commit()
             log.info("Schema v5 applied successfully.")
+
+        if current_version < 6:
+            log.info("Applying schema v6...")
+            conn.executescript(SCHEMA_V6)
+            conn.execute(
+                "INSERT OR REPLACE INTO schema_migrations (version, description) "
+                "VALUES (6, 'Schema v6: research profiles, code experiments, and research synthesis')"
+            )
+            conn.commit()
+            log.info("Schema v6 applied successfully.")
         else:
             log.info(f"Database schema is at version {current_version}, up to date.")
 

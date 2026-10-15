@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (target === 'tasks') { loadTools(); loadTasks(); }
       if (target === 'evaluation') { loadBenchmarks(); loadEvalRuns(); }
       if (target === 'training') loadTrainingData();
+      if (target === 'research') loadResearchData();
       if (target === 'hardware') loadHardwareAndModels();
       if (target === 'backups') loadBackups();
     });
@@ -1529,6 +1530,317 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     } catch (e) {
       trainingDetailsContent.innerHTML = `<p class="text-danger">Failed to load experiment details: ${e.message}</p>`;
+    }
+  }
+
+  // ── Research & Capabilities Subsystem (Phase 6) ──
+  let activeResearchSubtab = 'profiles';
+
+  async function loadResearchData() {
+    await loadContextBudget();
+    await loadResearchHistory(activeResearchSubtab);
+
+    // Populate dataset select
+    try {
+      const res = await fetch('/api/training/datasets');
+      if (res.ok) {
+        const data = await res.json();
+        const select = document.getElementById('code-export-dataset');
+        if (select) {
+          select.innerHTML = '<option value="">None (Standalone experiment)</option>';
+          (data.datasets || []).forEach(ds => {
+            select.innerHTML += `<option value="${ds.id}">${ds.name} (${ds.format})</option>`;
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load datasets for research export:', e);
+    }
+  }
+
+  async function loadContextBudget() {
+    const modelSelect = document.getElementById('budget-model-select');
+    const tokensInput = document.getElementById('budget-context-tokens');
+    const tokensVal = document.getElementById('budget-tokens-val');
+    if (!modelSelect || !tokensInput) return;
+
+    const modelId = modelSelect.value;
+    const tokens = parseInt(tokensInput.value, 10);
+    if (tokensVal) tokensVal.textContent = tokens;
+
+    try {
+      const res = await fetch(`/api/research/context-budget?model_id=${encodeURIComponent(modelId)}&context_tokens=${tokens}`);
+      if (!res.ok) return;
+      const data = await res.json();
+
+      document.getElementById('metric-kv-cache').textContent = `${data.kv_cache_mb} MB`;
+      document.getElementById('metric-weights').textContent = `${data.model_weights_mb} MB`;
+      document.getElementById('metric-total-vram').textContent = `${data.total_vram_mb} MB`;
+      document.getElementById('metric-headroom').textContent = `${data.headroom_mb} MB`;
+      document.getElementById('metric-rec-tokens').textContent = `${data.recommended_max_tokens} tokens`;
+
+      const badge = document.getElementById('budget-safety-badge');
+      if (badge) {
+        if (data.is_safe) {
+          badge.className = 'badge badge-success';
+          badge.textContent = 'Safe Budget (Headroom > 1GB)';
+        } else {
+          badge.className = 'badge badge-danger';
+          badge.textContent = 'OOM Risk (Low Headroom)';
+        }
+      }
+    } catch (err) {
+      console.error('Failed to calculate context budget:', err);
+    }
+  }
+
+  const budgetModelSelect = document.getElementById('budget-model-select');
+  const budgetContextTokens = document.getElementById('budget-context-tokens');
+  if (budgetModelSelect) budgetModelSelect.addEventListener('change', loadContextBudget);
+  if (budgetContextTokens) budgetContextTokens.addEventListener('input', loadContextBudget);
+
+  const btnRefreshResearch = document.getElementById('btn-refresh-research');
+  if (btnRefreshResearch) btnRefreshResearch.addEventListener('click', loadResearchData);
+
+  // Live Profiler Button
+  const btnRunProfile = document.getElementById('btn-run-profile');
+  if (btnRunProfile) {
+    btnRunProfile.addEventListener('click', async () => {
+      const modelSelect = document.getElementById('budget-model-select');
+      const promptInput = document.getElementById('profile-prompt-input');
+      const resultsDiv = document.getElementById('profile-live-results');
+
+      btnRunProfile.disabled = true;
+      btnRunProfile.textContent = '⚡ Profiling GPU Tokens...';
+
+      try {
+        const res = await fetch('/api/research/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model_id: modelSelect ? modelSelect.value : 'qwen2.5:7b',
+            prompt: promptInput ? promptInput.value : 'Explain QuickSort in 3 sentences.',
+            max_tokens: 64,
+          }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+
+        document.getElementById('live-ttft').textContent = `${data.ttft_ms} ms`;
+        document.getElementById('live-tps').textContent = `${data.tokens_per_second} tok/s`;
+        document.getElementById('live-itl').textContent = `${data.inter_token_latency_ms} ms`;
+        if (resultsDiv) resultsDiv.style.display = 'block';
+
+        if (activeResearchSubtab === 'profiles') await loadResearchHistory('profiles');
+      } catch (err) {
+        alert('Profiling failed: ' + err.message);
+      } finally {
+        btnRunProfile.disabled = false;
+        btnRunProfile.textContent = '⚡ Profile Inference Speed';
+      }
+    });
+  }
+
+  // Code Synthesizer Form
+  const codeSynthForm = document.getElementById('code-synth-form');
+  if (codeSynthForm) {
+    codeSynthForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const objInput = document.getElementById('code-objective');
+      const maxIterSelect = document.getElementById('code-max-iterations');
+      const expDsSelect = document.getElementById('code-export-dataset');
+      const submitBtn = document.getElementById('btn-submit-code-synth');
+      const resultPanel = document.getElementById('code-result-panel');
+      const outcomeBadge = document.getElementById('code-outcome-badge');
+      const iterBadge = document.getElementById('code-iterations-badge');
+      const previewBox = document.getElementById('code-preview-box');
+      const tracebackBox = document.getElementById('code-traceback-box');
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = '⚙️ Synthesizing & Testing in Sandbox...';
+
+      try {
+        const res = await fetch('/api/research/coding/synthesize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            objective: objInput.value,
+            max_iterations: parseInt(maxIterSelect.value, 10),
+            export_dataset_id: expDsSelect.value || null,
+          }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+
+        if (resultPanel) resultPanel.style.display = 'block';
+        if (outcomeBadge) {
+          outcomeBadge.className = data.status === 'passed' ? 'badge badge-success' : 'badge badge-danger';
+          outcomeBadge.textContent = data.status.toUpperCase();
+        }
+        if (iterBadge) iterBadge.textContent = `Iterations: ${data.iterations}/${data.max_iterations} (${data.duration_ms} ms)`;
+        if (previewBox) previewBox.textContent = data.final_code || data.initial_code || 'No code produced';
+
+        if (tracebackBox) {
+          if (data.status !== 'passed' && data.test_results && data.test_results.traceback) {
+            tracebackBox.style.display = 'block';
+            tracebackBox.textContent = data.test_results.traceback;
+          } else {
+            tracebackBox.style.display = 'none';
+          }
+        }
+
+        if (activeResearchSubtab === 'code') await loadResearchHistory('code');
+      } catch (err) {
+        alert('Code synthesis failed: ' + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '⚡ Synthesize & Sandbox Test';
+      }
+    });
+  }
+
+  // Knowledge Synthesizer Form
+  const synthSourcesVal = document.getElementById('synth-sources-val');
+  const synthMaxSources = document.getElementById('synth-max-sources');
+  if (synthMaxSources && synthSourcesVal) {
+    synthMaxSources.addEventListener('input', () => {
+      synthSourcesVal.textContent = synthMaxSources.value;
+    });
+  }
+
+  const knowledgeSynthForm = document.getElementById('knowledge-synth-form');
+  if (knowledgeSynthForm) {
+    knowledgeSynthForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const topicInput = document.getElementById('synth-topic');
+      const maxSources = parseInt(synthMaxSources.value, 10);
+      const saveMemCheck = document.getElementById('synth-save-memory');
+      const submitBtn = document.getElementById('btn-submit-knowledge-synth');
+      const resultPanel = document.getElementById('synth-result-panel');
+      const groundedBadge = document.getElementById('synth-grounded-badge');
+      const previewBox = document.getElementById('synth-markdown-preview');
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = '🔬 Synthesizing & Verifying Citations...';
+
+      try {
+        const res = await fetch('/api/research/synthesize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic: topicInput.value,
+            max_sources: maxSources,
+            save_to_memory: saveMemCheck ? saveMemCheck.checked : true,
+          }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+
+        if (resultPanel) resultPanel.style.display = 'block';
+        if (groundedBadge) {
+          const pct = Math.round(data.confidence_score * 100);
+          groundedBadge.className = pct >= 80 ? 'badge badge-success' : 'badge badge-warning';
+          groundedBadge.textContent = `Grounded ${pct}% (${data.sources_count} sources)`;
+        }
+        if (previewBox) {
+          previewBox.innerHTML = `<pre style="white-space: pre-wrap; font-family: inherit;">${data.brief_markdown}</pre>`;
+        }
+
+        if (activeResearchSubtab === 'syntheses') await loadResearchHistory('syntheses');
+      } catch (err) {
+        alert('Knowledge synthesis failed: ' + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🔬 Synthesize Knowledge Brief';
+      }
+    });
+  }
+
+  // Subnav Tabs for Historical History
+  const subtabProfilesBtn = document.getElementById('subtab-profiles-btn');
+  const subtabCodeBtn = document.getElementById('subtab-code-btn');
+  const subtabSynthesesBtn = document.getElementById('subtab-syntheses-btn');
+
+  function updateSubtabs(activeBtn, tabName) {
+    [subtabProfilesBtn, subtabCodeBtn, subtabSynthesesBtn].forEach(b => {
+      if (b) b.classList.toggle('active', b === activeBtn);
+    });
+    activeResearchSubtab = tabName;
+    loadResearchHistory(tabName);
+  }
+
+  if (subtabProfilesBtn) subtabProfilesBtn.addEventListener('click', () => updateSubtabs(subtabProfilesBtn, 'profiles'));
+  if (subtabCodeBtn) subtabCodeBtn.addEventListener('click', () => updateSubtabs(subtabCodeBtn, 'code'));
+  if (subtabSynthesesBtn) subtabSynthesesBtn.addEventListener('click', () => updateSubtabs(subtabSynthesesBtn, 'syntheses'));
+
+  async function loadResearchHistory(type) {
+    const thead = document.getElementById('research-history-thead');
+    const tbody = document.getElementById('research-history-tbody');
+    if (!thead || !tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center">Loading history...</td></tr>';
+
+    try {
+      if (type === 'profiles') {
+        thead.innerHTML = '<tr><th>Model</th><th>TTFT</th><th>Throughput</th><th>KV VRAM</th><th>Status</th></tr>';
+        const res = await fetch('/api/research/profiles?limit=10');
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        const profiles = data.profiles || [];
+        if (!profiles.length) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No inference profiles recorded yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = profiles.map(p => `
+          <tr>
+            <td><strong>${p.model_id}</strong></td>
+            <td>${p.ttft_ms} ms</td>
+            <td>${p.tokens_per_second} tok/s</td>
+            <td>${p.kv_cache_vram_mb} MB</td>
+            <td><span class="badge ${p.status === 'completed' ? 'badge-success' : 'badge-danger'}">${p.status}</span></td>
+          </tr>
+        `).join('');
+      } else if (type === 'code') {
+        thead.innerHTML = '<tr><th>Objective</th><th>Iterations</th><th>Duration</th><th>Outcome</th><th>Export</th></tr>';
+        const res = await fetch('/api/research/coding/experiments?limit=10');
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        const experiments = data.experiments || [];
+        if (!experiments.length) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No code synthesis experiments recorded yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = experiments.map(e => `
+          <tr>
+            <td title="${e.objective}">${e.objective.substring(0, 40)}...</td>
+            <td>${e.iterations}/${e.max_iterations}</td>
+            <td>${e.duration_ms} ms</td>
+            <td><span class="badge ${e.status === 'passed' ? 'badge-success' : 'badge-danger'}">${e.status}</span></td>
+            <td><small>${e.metadata && e.metadata.exported ? 'Dataset' : 'Standalone'}</small></td>
+          </tr>
+        `).join('');
+      } else if (type === 'syntheses') {
+        thead.innerHTML = '<tr><th>Topic</th><th>Sources</th><th>Grounding</th><th>Status</th><th>Date</th></tr>';
+        const res = await fetch('/api/research/syntheses?limit=10');
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        const syntheses = data.syntheses || [];
+        if (!syntheses.length) {
+          tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No research syntheses recorded yet.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = syntheses.map(s => `
+          <tr>
+            <td title="${s.topic}"><strong>${s.topic.substring(0, 35)}...</strong></td>
+            <td>${s.sources_count} chunks</td>
+            <td><span class="badge badge-info">${Math.round(s.confidence_score * 100)}%</span></td>
+            <td><span class="badge ${s.status === 'completed' ? 'badge-success' : 'badge-danger'}">${s.status}</span></td>
+            <td><small>${new Date(s.created_at).toLocaleTimeString()}</small></td>
+          </tr>
+        `).join('');
+      }
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-danger">Error loading history: ${err.message}</td></tr>`;
     }
   }
 
