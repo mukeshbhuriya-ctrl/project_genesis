@@ -182,3 +182,35 @@ class OllamaProvider(ModelProvider):
             payload["tools"] = request.tools
 
         return payload
+
+    async def embed(
+        self, texts: list[str] | str, model: str | None = None
+    ) -> list[list[float]]:
+        """Generate vector embeddings for input text(s)."""
+        from genesis.core import get_settings
+
+        if isinstance(texts, str):
+            input_data = [texts]
+        else:
+            input_data = texts
+
+        if not input_data:
+            return []
+
+        model_name = model or get_settings().embedding_model or "nomic-embed-text"
+        payload = {
+            "model": model_name,
+            "input": input_data,
+        }
+
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            resp = await client.post(
+                f"{self.base_url}/api/embed",
+                json=payload,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+
+        embeddings = data.get("embeddings", [])
+        return embeddings
+

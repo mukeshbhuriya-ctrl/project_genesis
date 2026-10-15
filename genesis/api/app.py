@@ -4,8 +4,11 @@ FastAPI application factory for Project Genesis.
 
 from __future__ import annotations
 
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 
 def create_app() -> FastAPI:
@@ -13,7 +16,7 @@ def create_app() -> FastAPI:
     from genesis import __version__
     from genesis.core import get_settings
     from genesis.core.logging import setup_logging
-    from genesis.api.routes import health, chat, memory, models
+    from genesis.api.routes import health, chat, memory, models, knowledge, backup
 
     settings = get_settings()
     setup_logging(level=settings.log_level, log_dir=settings.data_dir / "logs")
@@ -26,19 +29,33 @@ def create_app() -> FastAPI:
         redoc_url="/redoc",
     )
 
-    # CORS — local development only by default
+    # CORS — open locally for dev/tools
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+        allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
-    # Register routers
+    # Register API routers
     app.include_router(health.router, tags=["Health"])
     app.include_router(chat.router, prefix="/api", tags=["Chat"])
     app.include_router(memory.router, prefix="/api", tags=["Memory"])
     app.include_router(models.router, prefix="/api", tags=["Models"])
+    app.include_router(knowledge.router, prefix="/api", tags=["Knowledge"])
+    app.include_router(backup.router, prefix="/api", tags=["Backups"])
+
+    # Static Web UI Assets
+    web_dir = Path(__file__).parent.parent / "web"
+    if web_dir.is_dir():
+        app.mount("/static", StaticFiles(directory=str(web_dir)), name="static")
+
+        @app.get("/", response_class=HTMLResponse, include_in_schema=False)
+        async def serve_ui():
+            index_path = web_dir / "index.html"
+            if index_path.is_file():
+                return HTMLResponse(content=index_path.read_text(encoding="utf-8"))
+            return HTMLResponse(content="<h1>Project Genesis API Active</h1><p>UI not found.</p>")
 
     return app

@@ -27,19 +27,19 @@
 
 **Acceptance criterion:** Verified (40/40 tests passing, real model answers and conversation survives restart).
 
-## Phase 2: Memory and Knowledge 🔄 (Active)
-- [ ] Persistent structured memory (CRUD)
-- [ ] Memory categories and metadata
-- [ ] Retrieval with relevance scoring
-- [ ] Memory inspection UI
-- [ ] Document indexing (embeddings)
-- [ ] Source provenance tracking
-- [ ] Backup and recovery
-- [ ] Deduplication and contradiction handling
+## Phase 2: Memory and Knowledge ✅
+- [x] Persistent structured memory (CRUD)
+- [x] Memory categories and metadata
+- [x] Retrieval with relevance scoring
+- [x] Memory inspection UI
+- [x] Document indexing (embeddings)
+- [x] Source provenance tracking
+- [x] Backup and recovery
+- [x] Deduplication and contradiction handling
 
-**Acceptance criterion:** Approved information can be saved, retrieved in a later session, inspected, and deleted.
+**Acceptance criterion:** Verified (Information saved with 768-dim vector embeddings, retrieved in later sessions via hybrid search, inspected via Web UI, consolidated, backed up, and deleted).
 
-## Phase 3: Tools and Task Orchestration ⏳
+## Phase 3: Tools and Task Orchestration 🔄 (Active)
 - [ ] Typed tool registry
 - [ ] Permission model
 - [ ] Bounded planning and execution

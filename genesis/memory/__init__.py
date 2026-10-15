@@ -74,8 +74,10 @@ class MemoryStore:
         source: str = "",
         confidence: float = 1.0,
         metadata: dict[str, Any] | None = None,
+        embedding: list[float] | None = None,
+        embedding_model: str = "nomic-embed-text",
     ) -> MemoryRecord:
-        """Create a new memory record."""
+        """Create a new memory record and optionally persist its vector embedding."""
         record_id = str(uuid.uuid4())
         now = datetime.now(timezone.utc).isoformat()
         meta_json = json.dumps(metadata or {})
@@ -90,9 +92,21 @@ class MemoryStore:
                 """,
                 (record_id, category, content, source, confidence, now, now, meta_json),
             )
+
+            if embedding:
+                from genesis.memory.embeddings import pack_vector
+                blob = pack_vector(embedding)
+                conn.execute(
+                    """
+                    INSERT INTO memory_embeddings (memory_id, embedding, dimension, model, created_at)
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (record_id, blob, len(embedding), embedding_model, now),
+                )
+
             conn.commit()
 
-            log.info(f"Created memory {record_id[:8]}... [{category}]")
+            log.info(f"Created memory {record_id[:8]}... [{category}] (has_embedding={bool(embedding)})")
             return MemoryRecord(
                 id=record_id,
                 category=category,
@@ -106,6 +120,56 @@ class MemoryStore:
             )
         finally:
             conn.close()
+
+    def store_embedding(
+        self,
+        memory_id: str,
+        embedding: list[float],
+        model: str = "nomic-embed-text",
+    ) -> bool:
+        """Store or update vector embedding for an existing memory."""
+        from genesis.memory.embeddings import pack_vector
+        blob = pack_vector(embedding)
+        now = datetime.now(timezone.utc).isoformat()
+
+        conn = self._conn()
+        try:
+            conn.execute(
+                """
+                INSERT INTO memory_embeddings (memory_id, embedding, dimension, model, created_at)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(memory_id) DO UPDATE SET
+                    embedding = excluded.embedding,
+                    dimension = excluded.dimension,
+                    model = excluded.model,
+                    created_at = excluded.created_at
+                """,
+                (memory_id, blob, len(embedding), model, now),
+            )
+            conn.commit()
+            return True
+        except sqlite3.Error as e:
+            log.warning(f"Failed to store embedding for memory {memory_id}: {e}")
+            return False
+        finally:
+            conn.close()
+
+    def get_embedding(self, memory_id: str) -> list[float] | None:
+        """Retrieve the unpacked float embedding for a memory."""
+        from genesis.memory.embeddings import unpack_vector
+        conn = self._conn()
+        try:
+            cursor = conn.execute(
+                "SELECT embedding FROM memory_embeddings WHERE memory_id = ?",
+                (memory_id,),
+            )
+            row = cursor.fetchone()
+            if row and row["embedding"]:
+                return unpack_vector(row["embedding"])
+            return None
+        finally:
+            conn.close()
+
 
     def get(self, memory_id: str) -> MemoryRecord | None:
         """Retrieve a memory by ID."""
@@ -228,3 +292,82 @@ class MemoryStore:
             return cursor.fetchone()[0]
         finally:
             conn.close()
+
+    def search_semantic(
+        self,
+        query_vector: list[float],
+        category: str | None = None,
+        limit: int = 10,
+        min_similarity: float = 0.2,
+    ) -> list[tuple[MemoryRecord, float]]:
+        """Search memories using vector cosine similarity."""
+        from genesis.memory.embeddings import unpack_vector, cosine_similarity
+
+        conn = self._conn()
+        try:
+            sql = """
+                SELECT m.*, e.embedding
+                FROM memories m
+                JOIN memory_embeddings e ON m.id = e.memory_id
+            """
+            params: list[Any] = []
+            if category:
+                sql += " WHERE m.category = ?"
+                params.append(category)
+
+            cursor = conn.execute(sql, params)
+            scored: list[tuple[MemoryRecord, float]] = []
+
+            for row in cursor.fetchall():
+                record = self._row_to_record(row)
+                vec = unpack_vector(row["embedding"])
+                sim = cosine_similarity(query_vector, vec)
+                if sim >= min_similarity:
+                    scored.append((record, sim))
+
+            scored.sort(key=lambda x: x[1], reverse=True)
+            return scored[:limit]
+        finally:
+            conn.close()
+
+    def search_hybrid(
+        self,
+        query: str,
+        query_vector: list[float] | None = None,
+        category: str | None = None,
+        limit: int = 10,
+        alpha: float = 0.6,
+    ) -> list[tuple[MemoryRecord, float]]:
+        """
+        Hybrid search combining semantic vector similarity and lexical matching.
+        alpha: weight for vector similarity (1.0 = purely vector, 0.0 = purely lexical).
+        """
+        if not query_vector:
+            lexical_results = self.search(query=query, category=category, limit=limit)
+            return [(r, 1.0) for r in lexical_results]
+
+        semantic_candidates = self.search_semantic(
+            query_vector=query_vector, category=category, limit=limit * 2, min_similarity=0.0
+        )
+        semantic_map = {rec.id: (rec, score) for rec, score in semantic_candidates}
+
+        lexical_results = self.search(query=query, category=category, limit=limit * 2)
+
+        combined_scores: dict[str, tuple[MemoryRecord, float]] = {}
+
+        for rank, rec in enumerate(lexical_results):
+            lexical_score = 1.0 / (1.0 + rank * 0.1)
+            sem_score = semantic_map[rec.id][1] if rec.id in semantic_map else 0.0
+            fused = (alpha * sem_score) + ((1.0 - alpha) * lexical_score)
+            fused *= rec.confidence
+            combined_scores[rec.id] = (rec, round(fused, 4))
+
+        for rec_id, (rec, sem_score) in semantic_map.items():
+            if rec_id not in combined_scores:
+                fused = alpha * sem_score * rec.confidence
+                combined_scores[rec_id] = (rec, round(fused, 4))
+
+        results = list(combined_scores.values())
+        results.sort(key=lambda x: x[1], reverse=True)
+        return results[:limit]
+

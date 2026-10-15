@@ -81,3 +81,11 @@ class ModelProvider(ABC):
     async def get_model_info(self, model_id: str) -> ModelInfo | None:
         """Get info about a specific model."""
         ...
+
+    @abstractmethod
+    async def embed(
+        self, texts: list[str], model: str | None = None
+    ) -> list[list[float]]:
+        """Generate vector embeddings for one or more text inputs."""
+        ...
+

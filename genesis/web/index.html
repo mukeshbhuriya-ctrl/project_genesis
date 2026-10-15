@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Genesis — Local Autonomous AI Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/index.css">
+</head>
+<body>
+  <div id="app" class="app-layout">
+    <!-- Top Navigation Bar -->
+    <header class="top-header">
+      <div class="brand">
+        <div class="brand-logo">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </div>
+        <div class="brand-title">
+          <span class="brand-name">GENESIS</span>
+          <span class="brand-tag">v0.2.0 • Local-First</span>
+        </div>
+      </div>
+
+      <nav class="nav-tabs" role="tablist">
+        <button class="nav-tab active" data-tab="chat" id="tab-chat-btn">
+          <span class="tab-icon">💬</span> Chat &amp; Reasoning
+        </button>
+        <button class="nav-tab" data-tab="memory" id="tab-memory-btn">
+          <span class="tab-icon">🧠</span> Memory Subsystem
+        </button>
+        <button class="nav-tab" data-tab="knowledge" id="tab-knowledge-btn">
+          <span class="tab-icon">📚</span> Knowledge Index
+        </button>
+        <button class="nav-tab" data-tab="hardware" id="tab-hardware-btn">
+          <span class="tab-icon">⚡</span> System &amp; Hardware
+        </button>
+        <button class="nav-tab" data-tab="backups" id="tab-backups-btn">
+          <span class="tab-icon">💾</span> Backups
+        </button>
+      </nav>
+
+      <div class="header-status">
+        <div class="status-indicator online" id="server-status-pill">
+          <span class="status-dot"></span>
+          <span id="server-status-text">Ollama Active</span>
+        </div>
+        <div class="gpu-badge" id="gpu-pill" title="NVIDIA RTX 2000 Ada 8GB">
+          <span class="gpu-icon">GPU</span>
+          <span id="gpu-vram-text">RTX 2000 Ada</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="main-workspace">
+      <!-- 1. CHAT TAB -->
+      <section class="tab-content active" id="pane-chat">
+        <div class="chat-container">
+          <!-- Sidebar for Conversations -->
+          <aside class="conversations-sidebar">
+            <div class="sidebar-header">
+              <h3>Conversations</h3>
+              <button class="btn btn-sm btn-primary" id="btn-new-chat">+ New</button>
+            </div>
+            <div class="conversations-list" id="conversations-list">
+              <div class="loading-spinner">Loading dialogues...</div>
+            </div>
+          </aside>
+
+          <!-- Chat Stream Area -->
+          <div class="chat-main">
+            <div class="chat-header-bar">
+              <div class="chat-title-group">
+                <h2 id="active-chat-title">New Conversation</h2>
+                <span class="chat-model-tag" id="active-model-tag">qwen2.5:7b</span>
+              </div>
+              <div class="chat-controls">
+                <label class="model-select-label">Model:
+                  <select id="chat-model-select" class="form-select"></select>
+                </label>
+                <label class="temp-label">Temp:
+                  <input type="range" id="chat-temp" min="0" max="1" step="0.1" value="0.7">
+                  <span id="chat-temp-val">0.7</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="chat-messages-container" id="chat-messages-stream">
+              <div class="welcome-card">
+                <div class="welcome-icon">🧬</div>
+                <h3>Welcome to Project Genesis</h3>
+                <p>A self-improving, local-first AI platform running directly on your dedicated hardware.</p>
+                <div class="quick-prompts">
+                  <button class="quick-chip" data-prompt="Explain the design architecture of Project Genesis.">Design Architecture</button>
+                  <button class="quick-chip" data-prompt="What hardware optimizations are enabled for local inference?">Hardware Optimizations</button>
+                  <button class="quick-chip" data-prompt="How does semantic memory retrieval work in Phase 2?">Memory &amp; Embeddings</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Chat Input Area -->
+            <div class="chat-input-wrapper">
+              <form id="chat-form" class="chat-form">
+                <textarea
+                  id="chat-input"
+                  class="chat-textarea"
+                  placeholder="Message Genesis (Press Enter to send, Shift+Enter for newline)..."
+                  rows="1"
+                  required
+                ></textarea>
+                <button type="submit" class="btn btn-primary btn-send" id="btn-chat-send">
+                  <span>Send</span>
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                  </svg>
+                </button>
+              </form>
+              <div class="input-meta-bar">
+                <span class="meta-item" id="token-metrics">Tokens: Prompt: 0 | Completion: 0</span>
+                <span class="meta-item">SQLite WAL Storage Active</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. MEMORY TAB -->
+      <section class="tab-content" id="pane-memory">
+        <div class="module-container">
+          <div class="module-header">
+            <div>
+              <h2>Structured Persistent Memory</h2>
+              <p>CRUD, dense vector embeddings (nomic-embed-text), and hybrid search ranking.</p>
+            </div>
+            <button class="btn btn-primary" id="btn-open-add-memory">+ Add Memory</button>
+          </div>
+
+          <!-- Search & Controls Bar -->
+          <div class="filter-panel">
+            <div class="search-bar-row">
+              <input type="text" id="memory-search-input" class="form-input search-input" placeholder="Search memories semantically or by keywords...">
+              <button class="btn btn-primary" id="btn-memory-search">Search</button>
+            </div>
+            <div class="filter-controls-row">
+              <div class="mode-selector">
+                <span class="mode-label">Search Mode:</span>
+                <button class="mode-btn active" data-mode="hybrid">Hybrid (Vector + Lexical)</button>
+                <button class="mode-btn" data-mode="semantic">Dense Semantic</button>
+                <button class="mode-btn" data-mode="lexical">Lexical (Keyword)</button>
+              </div>
+              <div class="category-pills" id="memory-category-pills">
+                <button class="cat-pill active" data-cat="">All</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Memory Records Grid -->
+          <div class="memory-grid" id="memory-cards-container">
+            <div class="loading-spinner">Loading memory records...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. KNOWLEDGE INDEX TAB -->
+      <section class="tab-content" id="pane-knowledge">
+        <div class="module-container">
+          <div class="module-header">
+            <div>
+              <h2>Document Ingestion &amp; Semantic Knowledge</h2>
+              <p>Index local text, markdown, and code files into dense vector embeddings for RAG retrieval.</p>
+            </div>
+          </div>
+
+          <div class="grid-two-column">
+            <!-- Indexing Panel -->
+            <div class="card panel-card">
+              <h3>Index Document</h3>
+              <p class="card-subtitle">Provide an absolute or relative path to a local file.</p>
+              <form id="knowledge-index-form" class="standard-form">
+                <div class="form-group">
+                  <label for="doc-file-path">File Path:</label>
+                  <input type="text" id="doc-file-path" class="form-input" placeholder="d:\project_genesis\README.md" required>
+                </div>
+                <div class="form-group">
+                  <label for="doc-title">Document Title (optional):</label>
+                  <input type="text" id="doc-title" class="form-input" placeholder="Project Genesis README">
+                </div>
+                <button type="submit" class="btn btn-primary" id="btn-index-doc">Index &amp; Generate Embeddings</button>
+              </form>
+
+              <div id="index-result-alert" class="alert-box" style="display:none;"></div>
+            </div>
+
+            <!-- Semantic Search across Chunks -->
+            <div class="card panel-card">
+              <h3>Semantic Passage Search</h3>
+              <p class="card-subtitle">Query indexed passages using vector similarity.</p>
+              <form id="knowledge-search-form" class="standard-form">
+                <div class="form-group">
+                  <input type="text" id="knowledge-query" class="form-input" placeholder="Ask questions across indexed documents..." required>
+                </div>
+                <button type="submit" class="btn btn-secondary">Search Passages</button>
+              </form>
+
+              <div class="knowledge-search-results" id="knowledge-search-results"></div>
+            </div>
+          </div>
+
+          <!-- Indexed Documents List -->
+          <div class="card mt-4">
+            <h3>Indexed Document Repository</h3>
+            <div class="table-responsive">
+              <table class="data-table" id="documents-table">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Source Path</th>
+                    <th>Size</th>
+                    <th>Chunks</th>
+                    <th>Last Updated</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="documents-table-body">
+                  <tr><td colspan="6" class="text-center">Loading documents...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. HARDWARE & DIAGNOSTICS TAB -->
+      <section class="tab-content" id="pane-hardware">
+        <div class="module-container">
+          <div class="module-header">
+            <div>
+              <h2>Hardware Telemetry &amp; Models</h2>
+              <p>Hardware diagnostics, VRAM offload status, and local model registry.</p>
+            </div>
+            <button class="btn btn-secondary" id="btn-refresh-hw">Refresh Diagnostics</button>
+          </div>
+
+          <!-- Metric Cards Grid -->
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-label">Dedicated GPU</span>
+                <span class="metric-badge">RTX 2000 Ada</span>
+              </div>
+              <div class="metric-value" id="hw-gpu-name">NVIDIA RTX 2000 Ada (8 GB)</div>
+              <div class="metric-sub" id="hw-gpu-sub">Compute 8.9 • 100% Layer Offloading</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-label">Host Memory (RAM)</span>
+                <span class="metric-badge">32 GB</span>
+              </div>
+              <div class="metric-value" id="hw-ram-value">32.0 GB Total</div>
+              <div class="metric-sub" id="hw-ram-sub">Optimized for dual-channel throughput</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-label">High-Speed NVMe Storage</span>
+                <span class="metric-badge">Drive D:</span>
+              </div>
+              <div class="metric-value" id="hw-disk-value">~360 GB Available</div>
+              <div class="metric-sub">Dedicated isolated model repository</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-label">Embedding Engine</span>
+                <span class="metric-badge">Active</span>
+              </div>
+              <div class="metric-value">nomic-embed-text</div>
+              <div class="metric-sub">768-dimensional dense vectors</div>
+            </div>
+          </div>
+
+          <!-- Installed Models List -->
+          <div class="card mt-4">
+            <h3>Registered Model Backends</h3>
+            <div class="models-grid" id="installed-models-grid">
+              <div class="loading-spinner">Querying installed models...</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. BACKUPS TAB -->
+      <section class="tab-content" id="pane-backups">
+        <div class="module-container">
+          <div class="module-header">
+            <div>
+              <h2>Atomic Snapshots &amp; Disaster Recovery</h2>
+              <p>Live SQLite online backup snapshots with integrity verification.</p>
+            </div>
+            <button class="btn btn-primary" id="btn-create-backup">📸 Create Snapshot Now</button>
+          </div>
+
+          <div class="card mt-4">
+            <h3>Available Backup Snapshots</h3>
+            <div class="table-responsive">
+              <table class="data-table" id="backups-table">
+                <thead>
+                  <tr>
+                    <th>Filename</th>
+                    <th>Size</th>
+                    <th>Created At</th>
+                    <th>Integrity</th>
+                    <th>Path</th>
+                  </tr>
+                </thead>
+                <tbody id="backups-table-body">
+                  <tr><td colspan="5" class="text-center">Loading backup snapshots...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal for Creating Memory -->
+  <div class="modal-backdrop" id="memory-modal" style="display:none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Create Structured Memory</h3>
+        <button class="modal-close-btn" id="btn-close-memory-modal">&times;</button>
+      </div>
+      <form id="create-memory-form" class="standard-form">
+        <div class="form-group">
+          <label for="mem-content">Content / Fact:</label>
+          <textarea id="mem-content" class="form-textarea" rows="4" placeholder="Record a verified fact, instruction, or architectural finding..." required></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="mem-category">Category:</label>
+            <input type="text" id="mem-category" class="form-input" value="general" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="mem-source">Source / Origin:</label>
+            <input type="text" id="mem-source" class="form-input" value="user_interaction">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="mem-confidence">Confidence Score: <span id="mem-conf-val">1.0</span></label>
+          <input type="range" id="mem-confidence" min="0.1" max="1.0" step="0.05" value="1.0">
+        </div>
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" id="mem-auto-embed" checked>
+            Generate 768-dim Vector Embedding (nomic-embed-text)
+          </label>
+        </div>
+        <div class="form-group checkbox-group">
+          <label>
+            <input type="checkbox" id="mem-consolidate" checked>
+            Deduplicate / Consolidate with existing memories (&ge; 90% similarity)
+          </label>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-memory">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-memory">Save Memory Record</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

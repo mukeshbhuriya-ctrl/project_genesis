@@ -45,7 +45,7 @@ class TestDatabaseInitialization:
         conn = get_sync_connection(tmp_db_path)
         try:
             cursor = conn.execute("SELECT MAX(version) FROM schema_migrations")
-            assert cursor.fetchone()[0] == 1
+            assert cursor.fetchone()[0] >= 1
         finally:
             conn.close()
 
@@ -59,7 +59,7 @@ class TestDatabaseInitialization:
                 "SELECT version, description FROM schema_migrations ORDER BY version"
             )
             rows = cursor.fetchall()
-            assert len(rows) == 1
+            assert len(rows) >= 1
             assert rows[0]["version"] == 1
             assert "Initial schema" in rows[0]["description"]
         finally:

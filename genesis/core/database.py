@@ -15,7 +15,7 @@ from genesis.core.logging import get_logger
 log = get_logger("database")
 
 # ── Schema version history ──
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 SCHEMA_V1 = """
 -- Conversations
@@ -97,6 +97,44 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
 );
 """
 
+SCHEMA_V2 = """
+-- Memory vector embeddings
+CREATE TABLE IF NOT EXISTS memory_embeddings (
+    memory_id TEXT PRIMARY KEY REFERENCES memories(id) ON DELETE CASCADE,
+    embedding BLOB NOT NULL,
+    dimension INTEGER NOT NULL DEFAULT 768,
+    model TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Document knowledge sources
+CREATE TABLE IF NOT EXISTS knowledge_documents (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    source_path TEXT NOT NULL UNIQUE,
+    mime_type TEXT NOT NULL DEFAULT 'text/plain',
+    file_size_bytes INTEGER NOT NULL DEFAULT 0,
+    chunk_count INTEGER NOT NULL DEFAULT 0,
+    checksum TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+
+-- Chunked knowledge passages with embeddings
+CREATE TABLE IF NOT EXISTS knowledge_chunks (
+    id TEXT PRIMARY KEY,
+    document_id TEXT NOT NULL REFERENCES knowledge_documents(id) ON DELETE CASCADE,
+    chunk_index INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    token_count INTEGER NOT NULL DEFAULT 0,
+    embedding BLOB,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_doc ON knowledge_chunks(document_id, chunk_index);
+"""
+
 
 def get_sync_connection(db_path: str | Path) -> sqlite3.Connection:
     """Create a synchronous SQLite connection with recommended pragmas."""
@@ -138,11 +176,22 @@ def initialize_database(db_path: str | Path) -> None:
             )
             conn.commit()
             log.info("Schema v1 applied successfully.")
+
+        if current_version < 2:
+            log.info("Applying schema v2...")
+            conn.executescript(SCHEMA_V2)
+            conn.execute(
+                "INSERT OR REPLACE INTO schema_migrations (version, description) "
+                "VALUES (2, 'Schema v2: memory_embeddings, knowledge_documents, knowledge_chunks')"
+            )
+            conn.commit()
+            log.info("Schema v2 applied successfully.")
         else:
             log.info(f"Database schema is at version {current_version}, up to date.")
 
     finally:
         conn.close()
+
 
 
 def get_db_path_from_url(db_url: str) -> Path:
