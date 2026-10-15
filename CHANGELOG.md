@@ -2,7 +2,25 @@
 
 All notable changes to Project Genesis will be documented in this file.
 
+## [0.8.0] — 2026-10-15
+
+### Added
+- **Hardware and Deployment Evolution Subsystem (Phase 7)**:
+  - **Multi-Device Hardware Topology Orchestrator**: Dynamic hardware discovery for physical NVIDIA CUDA GPUs, host CPUs, and system RAM with active compute backend detection (`genesis/core/device.py`).
+  - **Multi-Device Layer Distribution Planner**: Dynamic layer offload calculation supporting single GPU (`single_gpu`), pipeline-parallel multi-GPU (`pipeline_parallel`), and CPU layer offloading (`cpu_offload`) with strict 1,024 MB safety reserve and KV-cache modeling to prevent CUDA out-of-memory errors on high-parameter models ($\ge 14\text{B}$).
+  - **Decoupled Work Job Queue**: Persistent SQLite WAL-mode queue supporting priority dispatch, atomic lease-based locking, worker heartbeats, progress tracking, retry limits, and automated orphan crash recovery (`genesis/core/queue.py`).
+  - **Standalone Job Worker Daemon**: Background worker loop leasing jobs, emitting live heartbeats, and dispatching handlers for fine-tuning, benchmarks, code synthesis, and knowledge research (`genesis/tasks/worker.py`).
+  - **Autonomous Tool Orchestration**: Built-in `CodeSynthesizerTool` (`synthesize_code`) and `KnowledgeSynthesizerTool` (`synthesize_knowledge`) registered in `ToolRegistry`, allowing `TaskPlanner` and `TaskExecutor` to deploy reflective code synthesis and research briefs as native bounded task steps (`genesis/tools/builtin/`).
+  - **Deployment REST API**: Endpoints under `/api/deployment`: `/api/deployment/topology`, `/api/deployment/layer-plan`, `/api/deployment/jobs`, `/api/deployment/jobs/{id}`, `/api/deployment/jobs/{id}/cancel` (`genesis/api/routes/deployment.py`).
+  - **CLI Worker Command**: `genesis worker` CLI command to start the decoupled background worker daemon (`genesis/cli.py`).
+  - **Interactive Web Dashboard Module**: Dedicated "Deployment & Topologies" tab with real-time compute device inventory, interactive layer offload distribution calculator, and live worker job queue monitor (`genesis/web/`).
+  - **Database Schema V7**: Introduced `device_topologies` and `work_jobs` tables with status, priority, and worker indexes (`genesis/core/database.py`).
+  - **Workstation Deployment Guide**: Documented architecture topology, process separation, background service management, and layer offload planning in `docs/deployment.md`.
+  - **Architecture Decision Record**: ADR-008 Multi-Device Hardware Topology Orchestration and Decoupled Background Worker Queue.
+  - **Comprehensive Test Suite**: 21 new unit, API, and E2E integration tests across device topology, job queue, worker daemon, deployment API, and end-to-end task execution, expanding total repository baseline to 171 passing tests (100% pass rate).
+
 ## [0.7.0] — 2026-10-15
+
 
 ### Added
 - **Research & Capability Expansion Subsystem (Phase 6)**:

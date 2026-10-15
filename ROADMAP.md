@@ -1,6 +1,7 @@
 # ROADMAP
 
-## Current Milestone: Phase 6 Complete ✅ → Phase 7: Hardware and Deployment Evolution (Next)
+## Current Milestone: Phase 7 Complete ✅ → Phase 8: Autonomous Meta-Improvement (Next)
+
 
 ## Phase 0: Discovery and Baseline ✅
 - [x] Inspect repository and environment
@@ -86,8 +87,24 @@
 
 **Acceptance criterion:** Verified (The platform profiles inference latency and KV-cache VRAM consumption, autonomously synthesizes and verifies Python code in an isolated sandbox with self-repair, exports verified samples into Phase 5 datasets, and executes multi-source citation-verified knowledge synthesis consolidated into memory).
 
-## Phase 7: Hardware and Deployment Evolution ⏳
-- [ ] Multi-GPU support
-- [ ] Distributed training
-- [ ] Separate training/inference processes
-- [ ] Workstation deployment guide
+## Phase 7: Hardware and Deployment Evolution ✅
+- [x] Multi-GPU & heterogeneous compute device topology orchestration (`genesis/core/device.py`)
+- [x] Multi-device layer distribution planner (`single_gpu`, `pipeline_parallel`, `cpu_offload`) with VRAM headroom and KV-cache safety modeling
+- [x] Decoupled persistent work job queue with atomic lease-locking, heartbeats, and automated orphan crash recovery (`genesis/core/queue.py`)
+- [x] Standalone background worker daemon for decoupled fine-tuning, benchmarks, and synthesis (`genesis/tasks/worker.py`)
+- [x] Autonomous tool integration: registered `synthesize_code` and `synthesize_knowledge` as first-class tools for bounded task orchestrator (`genesis/tools/builtin/`, `genesis/tasks/planner.py`)
+- [x] REST API endpoints (`/api/deployment/topology`, `/api/deployment/layer-plan`, `/api/deployment/jobs`, `/api/deployment/jobs/{id}/cancel`) (`genesis/api/routes/deployment.py`)
+- [x] CLI worker entry point `genesis worker` (`genesis/cli.py`)
+- [x] Interactive Web Dashboard Deployment tab: device inventory, layer distribution calculator, and live job queue monitor (`genesis/web/`)
+- [x] Workstation deployment and process separation guide (`docs/deployment.md`)
+- [x] Architecture Decision Record ADR-008
+- [x] 171/171 comprehensive tests passing (100% pass rate)
+
+**Acceptance criterion:** Verified (The platform discovers multi-device compute topologies and computes optimal layer offload plans, provides a persistent crash-resilient queue with lease-locking and background worker daemon, and integrates code synthesis and knowledge synthesis as first-class tools in the bounded task orchestrator).
+
+## Phase 8: Autonomous Meta-Improvement and Continuous Evolution ⏳
+- [ ] Closed-loop autonomous research cycles (evaluation -> failure diagnosis -> synthetic data generation -> LoRA fine-tuning -> validation -> deployment)
+- [ ] Dynamic task routing and multi-model dispatch (e.g., routing coding tasks to coder models, lightweight checks to small models)
+- [ ] Automated benchmark expansion from edge-case discovery
+- [ ] Long-horizon multi-step research synthesis and self-updating knowledge base
+

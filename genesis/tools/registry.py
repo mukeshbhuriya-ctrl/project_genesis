@@ -9,13 +9,16 @@ from typing import Any, Iterable
 from genesis.core.logging import get_logger
 from genesis.tools.base import BaseTool, ToolDefinition
 from genesis.tools.builtin.calculator import CalculatorTool
+from genesis.tools.builtin.code_synthesizer import CodeSynthesizerTool
 from genesis.tools.builtin.dir_lister import ListDirectoryTool
 from genesis.tools.builtin.file_reader import ReadFileTool
 from genesis.tools.builtin.file_writer import WriteFileTool
+from genesis.tools.builtin.knowledge_synthesizer import KnowledgeSynthesizerTool
 from genesis.tools.builtin.python_eval import PythonEvalTool
 from genesis.tools.permissions import PermissionManager
 
 log = get_logger("tool_registry")
+
 
 
 class ToolRegistry:
@@ -78,8 +81,11 @@ def create_default_registry(permission_manager: PermissionManager | None = None)
     registry.register(ListDirectoryTool(permission_manager=pm))
     registry.register(CalculatorTool())
     registry.register(PythonEvalTool())
+    registry.register(CodeSynthesizerTool())
+    registry.register(KnowledgeSynthesizerTool())
 
     return registry
+
 
 
 # Global default registry instance

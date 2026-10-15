@@ -32,10 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
       if (target === 'evaluation') { loadBenchmarks(); loadEvalRuns(); }
       if (target === 'training') loadTrainingData();
       if (target === 'research') loadResearchData();
+      if (target === 'deployment') loadDeploymentData();
       if (target === 'hardware') loadHardwareAndModels();
       if (target === 'backups') loadBackups();
     });
   });
+
 
   // ── Chat Subsystem ──
   const chatMessagesStream = document.getElementById('chat-messages-stream');
@@ -1844,10 +1846,198 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ── Deployment & Topology Subsystem (Phase 7) ──
+  const btnRefreshDeployment = document.getElementById('btn-refresh-deployment');
+  const layerPlanForm = document.getElementById('layer-plan-form');
+  const planContextTokens = document.getElementById('plan-context-tokens');
+  const planContextTokensVal = document.getElementById('plan-context-tokens-val');
+  const btnEnqueueTestJob = document.getElementById('btn-enqueue-test-job');
+
+  if (planContextTokens && planContextTokensVal) {
+    planContextTokens.addEventListener('input', () => {
+      planContextTokensVal.textContent = planContextTokens.value;
+    });
+  }
+
+  if (btnRefreshDeployment) {
+    btnRefreshDeployment.addEventListener('click', () => loadDeploymentData(true));
+  }
+
+  if (btnEnqueueTestJob) {
+    btnEnqueueTestJob.addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/deployment/jobs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            job_type: 'custom',
+            payload: { action: 'device_topology_benchmark', duration: 0.5 },
+            priority: 15,
+          }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        await loadWorkJobs();
+      } catch (err) {
+        alert('Failed to enqueue job: ' + err.message);
+      }
+    });
+  }
+
+  if (layerPlanForm) {
+    layerPlanForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const modelSelect = document.getElementById('plan-model-name');
+      const selectedOption = modelSelect.options[modelSelect.selectedIndex];
+      const layers = parseInt(selectedOption.dataset.layers || '28', 10);
+      const params = parseFloat(selectedOption.dataset.params || '7.0');
+      const quant = parseInt(document.getElementById('plan-quant-bits').value, 10);
+      const context = parseInt(document.getElementById('plan-context-tokens').value, 10);
+      const reserve = parseFloat(document.getElementById('plan-safety-reserve').value || '1024');
+
+      const badge = document.getElementById('layer-plan-strategy-badge');
+      const resultsDiv = document.getElementById('layer-plan-results');
+      const tbody = document.getElementById('layer-plan-tbody');
+
+      badge.textContent = 'Calculating...';
+      badge.className = 'badge badge-secondary';
+
+      try {
+        const res = await fetch('/api/deployment/layer-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model_name: modelSelect.value,
+            total_layers: layers,
+            parameter_size_b: params,
+            quant_bits: quant,
+            context_tokens: context,
+            safety_reserve_mb: reserve,
+          }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const plan = await res.json();
+
+        badge.textContent = 'Strategy: ' + plan.strategy.toUpperCase().replace('_', ' ');
+        badge.className = plan.strategy === 'single_gpu' ? 'badge badge-success' : (plan.strategy === 'pipeline_parallel' ? 'badge badge-info' : 'badge badge-warning');
+
+        resultsDiv.style.display = 'block';
+        tbody.innerHTML = Object.entries(plan.device_layers).map(([devId, count]) => {
+          const vram = plan.estimated_vram_usage_mb[devId] || 0;
+          return `
+            <tr>
+              <td><strong>${devId}</strong></td>
+              <td>${count} / ${plan.total_layers} layers</td>
+              <td>${vram.toFixed(1)} MB</td>
+              <td><span class="badge ${count > 0 ? 'badge-success' : 'badge-secondary'}">${count > 0 ? 'Active' : 'Idle'}</span></td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        badge.textContent = 'Error';
+        badge.className = 'badge badge-danger';
+        alert('Layer planning failed: ' + err.message);
+      }
+    });
+  }
+
+  async function loadDeploymentData(forceRefresh = false) {
+    const topoHostname = document.getElementById('topo-hostname');
+    const topoTotalVram = document.getElementById('topo-total-vram');
+    const topoTotalRam = document.getElementById('topo-total-ram');
+    const topoMode = document.getElementById('topo-mode');
+    const topoBackendBadge = document.getElementById('deployment-backend-badge');
+    const topoDevicesTbody = document.getElementById('topo-devices-tbody');
+
+    try {
+      const url = forceRefresh ? '/api/deployment/topology?refresh=true' : '/api/deployment/topology';
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+
+      if (topoHostname) topoHostname.textContent = data.hostname || '--';
+      if (topoTotalVram) topoTotalVram.textContent = `${data.total_vram_mb} MB`;
+      if (topoTotalRam) topoTotalRam.textContent = `${data.total_ram_gb} GB`;
+      if (topoMode) topoMode.textContent = data.is_multi_gpu ? 'Multi-GPU Cluster' : 'Single GPU';
+      if (topoBackendBadge) topoBackendBadge.textContent = `Backend: ${data.compute_backend.toUpperCase()}`;
+
+      if (topoDevicesTbody && data.devices) {
+        topoDevicesTbody.innerHTML = data.devices.map(d => `
+          <tr>
+            <td><strong>${d.id}</strong></td>
+            <td>${d.name}</td>
+            <td><span class="badge ${d.device_type === 'cuda' ? 'badge-success' : 'badge-secondary'}">${d.device_type.toUpperCase()}</span></td>
+            <td>${d.vram_total_mb.toFixed(0)} MB total (${d.vram_free_mb.toFixed(0)} MB free)</td>
+            <td>${d.is_primary ? '<span class="badge badge-info">Primary</span>' : '<span class="badge badge-secondary">Secondary</span>'}</td>
+          </tr>
+        `).join('');
+      }
+
+      await loadWorkJobs();
+    } catch (err) {
+      console.error('Error loading deployment topology:', err);
+    }
+  }
+
+  async function loadWorkJobs() {
+    const tbody = document.getElementById('jobs-table-tbody');
+    if (!tbody) return;
+
+    try {
+      const res = await fetch('/api/deployment/jobs?limit=25');
+      if (!res.ok) throw new Error(await res.text());
+      const jobs = await res.json();
+
+      if (!jobs || !jobs.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-muted">No background jobs in queue.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = jobs.map(j => {
+        const statusClass = j.status === 'completed' ? 'badge-success' : (j.status === 'running' || j.status === 'leased' ? 'badge-info' : (j.status === 'failed' ? 'badge-danger' : 'badge-secondary'));
+        const canCancel = j.status === 'queued' || j.status === 'leased' || j.status === 'running';
+        const progressPct = Math.round((j.progress || 0) * 100);
+
+        return `
+          <tr>
+            <td><code>${j.id.substring(0, 8)}...</code></td>
+            <td><strong>${j.job_type}</strong></td>
+            <td><span class="badge ${statusClass}">${j.status.toUpperCase()}</span></td>
+            <td>${j.priority}</td>
+            <td>
+              <div style="background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden; height: 14px; width: 80px;">
+                <div style="background: var(--accent-cyan); width: ${progressPct}%; height: 100%;"></div>
+              </div>
+              <small>${progressPct}%</small>
+            </td>
+            <td><small>${j.worker_id ? j.worker_id.substring(0, 16) : '--'}</small></td>
+            <td><small>${new Date(j.created_at).toLocaleTimeString()}</small></td>
+            <td>
+              ${canCancel ? `<button class="btn btn-xs btn-danger" onclick="cancelWorkJob('${j.id}')">Cancel</button>` : '<span class="text-muted">--</span>'}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="8" class="text-danger">Error loading work jobs: ${err.message}</td></tr>`;
+    }
+  }
+
+  window.cancelWorkJob = async function(jobId) {
+    if (!confirm('Cancel work job ' + jobId + '?')) return;
+    try {
+      const res = await fetch(`/api/deployment/jobs/${jobId}/cancel`, { method: 'POST' });
+      if (!res.ok) throw new Error(await res.text());
+      await loadWorkJobs();
+    } catch (err) {
+      alert('Failed to cancel job: ' + err.message);
+    }
+  };
+
   // ── Initial Bootstrap ──
   loadConversations();
   loadCategories();
   loadHardwareAndModels();
   loadDatasets();
 });
+
 

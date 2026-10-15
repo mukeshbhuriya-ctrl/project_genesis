@@ -49,6 +49,8 @@ class TestDatabaseInitialization:
             assert "research_profiles" in tables
             assert "code_experiments" in tables
             assert "research_synthesis" in tables
+            assert "device_topologies" in tables
+            assert "work_jobs" in tables
         finally:
             conn.close()
 

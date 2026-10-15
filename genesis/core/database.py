@@ -15,7 +15,7 @@ from genesis.core.logging import get_logger
 log = get_logger("database")
 
 # ── Schema version history ──
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 
 SCHEMA_V1 = """
 -- Conversations
@@ -347,6 +347,42 @@ CREATE TABLE IF NOT EXISTS research_synthesis (
 CREATE INDEX IF NOT EXISTS idx_research_synthesis_topic ON research_synthesis(topic);
 """
 
+SCHEMA_V7 = """
+-- Hardware & Device Topology Snapshots
+CREATE TABLE IF NOT EXISTS device_topologies (
+    id TEXT PRIMARY KEY,
+    hostname TEXT NOT NULL,
+    devices_json TEXT NOT NULL DEFAULT '[]',
+    total_vram_mb REAL NOT NULL DEFAULT 0.0,
+    total_ram_gb REAL NOT NULL DEFAULT 0.0,
+    compute_backend TEXT NOT NULL DEFAULT 'cuda',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+
+-- Decoupled Work Job Queue for Background Workers
+CREATE TABLE IF NOT EXISTS work_jobs (
+    id TEXT PRIMARY KEY,
+    job_type TEXT NOT NULL CHECK (job_type IN ('fine_tune', 'eval_benchmark', 'knowledge_index', 'code_synthesis', 'research_synthesis', 'custom')),
+    payload TEXT NOT NULL DEFAULT '{}',
+    status TEXT NOT NULL CHECK (status IN ('queued', 'leased', 'running', 'completed', 'failed', 'cancelled')),
+    priority INTEGER NOT NULL DEFAULT 10,
+    worker_id TEXT,
+    progress REAL NOT NULL DEFAULT 0.0,
+    max_retries INTEGER NOT NULL DEFAULT 3,
+    retries INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    leased_at TEXT,
+    completed_at TEXT,
+    heartbeat_at TEXT,
+    error TEXT,
+    result TEXT DEFAULT '{}',
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_work_jobs_status ON work_jobs(status, priority DESC, created_at ASC);
+CREATE INDEX IF NOT EXISTS idx_work_jobs_worker ON work_jobs(worker_id, status);
+"""
+
 
 def get_sync_connection(db_path: str | Path) -> sqlite3.Connection:
     """Create a synchronous SQLite connection with recommended pragmas."""
@@ -438,6 +474,16 @@ def initialize_database(db_path: str | Path) -> None:
             )
             conn.commit()
             log.info("Schema v6 applied successfully.")
+
+        if current_version < 7:
+            log.info("Applying schema v7...")
+            conn.executescript(SCHEMA_V7)
+            conn.execute(
+                "INSERT OR REPLACE INTO schema_migrations (version, description) "
+                "VALUES (7, 'Schema v7: device topologies and decoupled work job queue')"
+            )
+            conn.commit()
+            log.info("Schema v7 applied successfully.")
         else:
             log.info(f"Database schema is at version {current_version}, up to date.")
 

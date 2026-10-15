@@ -23,7 +23,7 @@
         </div>
         <div class="brand-title">
           <span class="brand-name">GENESIS</span>
-          <span class="brand-tag">v0.6.0 • Local-First</span>
+          <span class="brand-tag">v0.8.0 • Local-First</span>
         </div>
       </div>
 
@@ -48,6 +48,9 @@
         </button>
         <button class="nav-tab" data-tab="research" id="tab-research-btn">
           <span class="tab-icon">🔬</span> Research &amp; Capabilities
+        </button>
+        <button class="nav-tab" data-tab="deployment" id="tab-deployment-btn">
+          <span class="tab-icon">🚀</span> Deployment &amp; Topologies
         </button>
         <button class="nav-tab" data-tab="hardware" id="tab-hardware-btn">
           <span class="tab-icon">⚡</span> System &amp; Hardware
@@ -807,7 +810,165 @@
           </div>
         </div>
       </section>
+
+      <!-- 10. DEPLOYMENT & TOPOLOGIES TAB -->
+      <section class="tab-content" id="pane-deployment">
+        <div class="research-container">
+          <div class="section-header-row">
+            <div>
+              <h2>Hardware Topologies &amp; Decoupled Work Queue</h2>
+              <p class="section-subtext">Heterogeneous device orchestration (multi-GPU, pipeline-parallel, CPU offload) and crash-resilient worker job queue for decoupled model training, evaluation, and synthesis.</p>
+            </div>
+            <div class="header-action-group">
+              <button class="btn btn-secondary" id="btn-refresh-deployment">↻ Refresh Topology &amp; Jobs</button>
+            </div>
+          </div>
+
+          <!-- Top Grid: Device Topology & Layer Planner -->
+          <div class="research-grid">
+            <!-- Card 1: Compute Devices & Topology -->
+            <div class="card research-card">
+              <div class="card-header">
+                <h3>Compute Device Topology</h3>
+                <span class="badge badge-success" id="deployment-backend-badge">Backend: CUDA</span>
+              </div>
+              <div class="card-body">
+                <div class="stat-metrics-grid">
+                  <div class="metric-box">
+                    <span class="metric-label">Hostname</span>
+                    <span class="metric-val" id="topo-hostname" style="font-size:0.95rem;">--</span>
+                  </div>
+                  <div class="metric-box">
+                    <span class="metric-label">Total VRAM</span>
+                    <span class="metric-val text-primary" id="topo-total-vram">-- MB</span>
+                  </div>
+                  <div class="metric-box">
+                    <span class="metric-label">System RAM</span>
+                    <span class="metric-val" id="topo-total-ram">-- GB</span>
+                  </div>
+                  <div class="metric-box">
+                    <span class="metric-label">Topology Mode</span>
+                    <span class="metric-val text-success" id="topo-mode">Single GPU</span>
+                  </div>
+                </div>
+
+                <div class="table-responsive" style="margin-top: 15px;">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Device ID</th>
+                        <th>Device Name</th>
+                        <th>Type</th>
+                        <th>VRAM / Memory</th>
+                        <th>Role</th>
+                      </tr>
+                    </thead>
+                    <tbody id="topo-devices-tbody">
+                      <tr><td colspan="5" class="text-center">Loading compute devices...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 2: Multi-Device Layer Distribution Planner -->
+            <div class="card research-card">
+              <div class="card-header">
+                <h3>Multi-Device Layer Planner</h3>
+                <span class="badge badge-info" id="layer-plan-strategy-badge">Strategy: --</span>
+              </div>
+              <div class="card-body">
+                <form id="layer-plan-form" class="standard-form">
+                  <div class="form-row">
+                    <div class="form-group flex-1">
+                      <label for="plan-model-name">Target Model:</label>
+                      <select id="plan-model-name" class="form-select">
+                        <option value="qwen2.5:7b" data-layers="28" data-params="7.0" selected>Qwen 2.5 7B (28L, 7B)</option>
+                        <option value="qwen2.5:14b" data-layers="48" data-params="14.0">Qwen 2.5 14B (48L, 14B)</option>
+                        <option value="qwen2.5:32b" data-layers="64" data-params="32.0">Qwen 2.5 32B (64L, 32B)</option>
+                        <option value="qwen2.5-coder:1.5b-base" data-layers="28" data-params="1.5">Qwen 2.5 Coder 1.5B (28L, 1.5B)</option>
+                      </select>
+                    </div>
+                    <div class="form-group flex-1">
+                      <label for="plan-quant-bits">Quantization:</label>
+                      <select id="plan-quant-bits" class="form-select">
+                        <option value="4" selected>4-bit (Standard Q4_K_M)</option>
+                        <option value="8">8-bit (FP8 / Q8_0)</option>
+                        <option value="16">16-bit (Full FP16)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group flex-1">
+                      <label for="plan-context-tokens">Context Window: <strong id="plan-context-tokens-val">4096</strong></label>
+                      <input type="range" id="plan-context-tokens" min="2048" max="32768" step="2048" value="4096">
+                    </div>
+                    <div class="form-group flex-1">
+                      <label for="plan-safety-reserve">Safety Headroom (MB):</label>
+                      <input type="number" id="plan-safety-reserve" class="form-input" value="1024" min="256" max="4096" step="256">
+                    </div>
+                  </div>
+                  <button type="submit" class="btn btn-primary" id="btn-submit-layer-plan">📐 Calculate Offload Distribution</button>
+                </form>
+
+                <div class="layer-plan-results" id="layer-plan-results" style="display:none; margin-top: 15px;">
+                  <div class="table-responsive">
+                    <table class="data-table">
+                      <thead>
+                        <tr>
+                          <th>Device</th>
+                          <th>Assigned Layers</th>
+                          <th>Est. VRAM / Memory</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody id="layer-plan-tbody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Grid: Work Job Queue -->
+          <div class="research-grid" style="margin-top: 20px;">
+            <div class="card research-card" style="grid-column: 1 / -1;">
+              <div class="card-header">
+                <div>
+                  <h3>Decoupled Work Job Queue</h3>
+                  <span class="card-subtext" style="color:var(--text-muted); font-size:0.85rem;">Persistent SQLite WAL queue supporting worker lease-locking, heartbeats, and crash recovery.</span>
+                </div>
+                <div class="header-action-group">
+                  <button class="btn btn-sm btn-primary" id="btn-enqueue-test-job">+ Enqueue Test Job</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive" style="max-height: 340px; overflow-y: auto;">
+                  <table class="data-table" id="jobs-table">
+                    <thead>
+                      <tr>
+                        <th>Job ID</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Priority</th>
+                        <th>Progress</th>
+                        <th>Worker ID</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="jobs-table-tbody">
+                      <tr><td colspan="8" class="text-center">Loading job queue...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
+
   </div>
 
   <!-- Modal for Creating Memory -->

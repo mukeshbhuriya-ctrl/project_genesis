@@ -1,10 +1,10 @@
 # PROJECT STATE
 
-> Last updated: 2026-10-15 by Senior AI/ML Engineer (Phase 6 completion & Phase 7 activation)
+> Last updated: 2026-10-15 by Senior AI/ML Engineer (Phase 7 completion & Phase 8 activation)
 
 ## Current Phase
 
-**Phase 6 Complete (Verified) → Phase 7: Hardware and Deployment Evolution (Active)**
+**Phase 7 Complete (Verified) → Phase 8: Autonomous Meta-Improvement and Continuous Evolution (Active)**
 
 ## Implemented
 
@@ -82,11 +82,25 @@
 - [x] Database Schema V6 (`genesis/core/database.py`): added `research_profiles`, `code_experiments`, and `research_synthesis` tables with indexes and migration tracking
 - [x] REST API endpoints (`genesis/api/routes/research.py`): `/api/research/context-budget`, `/api/research/profile`, `/api/research/profiles`, `/api/research/coding/synthesize`, `/api/research/coding/experiments`, `/api/research/synthesize`, `/api/research/syntheses`
 - [x] Interactive Web Dashboard Research Tab (`genesis/web/`): live KV-cache calculator, one-click inference profiler, code synthesis runner with sandbox test and traceback visualizer, knowledge brief generator, and historical logs
-- [x] Comprehensive test suite in `tests/`: 150 tests covering all subsystems (100% passing)
+
+### Hardware and Deployment Evolution (Phase 7)
+- [x] Multi-GPU & heterogeneous compute device topology orchestrator (`genesis/core/device.py`): discovers physical CUDA GPUs, host CPUs, and system RAM with active compute backend detection
+- [x] Dynamic layer distribution planner (`genesis/core/device.py`): computes optimal layer offload plans (`single_gpu`, `pipeline_parallel`, `cpu_offload`) with VRAM headroom and KV-cache safety modeling to prevent CUDA OOM crashes on high-parameter models ($\ge 14\text{B}$)
+- [x] Decoupled persistent work job queue (`genesis/core/queue.py`): SQLite WAL-mode queue supporting priority dispatch, atomic lease-based locking, worker heartbeats, progress tracking, retry limits, and automated orphan crash recovery
+- [x] Standalone background worker daemon (`genesis/tasks/worker.py`): continuous worker loop leasing jobs, emitting live heartbeats, and dispatching handlers for fine-tuning, benchmarks, code synthesis, and knowledge research
+- [x] Autonomous tool integration (`genesis/tools/builtin/`, `genesis/tasks/planner.py`): registered `CodeSynthesizerTool` (`synthesize_code`) and `KnowledgeSynthesizerTool` (`synthesize_knowledge`) as first-class tools for bounded task orchestrator
+- [x] REST API endpoints (`genesis/api/routes/deployment.py`): `/api/deployment/topology`, `/api/deployment/layer-plan`, `/api/deployment/jobs`, `/api/deployment/jobs/{id}`, `/api/deployment/jobs/{id}/cancel`
+- [x] CLI worker entry point (`genesis/cli.py`): `genesis worker` command to start the decoupled background worker daemon
+- [x] Interactive Web Dashboard Deployment Tab (`genesis/web/`): device inventory, interactive layer offload distribution calculator, and live worker job queue monitor with cancellation controls
+- [x] Database Schema V7 (`genesis/core/database.py`): added `device_topologies` and `work_jobs` tables with status, priority, and worker indexes
+- [x] Workstation deployment and process separation guide (`docs/deployment.md`)
+- [x] Architecture Decision Record ADR-008 (`docs/decisions/ADR-008-hardware-topology-and-decoupled-worker-queue.md`)
+- [x] Comprehensive test suite in `tests/`: 171 tests covering all subsystems (100% passing)
 
 ## Verified
 
-- [x] **150/150 unit and integration tests pass (100% passing)** across all modules
+- [x] **171/171 unit and integration tests pass (100% passing)** across all modules
+- [x] **Phase 7 Acceptance Criterion verified**: The platform discovers multi-device compute topologies and computes optimal layer offload plans, provides a persistent crash-resilient queue with lease-locking and background worker daemon, and integrates code synthesis and knowledge synthesis as first-class tools in the bounded task orchestrator
 - [x] **Phase 6 Acceptance Criterion verified**: The platform profiles inference latency and KV-cache VRAM consumption, autonomously synthesizes and verifies Python code in an isolated sandbox with self-repair, exports verified samples into Phase 5 datasets, and executes multi-source citation-verified knowledge synthesis consolidated into memory
 - [x] **Phase 5 Acceptance Criterion verified**: The platform ingests and normalizes multi-format datasets, defends against evaluation benchmark contamination, executes VRAM-bounded LoRA fine-tuning under 4.8 GB, exports Ollama Modelfiles, and triggers automatic rollback when regressions are detected by Phase 4
 - [x] **Phase 4 Acceptance Criterion verified**: Repeatable benchmarks execute against local GPU model (`qwen2.5:7b`), failure modes categorized into error taxonomy, regressions detected against historical baselines, and structured reports generated
@@ -123,9 +137,10 @@
 | Node.js | 24.17.0 |
 | Git | 2.54.0 |
 
-## Next Steps (Phase 7: Hardware and Deployment Evolution)
+## Next Steps (Phase 8: Autonomous Meta-Improvement and Continuous Evolution)
 
-1. **Multi-GPU & Offload Topology:** Design abstract device orchestrator for multi-GPU workstations and heterogeneous compute topologies (CUDA, DirectML, CPU fallback).
-2. **Process Separation:** Isolate resource-heavy fine-tuning and long-running benchmark workers into decoupled daemon processes communicating via async IPC or SQLite queues.
-3. **Local Backend Evaluation:** Benchmark direct llama.cpp shared library C-bindings or vLLM versus Ollama runtime for peak generation throughput and lower memory overhead.
-4. **Autonomous Capability Orchestration:** Wire the reflective code synthesis and adaptive knowledge modules into the bounded task planner for autonomous multi-step problem solving.
+1. **Closed-Loop Autonomous Research Cycles:** Implement meta-orchestrator coordinating continuous self-directed cycles (benchmark evaluation -> gap identification -> synthetic dataset generation via code/knowledge synthesis -> LoRA fine-tuning -> validation -> deployment or rollback).
+2. **Dynamic Task Routing & Multi-Model Dispatch:** Route tasks dynamically across locally installed models based on task type and complexity (e.g. `qwen2.5-coder:7b` for code synthesis, `qwen2.5:7b` for reasoning and planning, `qwen2.5-coder:1.5b-base` for fast validation checks).
+3. **Automated Benchmark Expansion:** Automatically generate new challenging benchmark test cases from novel edge-case failures discovered during task execution.
+4. **Long-Horizon Multi-Step Research Synthesis:** Enable autonomous deep dive investigations that iteratively query documents, formulate hypotheses, test them in sandboxes, and synthesize publication-grade research reports.
+

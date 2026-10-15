@@ -165,5 +165,46 @@ def status() -> None:
     console.print(table)
 
 
+@main.command()
+@click.option("--worker-id", default=None, help="Unique worker identifier")
+@click.option("--poll-interval", default=2.0, type=float, help="Seconds between queue polls")
+@click.option("--heartbeat-interval", default=10.0, type=float, help="Seconds between worker heartbeats")
+def worker(worker_id: str | None, poll_interval: float, heartbeat_interval: float) -> None:
+    """Start the decoupled background job worker daemon."""
+    import asyncio
+    from genesis.core import get_settings
+    from genesis.core.database import get_db_path_from_url
+    from genesis.tasks.worker import JobWorker
+
+    settings = get_settings()
+    db_path = get_db_path_from_url(settings.get_db_url())
+
+    w = JobWorker(
+        worker_id=worker_id,
+        db_path=db_path,
+        poll_interval=poll_interval,
+        heartbeat_interval=heartbeat_interval,
+    )
+
+    console.print(
+        Panel(
+            f"[bold]Project Genesis[/] Background Job Worker\n"
+            f"Worker ID: [cyan]{w.worker_id}[/]\n"
+            f"Database: [cyan]{db_path}[/]\n"
+            f"Poll Interval: [cyan]{poll_interval}s[/] | Heartbeat: [cyan]{heartbeat_interval}s[/]",
+            title="Worker Daemon",
+            border_style="green",
+        )
+    )
+
+    try:
+        asyncio.run(w.start())
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Stopping worker...[/]")
+        w.stop()
+        console.print("[green]Worker stopped.[/]")
+
+
 if __name__ == "__main__":
     main()
+
