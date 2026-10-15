@@ -30,8 +30,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (target === 'knowledge') loadDocuments();
       if (target === 'tasks') { loadTools(); loadTasks(); }
       if (target === 'evaluation') { loadBenchmarks(); loadEvalRuns(); }
-      if (target === 'training') loadTrainingData();
-      if (target === 'research') loadResearchData();
+      if (target === 'training') { loadTrainingData(); loadReplayBuffer(); loadEWC(); }
+      if (target === 'research') { loadResearchData(); loadSymbolicVerifications(); }
       if (target === 'deployment') loadDeploymentData();
       if (target === 'hardware') loadHardwareAndModels();
       if (target === 'backups') loadBackups();
@@ -3842,7 +3842,375 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
+  // ── Phase 13: Continual Online Learning & Dynamic Experience Replay ──
+  async function loadReplayBuffer() {
+    const tbody = document.getElementById('replay-samples-tbody');
+    const totalCount = document.getElementById('replay-total-count');
+    const capacitySub = document.getElementById('replay-capacity-sub');
+
+    try {
+      // 1. Load buffer stats
+      const statsRes = await fetch('/api/continual/replay/stats');
+      if (statsRes.ok) {
+        const stats = await statsRes.json();
+        if (totalCount) totalCount.textContent = stats.total_samples || 0;
+        if (capacitySub && stats.capacity_per_domain) {
+          capacitySub.textContent = `Capacity: ${stats.capacity_per_domain} / domain`;
+        }
+      }
+
+      // 2. Load samples
+      const res = await fetch('/api/continual/replay/samples?limit=25');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const samples = data.samples || [];
+
+      if (!tbody) return;
+      if (samples.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No replay samples in buffer.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = samples.map(s => {
+        const domainBadge = {
+          reasoning: '<span class="badge" style="background:#8b5cf6;">reasoning</span>',
+          coding: '<span class="badge" style="background:#06b6d4;">coding</span>',
+          tools: '<span class="badge" style="background:#f59e0b;">tools</span>',
+          general: '<span class="badge" style="background:#10b981;">general</span>',
+        }[s.task_domain] || `<span class="badge">${escapeHtml(s.task_domain)}</span>`;
+
+        const inPreview = s.sample_input.length > 50 ? s.sample_input.slice(0, 50) + '...' : s.sample_input;
+        const outPreview = s.sample_target.length > 50 ? s.sample_target.slice(0, 50) + '...' : s.sample_target;
+        const created = s.created_at ? s.created_at.slice(0, 19).replace('T', ' ') : '--';
+
+        return `
+          <tr>
+            <td>${domainBadge}</td>
+            <td><strong>${s.priority_score.toFixed(2)}</strong></td>
+            <td>${s.usage_count}</td>
+            <td title="${escapeHtml(s.sample_input)}">${escapeHtml(inPreview)}</td>
+            <td title="${escapeHtml(s.sample_target)}">${escapeHtml(outPreview)}</td>
+            <td style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(created)}</td>
+            <td>
+              <button class="btn btn-sm btn-secondary" onclick="window.deleteReplaySample('${escapeHtml(s.id)}')">🗑️</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="7" class="error-msg">Error loading replay buffer: ${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
   }
+
+  async function loadEWC() {
+    const tbody = document.getElementById('ewc-checkpoints-tbody');
+    const countEl = document.getElementById('ewc-checkpoints-count');
+
+    try {
+      const res = await fetch('/api/continual/ewc/checkpoints');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const records = data.records || [];
+
+      if (countEl) countEl.textContent = records.length;
+      if (!tbody) return;
+
+      if (records.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No EWC parameter checkpoints consolidated yet.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = records.map(r => {
+        const created = r.created_at ? r.created_at.slice(0, 19).replace('T', ' ') : '--';
+        return `
+          <tr>
+            <td><strong>${escapeHtml(r.task_name)}</strong></td>
+            <td><code>${escapeHtml(r.experiment_id)}</code></td>
+            <td>&lambda; = ${r.importance_lambda}</td>
+            <td>${r.parameter_count} weights</td>
+            <td style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(created)}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="5" class="error-msg">Error loading EWC checkpoints: ${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+  }
+
+  window.deleteReplaySample = async function(sampleId) {
+    if (!confirm('Remove this sample from the replay buffer?')) return;
+    try {
+      const res = await fetch(`/api/continual/replay/samples/${encodeURIComponent(sampleId)}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      await loadReplayBuffer();
+    } catch (err) {
+      alert(`Failed to delete sample: ${err.message}`);
+    }
+  };
+
+  // Replay Sample Modal Wiring
+  const replayModal = document.getElementById('replay-sample-modal');
+  const btnOpenReplayModal = document.getElementById('btn-open-add-replay-modal');
+  const btnCloseReplayModal = document.getElementById('btn-close-replay-sample-modal');
+  const btnCancelReplayModal = document.getElementById('btn-cancel-replay-sample-modal');
+  const replayForm = document.getElementById('replay-sample-form');
+
+  if (btnOpenReplayModal && replayModal) {
+    btnOpenReplayModal.addEventListener('click', () => { replayModal.style.display = 'flex'; });
+  }
+  [btnCloseReplayModal, btnCancelReplayModal].forEach(btn => {
+    if (btn && replayModal) {
+      btn.addEventListener('click', () => { replayModal.style.display = 'none'; });
+    }
+  });
+
+  if (replayForm) {
+    replayForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const domain = document.getElementById('replay-domain-select').value;
+      const priority = parseFloat(document.getElementById('replay-priority-input').value) || 1.0;
+      const input = document.getElementById('replay-input-text').value.trim();
+      const target = document.getElementById('replay-target-text').value.trim();
+      const submitBtn = document.getElementById('btn-submit-replay-sample');
+
+      try {
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Saving...'; }
+        const res = await fetch('/api/continual/replay/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            task_domain: domain,
+            priority_score: priority,
+            sample_input: input,
+            sample_target: target
+          }),
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.detail || `HTTP ${res.status}`);
+        }
+        if (replayModal) replayModal.style.display = 'none';
+        replayForm.reset();
+        await loadReplayBuffer();
+      } catch (err) {
+        alert(`Failed to add replay sample: ${err.message}`);
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '📥 Add to Replay Buffer'; }
+      }
+    });
+  }
+
+  // Balanced Batch Sampling Modal Wiring
+  const batchModal = document.getElementById('replay-batch-modal');
+  const btnOpenBatchModal = document.getElementById('btn-open-sample-batch-modal');
+  const btnCloseBatchModal = document.getElementById('btn-close-replay-batch-modal');
+  const btnCloseBatchModalBtn = document.getElementById('btn-close-batch-modal-btn');
+  const btnGenerateBatch = document.getElementById('btn-generate-batch');
+  const batchResultsContainer = document.getElementById('batch-results-container');
+
+  if (btnOpenBatchModal && batchModal) {
+    btnOpenBatchModal.addEventListener('click', () => { batchModal.style.display = 'flex'; });
+  }
+  [btnCloseBatchModal, btnCloseBatchModalBtn].forEach(btn => {
+    if (btn && batchModal) {
+      btn.addEventListener('click', () => { batchModal.style.display = 'none'; });
+    }
+  });
+
+  if (btnGenerateBatch && batchResultsContainer) {
+    btnGenerateBatch.addEventListener('click', async () => {
+      const batchSize = parseInt(document.getElementById('batch-size-input').value, 10) || 4;
+      try {
+        btnGenerateBatch.disabled = true;
+        btnGenerateBatch.textContent = 'Sampling...';
+        const res = await fetch(`/api/continual/replay/batch?batch_size=${batchSize}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const batch = data.batch || [];
+
+        batchResultsContainer.style.display = 'block';
+        if (batch.length === 0) {
+          batchResultsContainer.innerHTML = '<p class="text-muted text-sm">No samples available in buffer to form a batch.</p>';
+        } else {
+          batchResultsContainer.innerHTML = batch.map(b => `
+            <div style="background:var(--bg-card); border:1px solid var(--border-color); border-radius:6px; padding:10px; margin-bottom:8px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+                <span class="badge">${escapeHtml(b.task_domain)}</span>
+                <span style="font-size:0.75rem; color:var(--text-muted);">Priority: ${b.priority_score.toFixed(2)} | Usage: ${b.usage_count}</span>
+              </div>
+              <p style="margin:2px 0; font-size:0.85rem;"><strong>Prompt:</strong> ${escapeHtml(b.sample_input)}</p>
+              <p style="margin:2px 0; font-size:0.85rem; color:var(--text-muted);"><strong>Target:</strong> ${escapeHtml(b.sample_target)}</p>
+            </div>
+          `).join('');
+        }
+        await loadReplayBuffer();
+      } catch (err) {
+        alert(`Failed to sample rehearsal batch: ${err.message}`);
+      } finally {
+        btnGenerateBatch.disabled = false;
+        btnGenerateBatch.textContent = '⚡ Sample Replay Batch';
+      }
+    });
+  }
+
+  // Refresh buttons
+  const btnRefreshReplay = document.getElementById('btn-refresh-replay-buffer');
+  if (btnRefreshReplay) btnRefreshReplay.addEventListener('click', () => loadReplayBuffer());
+  const btnRefreshEWC = document.getElementById('btn-refresh-ewc-table');
+  if (btnRefreshEWC) btnRefreshEWC.addEventListener('click', () => loadEWC());
+
+  // ── Phase 13: Neuro-Symbolic Verification Engine ──
+  async function loadSymbolicVerifications() {
+    const tbody = document.getElementById('symbolic-verifications-tbody');
+    try {
+      const res = await fetch('/api/symbolic/verifications?limit=25');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const records = data.records || [];
+
+      if (!tbody) return;
+      if (records.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted">No formal verifications recorded yet.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = records.map(r => {
+        let statusBadge = '<span class="badge badge-warning">inconclusive</span>';
+        if (r.status === 'verified') statusBadge = '<span class="badge badge-success">✓ verified</span>';
+        if (r.status === 'violated') statusBadge = '<span class="badge badge-danger">✗ violated</span>';
+
+        const exprPreview = (r.expression_or_code || '').length > 45
+          ? (r.expression_or_code || '').slice(0, 45) + '...'
+          : (r.expression_or_code || '');
+        const violations = (r.violations || []).join(', ') || 'None';
+        const created = r.created_at ? r.created_at.slice(0, 19).replace('T', ' ') : '--';
+
+        return `
+          <tr>
+            <td><code>${escapeHtml(r.id.slice(0, 12))}</code></td>
+            <td><span class="badge">${escapeHtml(r.target_type)}</span></td>
+            <td>${statusBadge}</td>
+            <td title="${escapeHtml(r.expression_or_code || '')}"><code>${escapeHtml(exprPreview)}</code></td>
+            <td style="font-size:0.8rem; color:${r.violations && r.violations.length > 0 ? 'var(--color-danger, #ef4444)' : 'var(--text-muted)'};">${escapeHtml(violations)}</td>
+            <td style="font-size:0.8rem;">${r.verification_latency_ms.toFixed(1)} ms</td>
+            <td style="font-size:0.75rem; color:var(--text-muted);">${escapeHtml(created)}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      if (tbody) {
+        tbody.innerHTML = `<tr><td colspan="7" class="error-msg">Error loading verifications: ${escapeHtml(err.message)}</td></tr>`;
+      }
+    }
+  }
+
+  // Symbolic Verify Modal Wiring
+  const verifyModal = document.getElementById('symbolic-verify-modal');
+  const btnOpenVerifyModal = document.getElementById('btn-open-verify-modal');
+  const btnCloseVerifyModal = document.getElementById('btn-close-symbolic-modal');
+  const btnCancelVerifyModal = document.getElementById('btn-cancel-symbolic-modal');
+  const verifyForm = document.getElementById('symbolic-verify-form');
+  const verifyTypeSelect = document.getElementById('symbolic-type-select');
+  const codeFields = document.getElementById('symbolic-code-fields');
+  const mathFields = document.getElementById('symbolic-math-fields');
+  const logicFields = document.getElementById('symbolic-logic-fields');
+  const verdictBox = document.getElementById('symbolic-verify-verdict');
+
+  if (btnOpenVerifyModal && verifyModal) {
+    btnOpenVerifyModal.addEventListener('click', () => {
+      verifyModal.style.display = 'flex';
+      if (verdictBox) verdictBox.style.display = 'none';
+    });
+  }
+  [btnCloseVerifyModal, btnCancelVerifyModal].forEach(btn => {
+    if (btn && verifyModal) {
+      btn.addEventListener('click', () => { verifyModal.style.display = 'none'; });
+    }
+  });
+
+  if (verifyTypeSelect) {
+    verifyTypeSelect.addEventListener('change', () => {
+      const val = verifyTypeSelect.value;
+      if (codeFields) codeFields.style.display = val === 'code' ? 'block' : 'none';
+      if (mathFields) mathFields.style.display = val === 'math' ? 'block' : 'none';
+      if (logicFields) logicFields.style.display = val === 'logic' ? 'block' : 'none';
+      if (verdictBox) verdictBox.style.display = 'none';
+    });
+  }
+
+  if (verifyForm) {
+    verifyForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const targetType = verifyTypeSelect.value;
+      const submitBtn = document.getElementById('btn-submit-symbolic-verify');
+
+      try {
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Verifying...'; }
+        let endpoint = '/api/symbolic/verify/code';
+        let payload = {};
+
+        if (targetType === 'code') {
+          endpoint = '/api/symbolic/verify/code';
+          payload = {
+            code: document.getElementById('symbolic-code-input').value,
+            check_termination: true,
+            check_safety: true,
+            check_division_by_zero: true
+          };
+        } else if (targetType === 'math') {
+          endpoint = '/api/symbolic/verify/math';
+          payload = {
+            expression: document.getElementById('symbolic-math-expr').value,
+            domain_min: parseFloat(document.getElementById('symbolic-math-min').value) || 0.0,
+            domain_max: parseFloat(document.getElementById('symbolic-math-max').value) || 10.0,
+            constraints: [document.getElementById('symbolic-math-rule').value]
+          };
+        } else if (targetType === 'logic') {
+          endpoint = '/api/symbolic/verify/logic';
+          const pStr = document.getElementById('symbolic-logic-premises').value;
+          const premises = pStr.split(',').map(s => s.trim()).filter(Boolean);
+          payload = {
+            premises: premises,
+            hypothesis: document.getElementById('symbolic-logic-hypothesis').value.trim()
+          };
+        }
+
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.detail || `HTTP ${res.status}`);
+        }
+        const result = await res.json();
+
+        if (verdictBox) {
+          verdictBox.style.display = 'block';
+          if (result.status === 'verified') {
+            verdictBox.className = 'alert-box alert-success';
+            verdictBox.innerHTML = `<strong>✓ VERIFIED</strong> (${result.verification_latency_ms.toFixed(1)} ms): All formal symbolic constraints satisfied.`;
+          } else {
+            verdictBox.className = 'alert-box alert-danger';
+            verdictBox.innerHTML = `<strong>✗ VIOLATED</strong> (${result.verification_latency_ms.toFixed(1)} ms): ${escapeHtml((result.violations || []).join('; '))}`;
+          }
+        }
+        await loadSymbolicVerifications();
+      } catch (err) {
+        alert(`Verification failed: ${err.message}`);
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '⚡ Verify Invariant'; }
+      }
+    });
+  }
+
+  const btnRefreshSymbolic = document.getElementById('btn-refresh-symbolic-table');
+  if (btnRefreshSymbolic) btnRefreshSymbolic.addEventListener('click', () => loadSymbolicVerifications());
 
   // ── Initial Bootstrap ──
   loadConversations();

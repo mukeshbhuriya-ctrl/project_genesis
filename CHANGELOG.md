@@ -2,6 +2,26 @@
 
 All notable changes to Project Genesis will be documented in this file.
 
+## [0.14.0] — 2026-10-15
+
+### Added
+- **Continual Online Learning Engine, Dynamic Experience Replay, and Neuro-Symbolic Verification Engine (Phase 13)**:
+  - **Streaming Prioritized Replay Buffer**: Implemented `ReplayBufferManager` (`genesis/training/continual.py`) enforcing bounded domain capacity (default 10,000 samples/domain), SHA-256 duplicate suppression, priority scoring, stratified balanced batch rehearsal sampling (`sample_batch`), and usage tracking across `reasoning`, `coding`, `tools`, and `general` task domains.
+  - **Elastic Weight Consolidation (EWC) Parameter Regularizer**: Implemented `EWCConsolidator` (`genesis/training/continual.py`) computing parameter empirical diagonal Fisher Information matrices ($F_i = \frac{1}{N}\sum (\nabla \log p)^2$) from validation gradient variances, evaluating quadratic EWC penalty loss ($L_{\text{EWC}} = \frac{\lambda}{2}\sum F_i(\theta_i - \theta_i^*)^2$) to protect previously learned competencies from catastrophic forgetting, and persisting consolidated task checkpoints into SQLite.
+  - **Virtual Soft Prompt Prefix Tuning**: Implemented `PrefixTuningManager` (`genesis/training/continual.py`) supporting Gaussian-initialized soft prompt prefixes and task prefix vector interpolation ($P = (1-\alpha)P_a + \alpha P_b$) for parameter-efficient task distillation.
+  - **Neuro-Symbolic Constraint Verification Engine**: Implemented `NeuroSymbolicVerifier` (`genesis/research/symbolic.py`) providing formal deterministic verification:
+    - *Code Invariant Static AST Analysis*: Checks code for termination safety (infinite `while` loops, unbounded recursion without base-case branching), safety and purity enforcement (forbids `eval`, `exec`, `__import__`, `globals`), and literal division-by-zero checks.
+    - *Mathematical Continuous Bounds Verification*: Evaluates mathematical expressions over discretized domain intervals to rigorously verify non-negativity ($f(x) \ge 0$), bounded range constraints, and monotonic increasing behavior.
+    - *Propositional Logic Resolution Refutation Theorem Proving*: Converts propositional premises and negated hypotheses into Conjunctive Normal Form (CNF) clauses and derives empty contradiction clauses ($\emptyset$) via systematic resolution rule to formally prove deductive validity.
+  - **Database Schema V13**: Introduced `replay_buffers`, `ewc_checkpoints`, and `symbolic_verifications` relational tables with strict foreign key constraints, indexes, and automated migration logic (`genesis/core/database.py`).
+  - **Phase 13 REST API Endpoints**: Mounted `/api/continual/*` (`/replay/samples`, `/replay/add`, `/replay/batch`, `/replay/stats`, `/replay/samples/{id}`, `/ewc/checkpoints`, `/ewc/consolidate`, `/ewc/penalty`, `/prefix/generate`) and `/api/symbolic/*` (`/verify/code`, `/verify/math`, `/verify/logic`, `/verifications`, `/verifications/{id}`) in `genesis/api/app.py`.
+  - **Interactive Web Dashboard UI**: Continual Learning & Experience Replay panel in Training tab, EWC Checkpoints table, Replay Sample ingestion modal, Balanced Batch generator modal, and Neuro-Symbolic Verification console with interactive workbench and verdict alerts in Research tab (`genesis/web/`).
+  - **Architecture Decision Record**: ADR-014 Continual Online Learning Engine, Dynamic Experience Replay, and Neuro-Symbolic Verification (`docs/decisions/ADR-014-continual-online-learning-and-neuro-symbolic-verification.md`).
+  - **Comprehensive Test Suite**: 12 new unit and integration tests across replay buffer management, EWC Fisher estimation, soft prefix generation, code invariant verification, continuous math checking, logic resolution, and REST APIs, expanding repository baseline to 266 passing tests (100% pass rate).
+
+### Fixed
+- **Knowledge Synthesizer Embedding Provider Fallback**: Configured `AdaptiveKnowledgeSynthesizer` to automatically wire its `KnowledgeIndexer` with an `EmbeddingEngine` backed by the active model provider rather than spawning an unconfigured default provider, eliminating 240-second HTTP connection timeouts when running offline or with mock providers.
+
 ## [0.13.0] — 2026-10-15
 
 ### Added

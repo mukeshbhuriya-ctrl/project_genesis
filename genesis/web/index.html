@@ -23,7 +23,7 @@
         </div>
         <div class="brand-title">
           <span class="brand-name">GENESIS</span>
-          <span class="brand-tag">v0.13.0 • Local-First</span>
+          <span class="brand-tag">v0.14.0 • Local-First</span>
         </div>
       </div>
 
@@ -592,6 +592,104 @@
               <!-- Dynamically populated metrics & loss trajectory -->
             </div>
           </div>
+
+          <!-- Phase 13: Continual Online Learning & Dynamic Replay Buffer -->
+          <div class="card mt-4" id="continual-learning-card">
+            <div class="card-header-flex">
+              <div>
+                <h3>🔄 Continual Online Learning &amp; Replay Buffer (Phase 13)</h3>
+                <p class="text-muted text-sm">Streaming experience rehearsal and Elastic Weight Consolidation (EWC) parameter penalty protection against catastrophic forgetting.</p>
+              </div>
+              <div class="btn-group">
+                <button class="btn btn-secondary btn-sm" id="btn-refresh-replay-buffer">🔄 Refresh Replay</button>
+                <button class="btn btn-secondary btn-sm" id="btn-open-sample-batch-modal">🎲 Sample Batch</button>
+                <button class="btn btn-primary btn-sm" id="btn-open-add-replay-modal">+ Add Replay Sample</button>
+              </div>
+            </div>
+
+            <!-- Buffer Metrics -->
+            <div class="metrics-grid mt-3">
+              <div class="metric-card">
+                <div class="metric-header">
+                  <span class="metric-label">Replay Buffer Size</span>
+                  <span class="metric-badge">SQLite</span>
+                </div>
+                <div class="metric-value" id="replay-total-count">0</div>
+                <div class="metric-sub" id="replay-capacity-sub">Capacity: 10,000 / domain</div>
+              </div>
+
+              <div class="metric-card">
+                <div class="metric-header">
+                  <span class="metric-label">Domain Distribution</span>
+                  <span class="metric-badge">Balanced</span>
+                </div>
+                <div class="metric-value" id="replay-domains-count">4 Domains</div>
+                <div class="metric-sub" id="replay-domains-sub">Reasoning, Coding, Tools, General</div>
+              </div>
+
+              <div class="metric-card">
+                <div class="metric-header">
+                  <span class="metric-label">EWC Checkpoints</span>
+                  <span class="metric-badge">Fisher Diagonal</span>
+                </div>
+                <div class="metric-value" id="ewc-checkpoints-count">0</div>
+                <div class="metric-sub">Protected task parameter references</div>
+              </div>
+
+              <div class="metric-card">
+                <div class="metric-header">
+                  <span class="metric-label">Prefix Tuning</span>
+                  <span class="metric-badge">Virtual Soft Prompts</span>
+                </div>
+                <div class="metric-value">Prefix Tuner</div>
+                <div class="metric-sub">Prefix length 16 • Interpolation enabled</div>
+              </div>
+            </div>
+
+            <!-- Replay Samples Table -->
+            <div class="table-responsive mt-3">
+              <table class="data-table" id="replay-samples-table">
+                <thead>
+                  <tr>
+                    <th>Domain</th>
+                    <th>Priority</th>
+                    <th>Usage</th>
+                    <th>Input Sample</th>
+                    <th>Target Output</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="replay-samples-tbody">
+                  <tr><td colspan="7" class="text-center">Loading replay buffer...</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- EWC Checkpoints Table -->
+            <div class="mt-4">
+              <div class="card-header-flex">
+                <h4>EWC Consolidated Parameter Checkpoints</h4>
+                <button class="btn btn-secondary btn-sm" id="btn-refresh-ewc-table">🔄 Refresh EWC</button>
+              </div>
+              <div class="table-responsive mt-2">
+                <table class="data-table" id="ewc-checkpoints-table">
+                  <thead>
+                    <tr>
+                      <th>Task Name</th>
+                      <th>Experiment ID</th>
+                      <th>Importance (&lambda;)</th>
+                      <th>Parameters</th>
+                      <th>Created</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ewc-checkpoints-tbody">
+                    <tr><td colspan="5" class="text-center">Loading EWC checkpoints...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -848,6 +946,42 @@
                   </thead>
                   <tbody id="steering-directives-tbody">
                     <tr><td colspan="7" class="text-center text-muted">No steering directives active.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Neuro-Symbolic Verification Engine (Phase 13) -->
+          <div class="card research-card" style="margin-top: 16px;">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h3 style="margin:0;">📐 Neuro-Symbolic Verification Engine</h3>
+                <p style="color:var(--text-muted); font-size:0.8rem; margin:2px 0 0 0;">
+                  Phase 13: Formal AST invariant verification (termination &amp; safety), mathematical continuous boundary checking, and propositional logic resolution refutation.
+                </p>
+              </div>
+              <div class="btn-group">
+                <button class="btn btn-sm btn-secondary" id="btn-refresh-symbolic-table">🔄 Refresh</button>
+                <button class="btn btn-sm btn-primary" id="btn-open-verify-modal">⚡ Run Formal Verification</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="data-table" id="symbolic-verifications-table">
+                  <thead>
+                    <tr>
+                      <th>Verification ID</th>
+                      <th>Target Type</th>
+                      <th>Status</th>
+                      <th>Expression / Code Preview</th>
+                      <th>Violations</th>
+                      <th>Latency</th>
+                      <th>Created</th>
+                    </tr>
+                  </thead>
+                  <tbody id="symbolic-verifications-tbody">
+                    <tr><td colspan="7" class="text-center text-muted">No formal verifications recorded yet.</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -2193,6 +2327,145 @@
       <div class="modal-actions" style="padding:16px; border-top:1px solid var(--border-color);">
         <button type="button" class="btn btn-secondary" id="btn-close-kernel-code-btn">Close</button>
       </div>
+    </div>
+  <!-- Modal for Ingesting Replay Sample (Phase 13) -->
+  <div class="modal-backdrop" id="replay-sample-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 620px;">
+      <div class="modal-header">
+        <h3>➕ Add Streaming Replay Sample</h3>
+        <button class="modal-close-btn" id="btn-close-replay-sample-modal">&times;</button>
+      </div>
+      <form id="replay-sample-form" class="standard-form">
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="replay-domain-select">Task Domain:</label>
+            <select id="replay-domain-select" class="form-select" required>
+              <option value="reasoning">Reasoning &amp; Chain-of-Thought</option>
+              <option value="coding">Coding &amp; Software Synthesis</option>
+              <option value="tools">Tool Use &amp; Task Execution</option>
+              <option value="general">General Instruction &amp; QA</option>
+            </select>
+          </div>
+          <div class="form-group flex-1">
+            <label for="replay-priority-input">Priority Score (0.01 - 100.0):</label>
+            <input type="number" id="replay-priority-input" class="form-input" value="1.0" min="0.01" max="100.0" step="0.1" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="replay-input-text">Sample Input / Prompt:</label>
+          <textarea id="replay-input-text" class="form-textarea" rows="3" placeholder="Input prompt or question..." required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="replay-target-text">Sample Target / Ground Truth Output:</label>
+          <textarea id="replay-target-text" class="form-textarea" rows="3" placeholder="Expected completion or response..." required></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-replay-sample-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-replay-sample">📥 Add to Replay Buffer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Sampling Balanced Batch (Phase 13) -->
+  <div class="modal-backdrop" id="replay-batch-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3>🎲 Sample Balanced Rehearsal Batch</h3>
+        <button class="modal-close-btn" id="btn-close-replay-batch-modal">&times;</button>
+      </div>
+      <div style="padding:16px;">
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="batch-size-input">Batch Size:</label>
+            <input type="number" id="batch-size-input" class="form-input" value="4" min="1" max="32">
+          </div>
+          <div class="form-group flex-1" style="display:flex; align-items:flex-end;">
+            <button class="btn btn-primary" id="btn-generate-batch" style="width:100%;">⚡ Sample Replay Batch</button>
+          </div>
+        </div>
+        <div class="mt-3" id="batch-results-container" style="max-height:360px; overflow-y:auto; display:none;">
+          <!-- Dynamically populated sampled items -->
+        </div>
+      </div>
+      <div class="modal-actions" style="padding:16px; border-top:1px solid var(--border-color);">
+        <button type="button" class="btn btn-secondary" id="btn-close-batch-modal-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Neuro-Symbolic Verification (Phase 13) -->
+  <div class="modal-backdrop" id="symbolic-verify-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 700px;">
+      <div class="modal-header">
+        <h3>📐 Run Neuro-Symbolic Verification</h3>
+        <button class="modal-close-btn" id="btn-close-symbolic-modal">&times;</button>
+      </div>
+      <form id="symbolic-verify-form" class="standard-form">
+        <div class="form-group">
+          <label for="symbolic-type-select">Verification Domain / Target Type:</label>
+          <select id="symbolic-type-select" class="form-select">
+            <option value="code">Python Code Invariants (Safety, AST, Termination, Zero-Div)</option>
+            <option value="math">Mathematical Continuous Bounds (f(x) &ge; 0, [a, b], Monotonicity)</option>
+            <option value="logic">Propositional Logic Resolution Refutation (Theorem Prover)</option>
+          </select>
+        </div>
+
+        <!-- Dynamic Form Body 1: Code -->
+        <div id="symbolic-code-fields">
+          <div class="form-group">
+            <label for="symbolic-code-input">Python Code Snippet:</label>
+            <textarea id="symbolic-code-input" class="form-textarea" rows="4" placeholder="def process(items):&#10;    return len(items)">def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n - 1) + fibonacci(n - 2)</textarea>
+          </div>
+        </div>
+
+        <!-- Dynamic Form Body 2: Math -->
+        <div id="symbolic-math-fields" style="display:none;">
+          <div class="form-group">
+            <label for="symbolic-math-expr">Mathematical Expression f(x):</label>
+            <input type="text" id="symbolic-math-expr" class="form-input" placeholder="e.g. x**2 + 1" value="x**2 + 1">
+          </div>
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label for="symbolic-math-min">Domain Min:</label>
+              <input type="number" id="symbolic-math-min" class="form-input" value="0.0" step="0.1">
+            </div>
+            <div class="form-group flex-1">
+              <label for="symbolic-math-max">Domain Max:</label>
+              <input type="number" id="symbolic-math-max" class="form-input" value="10.0" step="0.1">
+            </div>
+            <div class="form-group flex-1">
+              <label for="symbolic-math-rule">Property Rule:</label>
+              <select id="symbolic-math-rule" class="form-select">
+                <option value="non_negative">f(x) &ge; 0 (Non-negative)</option>
+                <option value="monotonic_increasing">Monotonic Increasing</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dynamic Form Body 3: Logic -->
+        <div id="symbolic-logic-fields" style="display:none;">
+          <div class="form-group">
+            <label for="symbolic-logic-premises">Premises (comma-separated):</label>
+            <input type="text" id="symbolic-logic-premises" class="form-input" placeholder="P -> Q, P" value="P -> Q, P">
+          </div>
+          <div class="form-group">
+            <label for="symbolic-logic-hypothesis">Hypothesis (Target to Verify):</label>
+            <input type="text" id="symbolic-logic-hypothesis" class="form-input" placeholder="Q" value="Q">
+          </div>
+        </div>
+
+        <div id="symbolic-verify-verdict" class="alert-box mt-3" style="display:none;"></div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-symbolic-modal">Close</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-symbolic-verify">⚡ Verify Invariant</button>
+        </div>
+      </form>
     </div>
   </div>
 

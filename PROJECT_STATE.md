@@ -1,10 +1,10 @@
 # PROJECT STATE
 
-> Last updated: 2026-10-15 by Senior AI/ML Engineer (Phase 12 completion & Phase 13 activation)
+> Last updated: 2026-10-15 by Senior AI/ML Engineer (Phase 13 completion & Phase 14 activation)
 
 ## Current Phase
 
-**Phase 12 Complete (Verified) → Phase 13: Continual Online Learning & Neuro-Symbolic Verification Engine (Active)**
+**Phase 13 Complete (Verified) → Phase 14: Autonomous Recursive Self-Architecting & Hardware-Targeted Micro-Quantization (Active)**
 
 ## Implemented
 
@@ -149,9 +149,24 @@
 - [x] Architecture Decision Record ADR-013 (`docs/decisions/ADR-013-autonomous-kernel-synthesis-and-cross-fleet-model-merging.md`)
 - [x] Comprehensive test suite in `tests/`: 254 tests covering all subsystems (100% passing)
 
+### Continual Online Learning & Neuro-Symbolic Verification (Phase 13)
+- [x] Streaming Prioritized Experience Replay Buffer (`genesis/training/continual.py`): capacity-bounded rehearsal store (`ReplaySample`, `ReplayBufferManager`) across `reasoning`, `coding`, `tools`, and `general` domains with duplicate fingerprinting, priority scoring, stratified rehearsal sampling (`sample_batch`), and usage count balancing
+- [x] Elastic Weight Consolidation (EWC) Regularization Engine (`genesis/training/continual.py`): parameter importance consolidation (`EWCRecord`, `EWCConsolidator`) evaluating empirical diagonal Fisher Information matrices ($F_i$) from validation gradient variances and computing quadratic penalty losses ($L_{\text{EWC}} = \frac{\lambda}{2}\sum F_i(\theta_i - \theta_i^*)^2$) to prevent catastrophic forgetting
+- [x] Virtual Soft Prompt Prefix Tuning Manager (`genesis/training/continual.py`): soft prompt prefix synthesizer (`PrefixTuningConfig`, `PrefixTuningManager`) with Gaussian initialization and task prefix interpolation ($P = (1-\alpha)P_a + \alpha P_b$)
+- [x] Neuro-Symbolic Formal Verification Engine (`genesis/research/symbolic.py`): deterministic verification engine (`SymbolicConstraint`, `VerificationResult`, `NeuroSymbolicVerifier`) supporting:
+  - AST static analysis: termination invariant checking, recursion base-case verification, safety/purity enforcement (prohibits `eval`, `exec`, `__import__`, `globals`), and division-by-zero detection
+  - Continuous mathematical bounds verification: non-negativity ($f(x) \ge 0$), domain boundary range constraints, and monotonicity checking
+  - Propositional logic resolution refutation theorem proving
+- [x] SQLite database schema v13 (`replay_buffers`, `ewc_checkpoints`, `symbolic_verifications` tables with foreign key cascades, indexes, and automated migrations) (`genesis/core/database.py`)
+- [x] Phase 13 REST API routes mounted under `/api/continual` and `/api/symbolic` (`genesis/api/app.py`)
+- [x] Interactive Web Dashboard UI (`genesis/web/`): Continual Learning & Experience Replay panel in Training tab, EWC Checkpoints table, Replay Sample modal, Rehearsal Batch modal, and Neuro-Symbolic Verification console with interactive workbench in Research tab
+- [x] Architecture Decision Record ADR-014 (`docs/decisions/ADR-014-continual-online-learning-and-neuro-symbolic-verification.md`)
+- [x] Comprehensive test suite in `tests/`: 266 tests covering all subsystems (100% passing)
+
 ## Verified
 
-- [x] **254/254 unit and integration tests pass (100% passing)** across all modules
+- [x] **266/266 unit and integration tests pass (100% passing)** across all modules
+- [x] **Phase 13 Acceptance Criterion verified**: The platform mitigates catastrophic forgetting via streaming prioritized experience replay and EWC quadratic Fisher penalty regularization, provides parameter-efficient virtual prompt prefix tuning, and deterministically verifies code termination invariants, continuous mathematical bounds, and propositional logic hypotheses
 - [x] **Phase 12 Acceptance Criterion verified**: The platform autonomously synthesizes, validates against ground-truth math, and reflectively repairs C/SIMD tensor acceleration kernels, performs cross-fleet parameter merging via SLERP, TIES, DARE, and Linear methods, and exposes live human-in-the-loop steering controls for operator oversight
 - [x] **Phase 11 Acceptance Criterion verified**: The platform dynamically detects host compilers, compiles hot-path tensor routines with transparent Python fallbacks and benchmark profiling, coordinates distributed fleet nodes with heartbeat tracking, and performs air-gapped or network delta bundle synchronization with timestamp conflict resolution
 - [x] **Phase 10 Acceptance Criterion verified**: The platform autonomously parses and validates visual artifacts, weaves cross-campaign concepts, debates, and experiments into a searchable meta-memory knowledge graph, and continuously runs closed-loop scientific research cycles publishing peer-structured IMRaD papers
@@ -194,9 +209,9 @@
 | Node.js | 24.17.0 |
 | Git | 2.54.0 |
 
-## Next Steps (Phase 13: Continual Online Learning & Neuro-Symbolic Verification Engine)
+## Next Steps (Phase 14: Autonomous Recursive Self-Architecting & Hardware-Targeted Micro-Quantization)
 
-1. **Streaming Memory Replay Buffers with EWC Regularization:** Implement an online replay mechanism that computes diagonal Fisher information matrices during fine-tuning to prevent catastrophic forgetting of core reasoning and tool use capabilities.
-2. **Neuro-Symbolic Constraint Verification:** Build a formal verification pipeline coupling LLM code synthesis with static symbolic constraints, Z3-based SAT/SMT assertions, and mathematical invariant checkers.
-3. **Dynamic Prompt Prefix Tuning & Fleet Task Distillation:** Orchestrate parameter-efficient soft prompt prefix distribution across workstation fleet nodes to distill specialized task capabilities into lightweight adapters.
+1. **Autonomous Neural Architecture Search (NAS) & Block Pruning:** Implement a hardware-aware pruning and architecture search engine that evaluates layer sensitivity, prunes redundant attention heads, and adjusts intermediate MLP feed-forward dimensions to fit strict VRAM targets on RTX 2000 Ada (8GB).
+2. **Hardware-Targeted Micro-Quantization Engine:** Build mixed-precision 2-bit, 3-bit, and 4-bit activation-aware weight quantization (AWQ/GPTQ) algorithms with salient weight protection to maximize tensor throughput on local Ada Lovelace tensor cores.
+3. **Self-Speculative Decoding Engine:** Implement local speculative decoding coupling small draft architectures (`qwen2.5-coder:1.5b-base`) with target models (`qwen2.5:7b`) to accelerate inference latency by 1.8x-2.5x without loss of generation accuracy.
 

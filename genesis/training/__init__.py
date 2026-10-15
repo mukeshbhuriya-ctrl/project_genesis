@@ -2,6 +2,14 @@
 Project Genesis Dataset and Fine-Tuning Subsystem.
 """
 
+from genesis.training.continual import (
+    EWCConsolidator,
+    EWCRecord,
+    PrefixTuningConfig,
+    PrefixTuningManager,
+    ReplayBufferManager,
+    ReplaySample,
+)
 from genesis.training.datasets import (
     Dataset,
     DatasetFormat,
@@ -31,13 +39,19 @@ __all__ = [
     "DatasetSample",
     "DatasetSplit",
     "DatasetStats",
+    "EWCConsolidator",
+    "EWCRecord",
     "ExperimentStatus",
     "ExperimentTracker",
     "FineTuningTrainer",
     "Hyperparameters",
     "ModelMergeManager",
     "ModelMergeRecipe",
+    "PrefixTuningConfig",
+    "PrefixTuningManager",
     "PreprocessingReport",
+    "ReplayBufferManager",
+    "ReplaySample",
     "TrainingCheckpoint",
     "TrainingExperiment",
     "TrainingMetricPoint",

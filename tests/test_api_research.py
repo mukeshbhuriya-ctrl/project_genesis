@@ -128,8 +128,10 @@ class TestResearchAPI:
             model="qwen2.5:7b",
         )
 
-        with patch("genesis.models.ollama_backend.OllamaProvider.generate", new_callable=AsyncMock) as mock_gen:
+        with patch("genesis.models.ollama_backend.OllamaProvider.generate", new_callable=AsyncMock) as mock_gen, \
+             patch("genesis.models.ollama_backend.OllamaProvider.embed", new_callable=AsyncMock) as mock_emb:
             mock_gen.return_value = mock_brief
+            mock_emb.return_value = [[0.02] * 768]
 
             res = client.post(
                 "/api/research/synthesize",

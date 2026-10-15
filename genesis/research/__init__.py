@@ -38,6 +38,11 @@ from genesis.research.steering import (
     SteeringController,
     SteeringEvent,
 )
+from genesis.research.symbolic import (
+    NeuroSymbolicVerifier,
+    SymbolicConstraint,
+    VerificationResult,
+)
 from genesis.research.synthesis import (
     AdaptiveKnowledgeSynthesizer,
     Citation,
@@ -62,7 +67,10 @@ __all__ = [
     "ResearchPaper",
     "KernelSynthesisEngine",
     "KernelSynthesisExperiment",
+    "NeuroSymbolicVerifier",
     "SteeringController",
     "SteeringEvent",
+    "SymbolicConstraint",
+    "VerificationResult",
 ]
 

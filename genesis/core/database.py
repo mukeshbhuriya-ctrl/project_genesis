@@ -661,6 +661,52 @@ CREATE INDEX IF NOT EXISTS idx_steering_target ON steering_events(target_type, t
 CREATE INDEX IF NOT EXISTS idx_steering_status ON steering_events(status);
 """
 
+SCHEMA_V13 = """
+-- Continual Learning Streaming Memory Replay Buffers
+CREATE TABLE IF NOT EXISTS replay_buffers (
+    id TEXT PRIMARY KEY,
+    task_domain TEXT NOT NULL CHECK (task_domain IN ('reasoning', 'coding', 'tools', 'general')),
+    sample_input TEXT NOT NULL,
+    sample_target TEXT NOT NULL,
+    priority_score REAL NOT NULL DEFAULT 1.0,
+    usage_count INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_replay_buffers_domain ON replay_buffers(task_domain);
+CREATE INDEX IF NOT EXISTS idx_replay_buffers_priority ON replay_buffers(priority_score DESC);
+
+-- Elastic Weight Consolidation (EWC) Checkpoints & Fisher Diagonal
+CREATE TABLE IF NOT EXISTS ewc_checkpoints (
+    id TEXT PRIMARY KEY,
+    experiment_id TEXT REFERENCES training_experiments(id) ON DELETE CASCADE,
+    task_name TEXT NOT NULL,
+    importance_lambda REAL NOT NULL DEFAULT 1000.0,
+    fisher_diagonal_json TEXT NOT NULL DEFAULT '{}',
+    optimal_weights_json TEXT NOT NULL DEFAULT '{}',
+    parameter_count INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_ewc_checkpoints_exp ON ewc_checkpoints(experiment_id);
+CREATE INDEX IF NOT EXISTS idx_ewc_checkpoints_task ON ewc_checkpoints(task_name);
+
+-- Neuro-Symbolic Verification Records
+CREATE TABLE IF NOT EXISTS symbolic_verifications (
+    id TEXT PRIMARY KEY,
+    target_type TEXT NOT NULL CHECK (target_type IN ('code', 'math', 'hypothesis', 'kernel')),
+    expression_or_code TEXT NOT NULL,
+    constraints_json TEXT NOT NULL DEFAULT '[]',
+    status TEXT NOT NULL CHECK (status IN ('verified', 'violated', 'inconclusive')),
+    violations_json TEXT NOT NULL DEFAULT '[]',
+    verification_latency_ms REAL NOT NULL DEFAULT 0.0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_symbolic_target_type ON symbolic_verifications(target_type);
+CREATE INDEX IF NOT EXISTS idx_symbolic_status ON symbolic_verifications(status);
+"""
+
 
 def get_sync_connection(db_path: str | Path) -> sqlite3.Connection:
     """Create a synchronous SQLite connection with recommended pragmas."""
@@ -812,6 +858,16 @@ def initialize_database(db_path: str | Path) -> None:
             )
             conn.commit()
             log.info("Schema v12 applied successfully.")
+
+        if current_version < 13:
+            log.info("Applying schema v13...")
+            conn.executescript(SCHEMA_V13)
+            conn.execute(
+                "INSERT OR REPLACE INTO schema_migrations (version, description) "
+                "VALUES (13, 'Schema v13: continual replay buffers, EWC checkpoints, and neuro-symbolic verifications')"
+            )
+            conn.commit()
+            log.info("Schema v13 applied successfully.")
         else:
             log.info(f"Database schema is at version {current_version}, up to date.")
 

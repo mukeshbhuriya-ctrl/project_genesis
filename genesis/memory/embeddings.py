@@ -10,6 +10,7 @@ from typing import Sequence
 
 from genesis.core import get_settings
 from genesis.core.logging import get_logger
+from genesis.models import ModelProvider
 from genesis.models.ollama_backend import OllamaProvider
 
 log = get_logger("memory.embeddings")
@@ -49,7 +50,7 @@ def cosine_similarity(v1: Sequence[float], v2: Sequence[float]) -> float:
 class EmbeddingEngine:
     """High-level client for generating and storing vector embeddings."""
 
-    def __init__(self, provider: OllamaProvider | None = None, model: str | None = None):
+    def __init__(self, provider: ModelProvider | None = None, model: str | None = None):
         self.provider = provider or OllamaProvider()
         settings = get_settings()
         self.model = model or settings.embedding_model or "nomic-embed-text"

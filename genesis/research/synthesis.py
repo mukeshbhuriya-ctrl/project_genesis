@@ -24,6 +24,7 @@ from genesis.core.database import get_sync_connection
 from genesis.core.logging import get_logger
 from genesis.knowledge.indexer import KnowledgeIndexer
 from genesis.memory import MemoryStore
+from genesis.memory.embeddings import EmbeddingEngine
 from genesis.models import GenerationRequest, ModelProvider
 from genesis.models.ollama_backend import OllamaProvider
 
@@ -101,7 +102,11 @@ class AdaptiveKnowledgeSynthesizer:
     ) -> None:
         self.provider = provider or OllamaProvider()
         self.db_path = Path(db_path)
-        self.indexer = indexer or KnowledgeIndexer(db_path=str(self.db_path))
+        if indexer is not None:
+            self.indexer = indexer
+        else:
+            engine = EmbeddingEngine(provider=self.provider)
+            self.indexer = KnowledgeIndexer(db_path=str(self.db_path), engine=engine)
         self.memory_store = memory_store or MemoryStore(db_path=str(self.db_path))
         self.model_id = model_id
 

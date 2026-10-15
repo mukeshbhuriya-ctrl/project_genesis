@@ -990,6 +990,22 @@ body {
   color: #38bdf8;
   margin-bottom: 12px;
 }
+.alert-box {
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+.alert-success {
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #34d399;
+}
+.alert-danger {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #f87171;
+}
 .profile-action-box {
   background: rgba(0, 0, 0, 0.2);
   border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));

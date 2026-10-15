@@ -67,6 +67,9 @@ class TestDatabaseInitialization:
             assert "kernel_experiments" in tables
             assert "model_merges" in tables
             assert "steering_events" in tables
+            assert "replay_buffers" in tables
+            assert "ewc_checkpoints" in tables
+            assert "symbolic_verifications" in tables
         finally:
             conn.close()
 
