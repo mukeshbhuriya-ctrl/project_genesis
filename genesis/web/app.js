@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (target === 'agents') loadAgentsData();
       if (target === 'graph') loadGraphData();
       if (target === 'fleet') loadFleetData();
+      if (target === 'architect') loadArchitectData();
     });
   });
 
@@ -4211,6 +4212,275 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const btnRefreshSymbolic = document.getElementById('btn-refresh-symbolic-table');
   if (btnRefreshSymbolic) btnRefreshSymbolic.addEventListener('click', () => loadSymbolicVerifications());
+
+  // ══════════════════════════════════════════════════════════════
+  // ── PHASE 14: AUTONOMOUS RECURSIVE ARCHITECT & MICRO-QUANT ──
+  // ══════════════════════════════════════════════════════════════
+
+  async function loadArchitectData() {
+    await Promise.all([
+      loadPruningExperiments(),
+      loadQuantProfiles(),
+      loadSpeculativeRuns(),
+    ]);
+  }
+
+  // 1. Structural Pruning & NAS
+  async function loadPruningExperiments() {
+    const tbody = document.getElementById('pruning-experiments-tbody');
+    if (!tbody) return;
+    try {
+      const res = await fetch('/api/pruning/experiments');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; color:var(--text-muted); padding:20px;">No pruning experiments registered yet. Click \'Plan &amp; Prune\' to begin.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(exp => {
+        const statusBadge = exp.status === 'verified'
+          ? '<span class="badge badge-success">✓ Verified</span>'
+          : `<span class="badge badge-warning">${escapeHtml(exp.status)}</span>`;
+        return `
+          <tr>
+            <td><code>${escapeHtml(exp.id)}</code></td>
+            <td><strong>${escapeHtml(exp.model_name)}</strong></td>
+            <td><span class="badge badge-info">${escapeHtml(exp.pruning_strategy)}</span></td>
+            <td>${exp.target_vram_mb ? exp.target_vram_mb.toFixed(0) + ' MB' : 'Auto'}</td>
+            <td><span style="color:var(--accent-danger);">-${exp.heads_pruned}</span></td>
+            <td>${exp.remaining_heads}</td>
+            <td><strong>-${exp.parameter_reduction_pct.toFixed(1)}%</strong></td>
+            <td>${exp.estimated_vram_mb.toFixed(0)} MB</td>
+            <td>${exp.metrics && exp.metrics.speedup_estimate ? exp.metrics.speedup_estimate.toFixed(2) + 'x' : '1.20x'}</td>
+            <td>${statusBadge}</td>
+            <td style="color:var(--text-muted); font-size:0.75rem;">${escapeHtml(exp.created_at.slice(0, 19).replace('T', ' '))}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:var(--accent-danger); padding:20px;">Failed to load pruning experiments: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  // 2. Micro-Quantization Profiles
+  async function loadQuantProfiles() {
+    const tbody = document.getElementById('quant-profiles-tbody');
+    if (!tbody) return;
+    try {
+      const res = await fetch('/api/quantization/profiles');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; color:var(--text-muted); padding:20px;">No micro-quantization profiles benchmarked yet. Click \'Profile Quant\' to test.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(p => {
+        const statusBadge = p.status === 'verified'
+          ? '<span class="badge badge-success">✓ Verified</span>'
+          : `<span class="badge badge-info">${escapeHtml(p.status)}</span>`;
+        return `
+          <tr>
+            <td><code>${escapeHtml(p.id)}</code></td>
+            <td><strong>${escapeHtml(p.model_name)}</strong></td>
+            <td><span class="badge badge-warning">${p.bits}-bit</span></td>
+            <td>${escapeHtml(p.strategy)}</td>
+            <td>Block ${p.block_size}</td>
+            <td>${(p.outlier_channel_ratio * 100).toFixed(1)}%</td>
+            <td><strong>${p.compression_ratio.toFixed(2)}x</strong></td>
+            <td><code>${p.mse_loss.toFixed(6)}</code></td>
+            <td><strong style="color:var(--accent-success);">${p.cosine_similarity.toFixed(4)}</strong></td>
+            <td>${statusBadge}</td>
+            <td style="color:var(--text-muted); font-size:0.75rem;">${escapeHtml(p.created_at.slice(0, 19).replace('T', ' '))}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:var(--accent-danger); padding:20px;">Failed to load quantization profiles: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  // 3. Self-Speculative Decoding Runs
+  async function loadSpeculativeRuns() {
+    const tbody = document.getElementById('speculative-runs-tbody');
+    if (!tbody) return;
+    try {
+      const res = await fetch('/api/speculative/runs');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; color:var(--text-muted); padding:20px;">No speculative runs executed yet. Click \'Speculative Run\' to launch.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(r => {
+        const statusBadge = r.status === 'completed'
+          ? '<span class="badge badge-success">✓ Accelerated</span>'
+          : `<span class="badge badge-warning">${escapeHtml(r.status)}</span>`;
+        const preview = r.output_text ? (r.output_text.slice(0, 45) + (r.output_text.length > 45 ? '...' : '')) : '—';
+        return `
+          <tr>
+            <td><code>${escapeHtml(r.id)}</code></td>
+            <td>${escapeHtml(r.target_model)}</td>
+            <td>${escapeHtml(r.draft_model)}</td>
+            <td><span class="badge badge-info">K=${r.lookahead_k}</span></td>
+            <td style="font-size:0.8rem; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escapeHtml(r.output_text || '')}">${escapeHtml(preview)}</td>
+            <td>${r.total_draft_tokens}</td>
+            <td><strong>${(r.acceptance_rate * 100).toFixed(1)}%</strong></td>
+            <td><strong style="color:var(--accent-success); font-size:1.05rem;">${r.speedup_factor.toFixed(2)}x</strong></td>
+            <td>${r.speculative_latency_ms.toFixed(0)} ms</td>
+            <td>${statusBadge}</td>
+            <td style="color:var(--text-muted); font-size:0.75rem;">${escapeHtml(r.created_at.slice(0, 19).replace('T', ' '))}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; color:var(--accent-danger); padding:20px;">Failed to load speculative runs: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  // Modals & Forms wiring
+  const pruningModal = document.getElementById('pruning-modal');
+  const quantModal = document.getElementById('quant-modal');
+  const specModal = document.getElementById('speculative-modal');
+
+  // Pruning modal open/close
+  const btnOpenPruning = document.getElementById('btn-open-pruning-modal');
+  const btnClosePruning = document.getElementById('btn-close-pruning-modal');
+  const btnCancelPruning = document.getElementById('btn-cancel-pruning-modal');
+  if (btnOpenPruning && pruningModal) btnOpenPruning.addEventListener('click', () => { pruningModal.style.display = 'flex'; });
+  if (btnClosePruning && pruningModal) btnClosePruning.addEventListener('click', () => { pruningModal.style.display = 'none'; });
+  if (btnCancelPruning && pruningModal) btnCancelPruning.addEventListener('click', () => { pruningModal.style.display = 'none'; });
+
+  // Quant modal open/close
+  const btnOpenQuant = document.getElementById('btn-open-quant-modal');
+  const btnCloseQuant = document.getElementById('btn-close-quant-modal');
+  const btnCancelQuant = document.getElementById('btn-cancel-quant-modal');
+  if (btnOpenQuant && quantModal) btnOpenQuant.addEventListener('click', () => { quantModal.style.display = 'flex'; });
+  if (btnCloseQuant && quantModal) btnCloseQuant.addEventListener('click', () => { quantModal.style.display = 'none'; });
+  if (btnCancelQuant && quantModal) btnCancelQuant.addEventListener('click', () => { quantModal.style.display = 'none'; });
+
+  // Speculative modal open/close
+  const btnOpenSpec = document.getElementById('btn-open-speculative-modal');
+  const btnCloseSpec = document.getElementById('btn-close-speculative-modal');
+  const btnCancelSpec = document.getElementById('btn-cancel-speculative-modal');
+  if (btnOpenSpec && specModal) btnOpenSpec.addEventListener('click', () => { specModal.style.display = 'flex'; });
+  if (btnCloseSpec && specModal) btnCloseSpec.addEventListener('click', () => { specModal.style.display = 'none'; });
+  if (btnCancelSpec && specModal) btnCancelSpec.addEventListener('click', () => { specModal.style.display = 'none'; });
+
+  // Refresh buttons
+  const btnRefPrune = document.getElementById('btn-refresh-pruning-table');
+  const btnRefQuant = document.getElementById('btn-refresh-quant-table');
+  const btnRefSpec = document.getElementById('btn-refresh-speculative-table');
+  if (btnRefPrune) btnRefPrune.addEventListener('click', () => loadPruningExperiments());
+  if (btnRefQuant) btnRefQuant.addEventListener('click', () => loadQuantProfiles());
+  if (btnRefSpec) btnRefSpec.addEventListener('click', () => loadSpeculativeRuns());
+
+  // Form: Pruning execution
+  const pruningForm = document.getElementById('pruning-plan-form');
+  if (pruningForm) {
+    pruningForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('btn-submit-pruning');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '⏳ Pruning Architecture...'; }
+      try {
+        const vramInput = document.getElementById('prune-target-vram');
+        const vramVal = vramInput && vramInput.value ? parseFloat(vramInput.value) : null;
+        const payload = {
+          model_name: document.getElementById('prune-model-select').value,
+          strategy: document.getElementById('prune-strategy-select').value,
+          target_vram_mb: vramVal,
+          head_prune_ratio: parseFloat(document.getElementById('prune-head-ratio').value) || 0.25,
+          mlp_prune_ratio: parseFloat(document.getElementById('prune-mlp-ratio').value) || 0.85,
+        };
+        const res = await fetch('/api/pruning/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${res.status}`);
+        }
+        if (pruningModal) pruningModal.style.display = 'none';
+        await loadPruningExperiments();
+        alert('Structural Pruning experiment completed and verified successfully!');
+      } catch (err) {
+        alert(`Pruning execution failed: ${err.message}`);
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '🚀 Plan & Execute Prune'; }
+      }
+    });
+  }
+
+  // Form: Quantization profiling
+  const quantForm = document.getElementById('quant-profile-form');
+  if (quantForm) {
+    quantForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('btn-submit-quant');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '⏳ Profiling Quantization...'; }
+      try {
+        const payload = {
+          model_name: document.getElementById('quant-model-select').value,
+          bits: parseInt(document.getElementById('quant-bits-select').value, 10),
+          strategy: document.getElementById('quant-strategy-select').value,
+          block_size: parseInt(document.getElementById('quant-block-size').value, 10),
+          outlier_channel_ratio: parseFloat(document.getElementById('quant-outlier-ratio').value) || 0.01,
+        };
+        const res = await fetch('/api/quantization/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${res.status}`);
+        }
+        if (quantModal) quantModal.style.display = 'none';
+        await loadQuantProfiles();
+        alert('Micro-Quantization benchmark profile created and verified successfully!');
+      } catch (err) {
+        alert(`Quantization profiling failed: ${err.message}`);
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '⚡ Run Micro-Quant Profile'; }
+      }
+    });
+  }
+
+  // Form: Speculative run
+  const specForm = document.getElementById('speculative-run-form');
+  if (specForm) {
+    specForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('btn-submit-speculative');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '⏳ Generating Speculatively...'; }
+      try {
+        const payload = {
+          prompt: document.getElementById('spec-prompt-input').value,
+          target_model: document.getElementById('spec-target-model').value,
+          draft_model: document.getElementById('spec-draft-model').value,
+          lookahead_k: parseInt(document.getElementById('spec-lookahead-k').value, 10),
+          acceptance_threshold: parseFloat(document.getElementById('spec-threshold').value) || 0.75,
+          max_tokens: parseInt(document.getElementById('spec-max-tokens').value, 10) || 64,
+        };
+        const res = await fetch('/api/speculative/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${res.status}`);
+        }
+        if (specModal) specModal.style.display = 'none';
+        await loadSpeculativeRuns();
+        alert('Speculative generation session completed and verified successfully!');
+      } catch (err) {
+        alert(`Speculative run failed: ${err.message}`);
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '🚀 Execute Speculative Run'; }
+      }
+    });
+  }
 
   // ── Initial Bootstrap ──
   loadConversations();

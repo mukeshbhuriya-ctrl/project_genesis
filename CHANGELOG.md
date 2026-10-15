@@ -2,6 +2,23 @@
 
 All notable changes to Project Genesis will be documented in this file.
 
+## [0.15.0] — 2026-10-15
+
+### Added
+- **Autonomous Recursive Self-Architecting, Hardware-Targeted Micro-Quantization, and Self-Speculative Decoding Engine (Phase 14)**:
+  - **Recursive Neural Architecture Search & Structural Block Pruner**: Implemented `RecursiveModelArchitect` (`genesis/models/pruning.py`) providing closed-form analytical transformer parameter calculations (embeddings, multi-head query/key/value projections, SwiGLU MLP intermediate expansions, RMSNorm layers) for `qwen2.5:7b`, `qwen2.5-coder:7b`, `qwen2.5-coder:1.5b-base`, and `llama3:8b`. Features first-order Taylor series sensitivity estimation ($|W \cdot \nabla_W L|$), L1 weight magnitude proxies, and autonomous parameter space optimization search over surviving attention heads ($h \ge h_{kv}$) and SwiGLU ratios ($m \in [0.6, 1.0]$) to satisfy target VRAM constraints ($< 5.5\text{ GB}$).
+  - **Hardware-Targeted Micro-Quantization Engine**: Implemented `MicroQuantizer` (`genesis/models/quantization.py`) supporting:
+    - *Symmetric Linear Uniform Quantization*: Zero-centered scaling factors with saturation clamping.
+    - *Asymmetric Affine Quantization*: Scale and non-negative integer zero-point offset formulation guaranteeing exact zero-point preservation ($w_{\min} \le 0.0 \le w_{\max}$).
+    - *Blocked Quantization*: Partitions tensor matrices into granular sub-blocks ($N \in \{32, 64, 128\}$) to suppress dynamic range outliers.
+    - *Activation-Aware Weight Quantization (AWQ)*: Isolates top salient outlier activation channels, preserving them in FP16 precision while quantizing non-outliers into 4-bit, 3-bit, or 2-bit representations. Computes reconstruction Mean Squared Error (MSE) and cosine similarity ($> 0.95$).
+  - **Self-Speculative Decoding Engine**: Implemented `SpeculativeEngine` (`genesis/models/speculative.py`) pairing lightweight draft model proposals (`qwen2.5-coder:1.5b-base`) with target model verification (`qwen2.5:7b`) via Leviathan rejection sampling across draft lookahead sequences ($K \in [1, 8]$). Evaluates acceptance ratios ($\alpha$), emits corrective tokens on rejection, and models analytical speedup factors ($1.8\text{x} - 2.6\text{x}$) with SQLite session telemetry logging.
+  - **Database Schema V14**: Added `pruning_experiments`, `quantization_profiles`, and `speculative_runs` relational tables in SQLite WAL mode with indexes and automated migration logic (`genesis/core/database.py`).
+  - **Phase 14 REST API Endpoints**: Mounted `/api/pruning/*` (`/architectures`, `/plan`, `/execute`, `/experiments`, `/experiments/{id}`), `/api/quantization/*` (`/strategies`, `/profile`, `/profiles`, `/profiles/{id}`), and `/api/speculative/*` (`/configs`, `/run`, `/runs`, `/runs/{id}`) in `genesis/api/app.py`.
+  - **Interactive Web Dashboard Module**: Dedicated "NAS & Micro-Quant" navigation tab (`#pane-architect`), structural pruning experiment table, micro-quantization profile benchmarking card, self-speculative decoding session manager, and 3 interactive modal dialogs for planning, profiling, and speculative inference (`genesis/web/`).
+  - **Architecture Decision Record**: ADR-015 Autonomous Recursive Self-Architecting, Hardware-Targeted Micro-Quantization, and Self-Speculative Decoding (`docs/decisions/ADR-015-autonomous-recursive-self-architecting-and-micro-quantization.md`).
+  - **Comprehensive Test Suite**: 20 new unit and integration tests across pruning math, Taylor sensitivity, VRAM constraints, symmetric/asymmetric/AWQ quantization, rejection sampling, and REST endpoints (`tests/test_pruning.py`, `tests/test_quantization.py`, `tests/test_speculative.py`, `tests/test_api_architecting.py`), expanding repository baseline to 286 passing tests (100% pass rate).
+
 ## [0.14.0] — 2026-10-15
 
 ### Added

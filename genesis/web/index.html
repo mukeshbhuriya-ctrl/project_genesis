@@ -23,7 +23,7 @@
         </div>
         <div class="brand-title">
           <span class="brand-name">GENESIS</span>
-          <span class="brand-tag">v0.14.0 • Local-First</span>
+          <span class="brand-tag">v0.15.0 • Local-First</span>
         </div>
       </div>
 
@@ -63,6 +63,9 @@
         </button>
         <button class="nav-tab" data-tab="fleet" id="tab-fleet-btn">
           <span class="tab-icon">🌐</span> Fleet &amp; Compilers
+        </button>
+        <button class="nav-tab" data-tab="architect" id="tab-architect-btn">
+          <span class="tab-icon">📐</span> NAS &amp; Micro-Quant
         </button>
         <button class="nav-tab" data-tab="hardware" id="tab-hardware-btn">
           <span class="tab-icon">⚡</span> System &amp; Hardware
@@ -1794,6 +1797,140 @@
 
         </div>
       </section>
+
+      <!-- 13. ARCHITECT, NAS & MICRO-QUANT TAB (Phase 14) -->
+      <section class="tab-content" id="pane-architect">
+        <div class="standard-pane">
+          <!-- Overview Banner -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h3 style="font-size:1.15rem; margin:0;">📐 Autonomous Recursive Self-Architecting &amp; Hardware-Targeted Micro-Quantization</h3>
+                <p style="color:var(--text-muted); font-size:0.85rem; margin:4px 0 0 0;">
+                  Neural Architecture Search (NAS), Taylor head sensitivity pruning, activation-aware outlier protection (AWQ), and self-speculative decoding acceleration on NVIDIA RTX 2000 Ada (8 GB VRAM).
+                </p>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-sm btn-primary" id="btn-open-pruning-modal">✂️ Plan &amp; Prune</button>
+                <button class="btn btn-sm btn-primary" id="btn-open-quant-modal">🔬 Profile Quant</button>
+                <button class="btn btn-sm btn-primary" id="btn-open-speculative-modal">🚀 Speculative Run</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 1: Autonomous Structural Block Pruning & NAS -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h3 style="font-size:1.05rem; margin:0;">✂️ Structural Block Pruning &amp; NAS Experiments</h3>
+                <p style="color:var(--text-muted); font-size:0.8rem; margin:2px 0 0 0;">
+                  Evaluates attention head and SwiGLU MLP sensitivities to dynamically compress models into target VRAM constraints.
+                </p>
+              </div>
+              <button class="btn btn-sm btn-secondary" id="btn-refresh-pruning-table">🔄 Refresh</button>
+            </div>
+            <div class="card-body">
+              <div class="table-container">
+                <table class="data-table" id="pruning-experiments-table">
+                  <thead>
+                    <tr>
+                      <th>Experiment ID</th>
+                      <th>Model Name</th>
+                      <th>Strategy</th>
+                      <th>Target VRAM</th>
+                      <th>Pruned Heads</th>
+                      <th>Remaining Heads</th>
+                      <th>Param Reduction</th>
+                      <th>Est. VRAM</th>
+                      <th>Speedup</th>
+                      <th>Status</th>
+                      <th>Created At</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pruning-experiments-tbody">
+                    <tr><td colspan="11" style="text-align:center; color:var(--text-muted); padding:20px;">No pruning experiments registered yet. Click 'Plan &amp; Prune' to begin.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Hardware-Targeted Micro-Quantization Profiles -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h3 style="font-size:1.05rem; margin:0;">🔬 Hardware-Targeted Micro-Quantization (AWQ / 4-bit / 3-bit / 2-bit)</h3>
+                <p style="color:var(--text-muted); font-size:0.8rem; margin:2px 0 0 0;">
+                  Activation-aware salient channel preservation with granular block scaling factors optimized for Ada Lovelace Tensor Cores.
+                </p>
+              </div>
+              <button class="btn btn-sm btn-secondary" id="btn-refresh-quant-table">🔄 Refresh</button>
+            </div>
+            <div class="card-body">
+              <div class="table-container">
+                <table class="data-table" id="quant-profiles-table">
+                  <thead>
+                    <tr>
+                      <th>Profile ID</th>
+                      <th>Model Name</th>
+                      <th>Bits</th>
+                      <th>Strategy</th>
+                      <th>Block Size</th>
+                      <th>Outlier Ratio</th>
+                      <th>Compression</th>
+                      <th>MSE Loss</th>
+                      <th>Cosine Similarity</th>
+                      <th>Status</th>
+                      <th>Created At</th>
+                    </tr>
+                  </thead>
+                  <tbody id="quant-profiles-tbody">
+                    <tr><td colspan="11" style="text-align:center; color:var(--text-muted); padding:20px;">No micro-quantization profiles benchmarked yet. Click 'Profile Quant' to test.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Self-Speculative Decoding Engine -->
+          <div class="card">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h3 style="font-size:1.05rem; margin:0;">⚡ Self-Speculative Decoding Inference Sessions</h3>
+                <p style="color:var(--text-muted); font-size:0.8rem; margin:2px 0 0 0;">
+                  Draft proposal acceleration (1.5B) combined with target parallel verification (7B) utilizing Leviathan rejection sampling.
+                </p>
+              </div>
+              <button class="btn btn-sm btn-secondary" id="btn-refresh-speculative-table">🔄 Refresh</button>
+            </div>
+            <div class="card-body">
+              <div class="table-container">
+                <table class="data-table" id="speculative-runs-table">
+                  <thead>
+                    <tr>
+                      <th>Run ID</th>
+                      <th>Target Model</th>
+                      <th>Draft Model</th>
+                      <th>Lookahead K</th>
+                      <th>Output Preview</th>
+                      <th>Draft Tokens</th>
+                      <th>Acceptance Rate</th>
+                      <th>Speedup Factor</th>
+                      <th>Spec Latency</th>
+                      <th>Status</th>
+                      <th>Created At</th>
+                    </tr>
+                  </thead>
+                  <tbody id="speculative-runs-tbody">
+                    <tr><td colspan="11" style="text-align:center; color:var(--text-muted); padding:20px;">No speculative runs executed yet. Click 'Speculative Run' to launch.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
     </main>
 
   </div>
@@ -2464,6 +2601,161 @@
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" id="btn-cancel-symbolic-modal">Close</button>
           <button type="submit" class="btn btn-primary" id="btn-submit-symbolic-verify">⚡ Verify Invariant</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Structural Pruning & NAS (Phase 14) -->
+  <div class="modal-backdrop" id="pruning-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 640px;">
+      <div class="modal-header">
+        <h3>✂️ Plan &amp; Execute Structural Pruning</h3>
+        <button class="modal-close-btn" id="btn-close-pruning-modal">&times;</button>
+      </div>
+      <form id="pruning-plan-form" class="standard-form">
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="prune-model-select">Target Base Model:</label>
+            <select id="prune-model-select" class="form-select" required>
+              <option value="qwen2.5:7b" selected>qwen2.5:7b (28 Layers, 28 Heads, 7.6B)</option>
+              <option value="qwen2.5-coder:7b">qwen2.5-coder:7b (28 Layers, 28 Heads, 7.6B)</option>
+              <option value="qwen2.5-coder:1.5b-base">qwen2.5-coder:1.5b-base (28 Layers, 12 Heads, 1.54B)</option>
+              <option value="llama3:8b">llama3:8b (32 Layers, 32 Heads, 8.0B)</option>
+            </select>
+          </div>
+          <div class="form-group flex-1">
+            <label for="prune-strategy-select">Sensitivity Strategy:</label>
+            <select id="prune-strategy-select" class="form-select" required>
+              <option value="taylor_sensitivity" selected>First-Order Taylor Sensitivity (|W·∇W|)</option>
+              <option value="structured_head">Structured Head Elimination</option>
+              <option value="magnitude_l1">L1 Weight Magnitude Proxy</option>
+              <option value="mlp_intermediate">MLP SwiGLU Intermediate Prune Only</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="prune-target-vram">Target VRAM Bound (MB):</label>
+            <input type="number" id="prune-target-vram" class="form-input" value="3800" min="500" max="16000" step="100">
+            <small style="color:var(--text-muted); font-size:0.75rem;">Leave empty or set e.g. 3800 MB for RTX 2000 Ada.</small>
+          </div>
+          <div class="form-group flex-1">
+            <label for="prune-head-ratio">Head Prune Ratio (if VRAM blank):</label>
+            <input type="number" id="prune-head-ratio" class="form-input" value="0.25" min="0.0" max="0.75" step="0.05">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="prune-mlp-ratio">SwiGLU Intermediate Dimension Ratio:</label>
+          <input type="number" id="prune-mlp-ratio" class="form-input" value="0.85" min="0.5" max="1.0" step="0.05">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-pruning-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-pruning">🚀 Plan &amp; Execute Prune</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Hardware Micro-Quantization (Phase 14) -->
+  <div class="modal-backdrop" id="quant-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 640px;">
+      <div class="modal-header">
+        <h3>🔬 Benchmark Micro-Quantization Profile</h3>
+        <button class="modal-close-btn" id="btn-close-quant-modal">&times;</button>
+      </div>
+      <form id="quant-profile-form" class="standard-form">
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="quant-model-select">Model Architecture:</label>
+            <select id="quant-model-select" class="form-select" required>
+              <option value="qwen2.5:7b" selected>qwen2.5:7b (7.6B Parameters)</option>
+              <option value="qwen2.5-coder:7b">qwen2.5-coder:7b (7.6B Parameters)</option>
+              <option value="qwen2.5-coder:1.5b-base">qwen2.5-coder:1.5b-base (1.54B Parameters)</option>
+              <option value="llama3:8b">llama3:8b (8.0B Parameters)</option>
+            </select>
+          </div>
+          <div class="form-group flex-1">
+            <label for="quant-bits-select">Target Quantization Bits:</label>
+            <select id="quant-bits-select" class="form-select" required>
+              <option value="4" selected>4-bit (INT4 ~4.2x Compression)</option>
+              <option value="3">3-bit (INT3 ~5.3x Extreme Compression)</option>
+              <option value="2">2-bit (INT2 ~7.5x Ultra-Compressed)</option>
+              <option value="8">8-bit (INT8 ~2.0x High Fidelity)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="quant-strategy-select">Algorithm Strategy:</label>
+            <select id="quant-strategy-select" class="form-select" required>
+              <option value="awq_outlier_salient" selected>AWQ (Activation-Aware Outlier Channels)</option>
+              <option value="asymmetric">Asymmetric Affine (Scale + Zero-Point)</option>
+              <option value="symmetric">Symmetric Linear Blocked</option>
+              <option value="gptq_hessian">Hessian-Guided Quantization</option>
+            </select>
+          </div>
+          <div class="form-group flex-1">
+            <label for="quant-block-size">Block Size (Scaling Granularity):</label>
+            <select id="quant-block-size" class="form-select" required>
+              <option value="64" selected>64 (Recommended Balance)</option>
+              <option value="32">32 (Fine-Grained / Higher Fidelity)</option>
+              <option value="128">128 (Coarse / Lower Memory Overhead)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="quant-outlier-ratio">Salient Outlier Channel Ratio (FP16 Protected):</label>
+          <input type="number" id="quant-outlier-ratio" class="form-input" value="0.01" min="0.0" max="0.10" step="0.005">
+          <small style="color:var(--text-muted); font-size:0.75rem;">Preserves top 1% channels in FP16 to prevent activation clipping degradation.</small>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-quant-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-quant">⚡ Run Micro-Quant Profile</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Self-Speculative Decoding (Phase 14) -->
+  <div class="modal-backdrop" id="speculative-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 660px;">
+      <div class="modal-header">
+        <h3>🚀 Launch Self-Speculative Decoding Session</h3>
+        <button class="modal-close-btn" id="btn-close-speculative-modal">&times;</button>
+      </div>
+      <form id="speculative-run-form" class="standard-form">
+        <div class="form-group">
+          <label for="spec-prompt-input">Input Prompt / Instruction:</label>
+          <textarea id="spec-prompt-input" class="form-textarea" rows="3" placeholder="Enter prompt to evaluate accelerated draft/target speculative verification..." required>Explain how activation-aware weight quantization preserves outlier activations during low-bit compression.</textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="spec-target-model">Target Model (Verification):</label>
+            <input type="text" id="spec-target-model" class="form-input" value="qwen2.5:7b" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="spec-draft-model">Draft Model (Proposal):</label>
+            <input type="text" id="spec-draft-model" class="form-input" value="qwen2.5-coder:1.5b-base" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="spec-lookahead-k">Lookahead Tokens (K):</label>
+            <input type="number" id="spec-lookahead-k" class="form-input" value="4" min="1" max="8" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="spec-threshold">Acceptance Threshold (&gamma;):</label>
+            <input type="number" id="spec-threshold" class="form-input" value="0.75" min="0.1" max="1.0" step="0.05" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="spec-max-tokens">Max Tokens:</label>
+            <input type="number" id="spec-max-tokens" class="form-input" value="64" min="16" max="256" step="16" required>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-speculative-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-speculative">🚀 Execute Speculative Run</button>
         </div>
       </form>
     </div>

@@ -70,6 +70,9 @@ class TestDatabaseInitialization:
             assert "replay_buffers" in tables
             assert "ewc_checkpoints" in tables
             assert "symbolic_verifications" in tables
+            assert "pruning_experiments" in tables
+            assert "quantization_profiles" in tables
+            assert "speculative_runs" in tables
         finally:
             conn.close()
 

@@ -1,6 +1,6 @@
 # ROADMAP
 
-## Current Milestone: Phase 12 Complete ✅ → Phase 13: Continual Online Learning & Neuro-Symbolic Verification Engine (Next)
+## Current Milestone: Phase 14 Complete ✅ → Phase 15: Cross-Modal Synthetic World Models & Continuous Latent Dream Exploration (Next)
 
 
 ## Phase 0: Discovery and Baseline ✅
@@ -184,10 +184,23 @@
 
 **Acceptance criterion:** Verified (The platform mitigates catastrophic forgetting via streaming prioritized experience replay and EWC quadratic Fisher penalty regularization, provides parameter-efficient virtual prompt prefix tuning, and deterministically verifies code termination invariants, continuous mathematical bounds, and propositional logic hypotheses).
 
-## Phase 14: Autonomous Recursive Self-Architecting & Hardware-Targeted Micro-Quantization (Next) ⏳
-- [ ] Autonomous neural architecture search (NAS) & block pruning (attention head pruning, intermediate dimension scaling) for target VRAM profiles
-- [ ] Hardware-targeted micro-quantization (2-bit/3-bit/4-bit mixed-precision AWQ/GPTQ with outlier channel protection) optimized for RTX 2000 Ada tensor cores
-- [ ] Self-speculative decoding engine with draft model generation and speculative verification for ultra-low latency local inference
+## Phase 14: Autonomous Recursive Self-Architecting & Hardware-Targeted Micro-Quantization ✅
+- [x] Autonomous neural architecture search (NAS) & block pruning (attention head pruning, intermediate dimension scaling) for target VRAM profiles (`genesis/models/pruning.py`)
+- [x] Hardware-targeted micro-quantization (2-bit/3-bit/4-bit mixed-precision AWQ with salient outlier channel protection) optimized for RTX 2000 Ada Tensor Cores (`genesis/models/quantization.py`)
+- [x] Self-speculative decoding engine with draft model generation and parallel speculative verification for ultra-low latency local inference (`genesis/models/speculative.py`)
+- [x] SQLite Schema Version 14 migrations (`pruning_experiments`, `quantization_profiles`, `speculative_runs`) (`genesis/core/database.py`)
+- [x] Phase 14 REST API routes mounted under `/api/pruning`, `/api/quantization`, and `/api/speculative` (`genesis/api/app.py`)
+- [x] Interactive Web Dashboard UI: Dedicated "NAS & Micro-Quant" navigation tab (`#pane-architect`), structural pruning experiment table, micro-quantization benchmarking card, self-speculative decoding session manager, and 3 interactive modal dialogs (`genesis/web/`)
+- [x] Architecture Decision Record ADR-015 (`docs/decisions/ADR-015-autonomous-recursive-self-architecting-and-micro-quantization.md`)
+- [x] 286/286 comprehensive tests passing (100% pass rate)
+
+**Acceptance criterion:** Verified (The platform dynamically prunes transformer attention heads and SwiGLU dimensions to fit within strict VRAM budgets, quantizes model tensors to 2/3/4/8 bits with outlier channel preservation achieving >0.95 cosine similarity, and accelerates autoregressive inference via self-speculative draft proposal and parallel rejection sampling).
+
+## Phase 15: Cross-Modal Synthetic World Models & Continuous Latent Dream Exploration (Next) ⏳
+- [ ] Multimodal environment transition modeling: auto-regressive state-space prediction of code/system states from multi-step execution traces
+- [ ] Latent imagination and dream exploration: generative rollout of synthetic counterfactual scenarios for policy pre-training without GPU execution risk
+- [ ] Cross-modal representation alignment: unified embedding projections bridging symbolic AST graphs, visual inspection tokens, and textual reasoning traces
+- [ ] Dynamic execution sandbox checkpointing with state-forking and rollback for tree-search exploration
 
 
 

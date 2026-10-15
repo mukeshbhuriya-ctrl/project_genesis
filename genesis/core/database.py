@@ -707,6 +707,69 @@ CREATE INDEX IF NOT EXISTS idx_symbolic_target_type ON symbolic_verifications(ta
 CREATE INDEX IF NOT EXISTS idx_symbolic_status ON symbolic_verifications(status);
 """
 
+SCHEMA_V14 = """
+-- Neural Architecture Search & Block Pruning Experiments
+CREATE TABLE IF NOT EXISTS pruning_experiments (
+    id TEXT PRIMARY KEY,
+    model_name TEXT NOT NULL,
+    target_vram_mb REAL NOT NULL,
+    pruning_strategy TEXT NOT NULL CHECK (pruning_strategy IN ('structured_head', 'mlp_intermediate', 'taylor_sensitivity', 'magnitude_l1')),
+    heads_pruned INTEGER NOT NULL DEFAULT 0,
+    remaining_heads INTEGER NOT NULL,
+    mlp_expansion_ratio REAL NOT NULL DEFAULT 1.0,
+    original_parameters INTEGER NOT NULL,
+    pruned_parameters INTEGER NOT NULL,
+    parameter_reduction_pct REAL NOT NULL,
+    estimated_vram_mb REAL NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('planned', 'pruned', 'benchmarking', 'verified', 'rejected')),
+    metrics_json TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_pruning_model ON pruning_experiments(model_name);
+CREATE INDEX IF NOT EXISTS idx_pruning_status ON pruning_experiments(status);
+
+-- Hardware-Targeted Micro-Quantization Profiles
+CREATE TABLE IF NOT EXISTS quantization_profiles (
+    id TEXT PRIMARY KEY,
+    model_name TEXT NOT NULL,
+    bits INTEGER NOT NULL CHECK (bits IN (2, 3, 4, 8)),
+    strategy TEXT NOT NULL CHECK (strategy IN ('symmetric', 'asymmetric', 'awq_outlier_salient', 'gptq_hessian')),
+    block_size INTEGER NOT NULL DEFAULT 64 CHECK (block_size IN (32, 64, 128)),
+    outlier_channel_ratio REAL NOT NULL DEFAULT 0.01,
+    original_size_mb REAL NOT NULL,
+    quantized_size_mb REAL NOT NULL,
+    compression_ratio REAL NOT NULL,
+    mse_loss REAL NOT NULL DEFAULT 0.0,
+    status TEXT NOT NULL CHECK (status IN ('quantizing', 'completed', 'verified', 'failed')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_quant_model ON quantization_profiles(model_name);
+CREATE INDEX IF NOT EXISTS idx_quant_bits ON quantization_profiles(bits);
+
+-- Self-Speculative Decoding Inference Runs
+CREATE TABLE IF NOT EXISTS speculative_runs (
+    id TEXT PRIMARY KEY,
+    target_model TEXT NOT NULL,
+    draft_model TEXT NOT NULL,
+    lookahead_k INTEGER NOT NULL DEFAULT 4,
+    prompt TEXT NOT NULL,
+    output_text TEXT NOT NULL,
+    accepted_tokens INTEGER NOT NULL DEFAULT 0,
+    total_draft_tokens INTEGER NOT NULL DEFAULT 0,
+    acceptance_rate REAL NOT NULL DEFAULT 0.0,
+    speedup_factor REAL NOT NULL DEFAULT 1.0,
+    target_latency_ms REAL NOT NULL DEFAULT 0.0,
+    speculative_latency_ms REAL NOT NULL DEFAULT 0.0,
+    status TEXT NOT NULL CHECK (status IN ('running', 'completed', 'fallback_autoregressive', 'failed')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_speculative_models ON speculative_runs(target_model, draft_model);
+CREATE INDEX IF NOT EXISTS idx_speculative_status ON speculative_runs(status);
+"""
+
 
 def get_sync_connection(db_path: str | Path) -> sqlite3.Connection:
     """Create a synchronous SQLite connection with recommended pragmas."""
@@ -868,6 +931,16 @@ def initialize_database(db_path: str | Path) -> None:
             )
             conn.commit()
             log.info("Schema v13 applied successfully.")
+
+        if current_version < 14:
+            log.info("Applying schema v14...")
+            conn.executescript(SCHEMA_V14)
+            conn.execute(
+                "INSERT OR REPLACE INTO schema_migrations (version, description) "
+                "VALUES (14, 'Schema v14: neural architecture pruning, micro-quantization profiles, and speculative decoding runs')"
+            )
+            conn.commit()
+            log.info("Schema v14 applied successfully.")
         else:
             log.info(f"Database schema is at version {current_version}, up to date.")
 
