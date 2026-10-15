@@ -15,7 +15,8 @@ from genesis.core.logging import get_logger
 log = get_logger("database")
 
 # ── Schema version history ──
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
+
 
 SCHEMA_V1 = """
 -- Conversations
@@ -383,6 +384,50 @@ CREATE INDEX IF NOT EXISTS idx_work_jobs_status ON work_jobs(status, priority DE
 CREATE INDEX IF NOT EXISTS idx_work_jobs_worker ON work_jobs(worker_id, status);
 """
 
+SCHEMA_V8 = """
+-- Autonomous Meta-Improvement cycles
+CREATE TABLE IF NOT EXISTS meta_cycles (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    benchmark_id TEXT NOT NULL,
+    model_id TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('pending', 'diagnosing', 'curating', 'fine_tuning', 'validating', 'completed', 'regressed', 'failed')),
+    baseline_score REAL NOT NULL DEFAULT 0.0,
+    candidate_score REAL NOT NULL DEFAULT 0.0,
+    verdict TEXT NOT NULL CHECK (verdict IN ('pending', 'promoted', 'rolled_back', 'failed', 'inconclusive')),
+    dataset_id TEXT,
+    experiment_id TEXT,
+    checkpoint_id TEXT,
+    stages_json TEXT NOT NULL DEFAULT '[]',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    completed_at TEXT,
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_meta_cycles_status ON meta_cycles(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_meta_cycles_model ON meta_cycles(model_id);
+
+-- Dynamic Multi-Model Routes
+CREATE TABLE IF NOT EXISTS model_routes (
+    id TEXT PRIMARY KEY,
+    task_category TEXT NOT NULL UNIQUE CHECK (task_category IN ('coding', 'reasoning', 'fast_validation', 'embedding', 'general')),
+    preferred_model TEXT NOT NULL,
+    fallback_model TEXT NOT NULL,
+    min_vram_mb REAL NOT NULL DEFAULT 0.0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_model_routes_category ON model_routes(task_category);
+
+-- Default system routes
+INSERT OR IGNORE INTO model_routes (id, task_category, preferred_model, fallback_model, min_vram_mb, metadata)
+VALUES
+    ('route-coding', 'coding', 'qwen2.5-coder:7b', 'qwen2.5:7b', 4000.0, '{"description": "Specialized coding and debugging model"}'),
+    ('route-reasoning', 'reasoning', 'qwen2.5:7b', 'qwen2.5-coder:7b', 4000.0, '{"description": "Multi-step reasoning and analytical planning model"}'),
+    ('route-fast-validation', 'fast_validation', 'qwen2.5-coder:1.5b-base', 'qwen2.5:7b', 1500.0, '{"description": "Ultra-low latency model for quick validation and classification"}'),
+    ('route-embedding', 'embedding', 'nomic-embed-text:latest', 'nomic-embed-text:latest', 500.0, '{"description": "Dense vector embedding provider"}'),
+    ('route-general', 'general', 'qwen2.5:7b', 'qwen2.5:7b', 4000.0, '{"description": "Default general-purpose conversational and instruction model"}');
+"""
+
 
 def get_sync_connection(db_path: str | Path) -> sqlite3.Connection:
     """Create a synchronous SQLite connection with recommended pragmas."""
@@ -484,6 +529,16 @@ def initialize_database(db_path: str | Path) -> None:
             )
             conn.commit()
             log.info("Schema v7 applied successfully.")
+
+        if current_version < 8:
+            log.info("Applying schema v8...")
+            conn.executescript(SCHEMA_V8)
+            conn.execute(
+                "INSERT OR REPLACE INTO schema_migrations (version, description) "
+                "VALUES (8, 'Schema v8: autonomous meta-improvement cycles and dynamic model routes')"
+            )
+            conn.commit()
+            log.info("Schema v8 applied successfully.")
         else:
             log.info(f"Database schema is at version {current_version}, up to date.")
 

@@ -92,6 +92,7 @@ class ModelProvider(ABC):
 
 from genesis.models.context import ContextBudget, ContextManager, ModelArchitecture
 from genesis.models.profiler import InferenceProfileResult, InferenceProfiler
+from genesis.models.router import ModelRoute, ModelRouter, RouteDecision, TASK_CATEGORIES
 
 __all__ = [
     "GenerationRequest",
@@ -103,5 +104,10 @@ __all__ = [
     "ModelArchitecture",
     "InferenceProfileResult",
     "InferenceProfiler",
+    "ModelRoute",
+    "ModelRouter",
+    "RouteDecision",
+    "TASK_CATEGORIES",
 ]
+
 

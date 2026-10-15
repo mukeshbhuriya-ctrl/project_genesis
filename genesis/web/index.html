@@ -52,6 +52,9 @@
         <button class="nav-tab" data-tab="deployment" id="tab-deployment-btn">
           <span class="tab-icon">🚀</span> Deployment &amp; Topologies
         </button>
+        <button class="nav-tab" data-tab="meta" id="tab-meta-btn">
+          <span class="tab-icon">🧬</span> Meta-Evolution
+        </button>
         <button class="nav-tab" data-tab="hardware" id="tab-hardware-btn">
           <span class="tab-icon">⚡</span> System &amp; Hardware
         </button>
@@ -967,6 +970,163 @@
           </div>
         </div>
       </section>
+
+      <!-- 9. META-EVOLUTION TAB -->
+      <section class="tab-content" id="pane-meta">
+        <div class="research-container">
+          <!-- Top Header -->
+          <div class="research-top-bar">
+            <div>
+              <h2>Autonomous Meta-Improvement &amp; Model Routing</h2>
+              <p class="section-subtitle">Closed-loop autonomous model evolution, dynamic multi-model dispatch, and automated benchmark edge-case expansion.</p>
+            </div>
+            <div class="header-action-group">
+              <button class="btn btn-primary" id="btn-open-meta-cycle-modal">🧬 Run Evolution Cycle</button>
+            </div>
+          </div>
+
+          <!-- Grid: Cycles & Router -->
+          <div class="research-grid">
+            <!-- Card 1: Meta-Improvement Cycles -->
+            <div class="card research-card">
+              <div class="card-header">
+                <h3>Autonomous Evolution Cycles</h3>
+                <span class="card-subtext" style="color:var(--text-muted); font-size:0.85rem;">Diagnostic evaluation &rarr; synthetic remediation &rarr; LoRA fine-tuning &rarr; regression defense.</span>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive" style="max-height: 380px; overflow-y: auto;">
+                  <table class="data-table" id="meta-cycles-table">
+                    <thead>
+                      <tr>
+                        <th>Cycle Name</th>
+                        <th>Target Suite</th>
+                        <th>Status</th>
+                        <th>Baseline vs Candidate</th>
+                        <th>Verdict</th>
+                        <th>Date</th>
+                      </tr>
+                    </thead>
+                    <tbody id="meta-cycles-tbody">
+                      <tr><td colspan="6" class="text-center">Loading evolution cycles...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 2: Dynamic Multi-Model Dispatch -->
+            <div class="card research-card">
+              <div class="card-header">
+                <h3>Dynamic Multi-Model Router</h3>
+                <span class="badge badge-info" id="router-active-status">Active</span>
+              </div>
+              <div class="card-body">
+                <form id="test-router-form" class="standard-form">
+                  <div class="form-group">
+                    <label for="route-test-prompt">Test Task Prompt:</label>
+                    <textarea id="route-test-prompt" class="form-textarea" rows="2" placeholder="e.g. Write a Python function with unit tests to compute SHA256"></textarea>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group flex-1">
+                      <label for="route-override-category">Category Override (Optional):</label>
+                      <select id="route-override-category" class="form-select">
+                        <option value="">Auto-Detect Intent</option>
+                        <option value="coding">Coding (Specialized code synthesizer)</option>
+                        <option value="reasoning">Reasoning (Multi-step analytical)</option>
+                        <option value="fast_validation">Fast Validation (Low latency check)</option>
+                        <option value="embedding">Embedding (Vector encoding)</option>
+                        <option value="general">General (Conversational)</option>
+                      </select>
+                    </div>
+                    <div class="form-group flex-1" style="align-self: flex-end;">
+                      <button type="submit" class="btn btn-secondary" id="btn-test-route" style="width:100%;">🎯 Route Workload</button>
+                    </div>
+                  </div>
+                </form>
+
+                <div id="route-decision-result" style="display:none; margin-top: 12px; padding: 10px; background: rgba(0,255,200,0.06); border: 1px solid var(--accent-cyan); border-radius: 6px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong id="routed-model-name" style="color:var(--accent-cyan); font-size:1.05rem;">--</strong>
+                    <span class="badge badge-success" id="routed-category-badge">--</span>
+                  </div>
+                  <p id="routed-reason-text" style="margin: 6px 0 0; font-size:0.85rem; color:var(--text-muted);"></p>
+                </div>
+
+                <h4 style="margin-top: 18px; margin-bottom: 8px;">Configured Model Routes</h4>
+                <div class="table-responsive">
+                  <table class="data-table" id="routes-table">
+                    <thead>
+                      <tr>
+                        <th>Category</th>
+                        <th>Preferred Model</th>
+                        <th>Fallback Model</th>
+                        <th>Min VRAM</th>
+                      </tr>
+                    </thead>
+                    <tbody id="routes-tbody">
+                      <tr><td colspan="4" class="text-center">Loading routes...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Grid: Benchmark Expansion -->
+          <div class="research-grid" style="margin-top: 20px;">
+            <div class="card research-card" style="grid-column: 1 / -1;">
+              <div class="card-header">
+                <div>
+                  <h3>Automated Benchmark Expansion</h3>
+                  <span class="card-subtext" style="color:var(--text-muted); font-size:0.85rem;">Mines failure edge cases from code sandbox traces and synthesizes challenging deterministic grading cases.</span>
+                </div>
+                <div class="header-action-group">
+                  <button class="btn btn-sm btn-primary" id="btn-trigger-expansion">⚡ Expand Benchmark Suite</button>
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="form-row" style="margin-bottom: 12px;">
+                  <div class="form-group flex-1">
+                    <label for="expand-target-bm">Target Benchmark:</label>
+                    <select id="expand-target-bm" class="form-select">
+                      <option value="bm-coding-v1" selected>Genesis Python Coding Baseline v1</option>
+                      <option value="bm-reasoning-v1">Genesis Reasoning Baseline v1</option>
+                    </select>
+                  </div>
+                  <div class="form-group flex-1">
+                    <label for="expand-domain">Capability Domain:</label>
+                    <select id="expand-domain" class="form-select">
+                      <option value="coding" selected>Coding</option>
+                      <option value="reasoning">Reasoning</option>
+                    </select>
+                  </div>
+                  <div class="form-group flex-1">
+                    <label for="expand-count">Number of Cases:</label>
+                    <input type="number" id="expand-count" class="form-input" value="3" min="1" max="10">
+                  </div>
+                </div>
+                <div id="expansion-result-box" style="display:none; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 6px; border: 1px solid var(--border-color);">
+                  <h4 style="color:var(--accent-cyan); margin-bottom: 6px;">Expansion Succeeded</h4>
+                  <p id="expansion-summary-text" style="font-size:0.9rem; color:var(--text-main); margin:0 0 10px 0;"></p>
+                  <div class="table-responsive">
+                    <table class="data-table">
+                      <thead>
+                        <tr>
+                          <th>Case Name</th>
+                          <th>Prompt</th>
+                          <th>Expected Output</th>
+                          <th>Grading Type</th>
+                        </tr>
+                      </thead>
+                      <tbody id="expansion-cases-tbody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
   </div>
@@ -1107,6 +1267,52 @@
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" id="btn-cancel-experiment">Cancel</button>
           <button type="submit" class="btn btn-primary" id="btn-submit-experiment">Create &amp; Initialize Run</button>
+        </div>
+      </form>
+    </div>
+  <!-- Modal for Launching Autonomous Evolution Cycle -->
+  <div class="modal-backdrop" id="meta-cycle-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 640px;">
+      <div class="modal-header">
+        <h3>Launch Autonomous Evolution Cycle</h3>
+        <button class="modal-close-btn" id="btn-close-meta-modal">&times;</button>
+      </div>
+      <form id="launch-meta-cycle-form" class="standard-form">
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="meta-cycle-name">Cycle Identifier:</label>
+            <input type="text" id="meta-cycle-name" class="form-input" placeholder="e.g. auto-evolve-coding-01" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="meta-benchmark-select">Diagnostic Benchmark Suite:</label>
+            <select id="meta-benchmark-select" class="form-select">
+              <option value="bm-coding-v1" selected>Genesis Python Coding Baseline v1</option>
+              <option value="bm-reasoning-v1">Genesis Reasoning Baseline v1</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="meta-base-model-select">Target Base Model:</label>
+            <select id="meta-base-model-select" class="form-select">
+              <option value="qwen2.5-coder:7b" selected>qwen2.5-coder:7b (Primary Coding)</option>
+              <option value="qwen2.5:7b">qwen2.5:7b (Reasoning &amp; General)</option>
+              <option value="qwen2.5-coder:1.5b-base">qwen2.5-coder:1.5b-base (Lightweight)</option>
+            </select>
+          </div>
+          <div class="form-group flex-1">
+            <label for="meta-training-steps">Fine-Tuning Steps:</label>
+            <input type="number" id="meta-training-steps" class="form-input" value="20" min="5" max="200">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="meta-regression-threshold">Regression Defense Tolerance (&Delta; accuracy):</label>
+          <input type="number" id="meta-regression-threshold" class="form-input" value="0.05" step="0.01" min="0" max="0.30">
+          <small style="color:var(--text-muted); font-size:0.8rem;">Candidate models degrading accuracy by more than this tolerance are automatically rolled back.</small>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-meta-cycle">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-meta-cycle">🚀 Launch Closed-Loop Cycle</button>
         </div>
       </form>
     </div>

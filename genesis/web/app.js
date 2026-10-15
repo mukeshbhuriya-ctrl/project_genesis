@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (target === 'deployment') loadDeploymentData();
       if (target === 'hardware') loadHardwareAndModels();
       if (target === 'backups') loadBackups();
+      if (target === 'meta') loadMetaData();
     });
   });
 
@@ -2032,6 +2033,236 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Failed to cancel job: ' + err.message);
     }
   };
+
+  // ── Meta-Improvement & Multi-Model Dispatch Subsystem ──
+  const metaCycleModal = document.getElementById('meta-cycle-modal');
+  const btnOpenMetaCycleModal = document.getElementById('btn-open-meta-cycle-modal');
+  const btnCloseMetaModal = document.getElementById('btn-close-meta-modal');
+  const btnCancelMetaCycle = document.getElementById('btn-cancel-meta-cycle');
+  const launchMetaCycleForm = document.getElementById('launch-meta-cycle-form');
+  const testRouterForm = document.getElementById('test-router-form');
+  const btnTriggerExpansion = document.getElementById('btn-trigger-expansion');
+
+  if (btnOpenMetaCycleModal && metaCycleModal) {
+    btnOpenMetaCycleModal.addEventListener('click', () => {
+      const nameEl = document.getElementById('meta-cycle-name');
+      if (nameEl) nameEl.value = 'auto-cycle-' + Date.now().toString().slice(-6);
+      metaCycleModal.style.display = 'flex';
+    });
+  }
+
+  if (btnCloseMetaModal && metaCycleModal) {
+    btnCloseMetaModal.addEventListener('click', () => {
+      metaCycleModal.style.display = 'none';
+    });
+  }
+
+  if (btnCancelMetaCycle && metaCycleModal) {
+    btnCancelMetaCycle.addEventListener('click', () => {
+      metaCycleModal.style.display = 'none';
+    });
+  }
+
+  async function loadMetaData() {
+    await Promise.all([
+      loadMetaCycles(),
+      loadModelRoutes()
+    ]);
+  }
+
+  async function loadMetaCycles() {
+    const tbody = document.getElementById('meta-cycles-tbody');
+    if (!tbody) return;
+
+    try {
+      const res = await fetch('/api/meta/cycles');
+      if (!res.ok) throw new Error(await res.text());
+      const cycles = await res.json();
+
+      if (!cycles || !cycles.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No evolution cycles recorded yet.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = cycles.map(c => {
+        let statusBadge = 'badge-secondary';
+        if (c.status === 'completed') statusBadge = 'badge-success';
+        else if (c.status === 'failed') statusBadge = 'badge-danger';
+        else if (c.status === 'running') statusBadge = 'badge-info';
+
+        let verdictBadge = 'badge-secondary';
+        if (c.decision_verdict === 'promote') verdictBadge = 'badge-success';
+        else if (c.decision_verdict === 'rollback') verdictBadge = 'badge-warning';
+
+        const baseScore = c.baseline_score !== null && c.baseline_score !== undefined ? (c.baseline_score * 100).toFixed(1) + '%' : '--';
+        const candScore = c.candidate_score !== null && c.candidate_score !== undefined ? (c.candidate_score * 100).toFixed(1) + '%' : '--';
+
+        return `
+          <tr>
+            <td><strong>${c.cycle_name || c.id.substring(0, 8)}</strong></td>
+            <td><code>${c.benchmark_suite_id || '--'}</code></td>
+            <td><span class="badge ${statusBadge}">${c.status.toUpperCase()}</span></td>
+            <td><small>Base: ${baseScore} &rarr; Cand: ${candScore}</small></td>
+            <td><span class="badge ${verdictBadge}">${(c.decision_verdict || '--').toUpperCase()}</span></td>
+            <td><small>${new Date(c.created_at).toLocaleString()}</small></td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-danger">Failed to load cycles: ${err.message}</td></tr>`;
+    }
+  }
+
+  async function loadModelRoutes() {
+    const tbody = document.getElementById('routes-tbody');
+    if (!tbody) return;
+
+    try {
+      const res = await fetch('/api/meta/routes');
+      if (!res.ok) throw new Error(await res.text());
+      const routes = await res.json();
+
+      if (!routes || !routes.length) {
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No routes configured.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = routes.map(r => `
+        <tr>
+          <td><span class="badge badge-info">${r.task_category}</span></td>
+          <td><strong>${r.primary_model}</strong></td>
+          <td>${r.fallback_model ? `<code>${r.fallback_model}</code>` : '<span class="text-muted">None</span>'}</td>
+          <td><small>${r.min_vram_gb} GB</small></td>
+        </tr>
+      `).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="4" class="text-danger">Failed to load routes: ${err.message}</td></tr>`;
+    }
+  }
+
+  if (testRouterForm) {
+    testRouterForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const prompt = document.getElementById('route-test-prompt').value.trim();
+      const catOverride = document.getElementById('route-override-category').value.trim();
+      const resultBox = document.getElementById('route-decision-result');
+      const modelNameEl = document.getElementById('routed-model-name');
+      const catBadgeEl = document.getElementById('routed-category-badge');
+      const reasonEl = document.getElementById('routed-reason-text');
+
+      if (!prompt) return;
+
+      try {
+        const payload = { prompt };
+        if (catOverride) payload.task_category = catOverride;
+
+        const res = await fetch('/api/meta/route', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+
+        resultBox.style.display = 'block';
+        modelNameEl.textContent = data.selected_model + (data.is_fallback ? ' (Fallback)' : '');
+        catBadgeEl.textContent = data.task_category.toUpperCase();
+        reasonEl.textContent = `Routing rationale: ${data.routing_reason} (VRAM Headroom: ${data.free_vram_gb.toFixed(2)} GB, Fallback: ${data.is_fallback ? 'YES' : 'NO'})`;
+      } catch (err) {
+        alert('Route query failed: ' + err.message);
+      }
+    });
+  }
+
+  if (btnTriggerExpansion) {
+    btnTriggerExpansion.addEventListener('click', async () => {
+      const suiteId = document.getElementById('expand-target-bm').value;
+      const domain = document.getElementById('expand-domain').value;
+      const count = parseInt(document.getElementById('expand-count').value, 10) || 3;
+      const resultBox = document.getElementById('expansion-result-box');
+      const summaryText = document.getElementById('expansion-summary-text');
+      const casesTbody = document.getElementById('expansion-cases-tbody');
+
+      btnTriggerExpansion.disabled = true;
+      btnTriggerExpansion.textContent = '⚡ Expanding...';
+
+      try {
+        const res = await fetch('/api/meta/benchmark/expand', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            target_suite_id: suiteId,
+            domain: domain,
+            num_cases: count
+          })
+        });
+
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+
+        resultBox.style.display = 'block';
+        summaryText.textContent = `Synthesized ${data.synthesized_cases_count} cases for suite "${data.target_suite_id}" from ${data.mined_failures_count} failure edge-case traces.`;
+
+        if (data.synthesized_cases && data.synthesized_cases.length) {
+          casesTbody.innerHTML = data.synthesized_cases.map(c => `
+            <tr>
+              <td><code>${c.name}</code></td>
+              <td><small>${(c.prompt || '').substring(0, 60)}...</small></td>
+              <td><code>${(c.expected_output || '').substring(0, 30)}...</code></td>
+              <td><span class="badge badge-info">${c.grading_type}</span></td>
+            </tr>
+          `).join('');
+        } else {
+          casesTbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No cases rendered.</td></tr>';
+        }
+      } catch (err) {
+        alert('Benchmark expansion failed: ' + err.message);
+      } finally {
+        btnTriggerExpansion.disabled = false;
+        btnTriggerExpansion.textContent = '⚡ Expand Benchmark Suite';
+      }
+    });
+  }
+
+  if (launchMetaCycleForm) {
+    launchMetaCycleForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('btn-submit-meta-cycle');
+      const cycleName = document.getElementById('meta-cycle-name').value.trim();
+      const suiteId = document.getElementById('meta-benchmark-select').value;
+      const baseModel = document.getElementById('meta-base-model-select').value;
+      const steps = parseInt(document.getElementById('meta-training-steps').value, 10) || 20;
+      const regThreshold = parseFloat(document.getElementById('meta-regression-threshold').value) || 0.05;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = '🚀 Launching Cycle...';
+
+      try {
+        const res = await fetch('/api/meta/cycles/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            cycle_name: cycleName,
+            benchmark_suite_id: suiteId,
+            target_base_model: baseModel,
+            training_steps: steps,
+            regression_threshold: regThreshold
+          })
+        });
+
+        if (!res.ok) throw new Error(await res.text());
+        metaCycleModal.style.display = 'none';
+        await loadMetaCycles();
+        alert('Autonomous evolution cycle launched successfully!');
+      } catch (err) {
+        alert('Cycle execution failed: ' + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🚀 Launch Closed-Loop Cycle';
+      }
+    });
+  }
 
   // ── Initial Bootstrap ──
   loadConversations();

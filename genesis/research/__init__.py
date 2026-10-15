@@ -16,6 +16,11 @@ from genesis.research.coding import (
     ReflectiveCodeSynthesizer,
     SandboxResult,
 )
+from genesis.research.meta import (
+    CycleStage,
+    MetaCycleRecord,
+    MetaResearchOrchestrator,
+)
 from genesis.research.synthesis import (
     AdaptiveKnowledgeSynthesizer,
     Citation,
@@ -30,4 +35,8 @@ __all__ = [
     "Citation",
     "ResearchBrief",
     "AdaptiveKnowledgeSynthesizer",
+    "CycleStage",
+    "MetaCycleRecord",
+    "MetaResearchOrchestrator",
 ]
+

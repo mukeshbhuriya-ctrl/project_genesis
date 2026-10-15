@@ -51,6 +51,25 @@ class TestDatabaseInitialization:
             assert "research_synthesis" in tables
             assert "device_topologies" in tables
             assert "work_jobs" in tables
+            assert "meta_cycles" in tables
+            assert "model_routes" in tables
+        finally:
+            conn.close()
+
+    def test_default_model_routes_seeded(self, tmp_db_path: Path):
+        """Default model routes should be seeded on initialization."""
+        initialize_database(tmp_db_path)
+
+        conn = get_sync_connection(tmp_db_path)
+        try:
+            cursor = conn.execute("SELECT task_category, preferred_model FROM model_routes")
+            routes = {row["task_category"]: row["preferred_model"] for row in cursor.fetchall()}
+            assert "coding" in routes
+            assert "reasoning" in routes
+            assert "fast_validation" in routes
+            assert "embedding" in routes
+            assert "general" in routes
+            assert routes["coding"] == "qwen2.5-coder:7b"
         finally:
             conn.close()
 

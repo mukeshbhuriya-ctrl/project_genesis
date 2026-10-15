@@ -2,6 +2,19 @@
 
 All notable changes to Project Genesis will be documented in this file.
 
+## [0.9.0] — 2026-10-15
+
+### Added
+- **Autonomous Meta-Improvement and Continuous Evolution Subsystem (Phase 8)**:
+  - **Dynamic Task Router & Multi-Model Dispatch**: Automatic intent classification across five task categories (`coding`, `reasoning`, `fast_validation`, `embedding`, `general`) with compiled regex heuristics. Evaluates live physical VRAM headroom using `DeviceOrchestrator` (`detect_gpu`) and dynamically dispatches workloads to specialized models (`qwen2.5-coder:7b`, `qwen2.5:7b`, `qwen2.5-coder:1.5b-base`, `nomic-embed-text`) with transparent fallback handling (`genesis/models/router.py`).
+  - **Automated Benchmark Expansion from Edge-Case Mining**: Mining failed execution traces from `code_experiments` and `eval_results` tables, extracting syntax and runtime failure modes, and synthesizing deterministic `EvalCase` instances with automated name collision disambiguation (`genesis/evaluation/expansion.py`).
+  - **Closed-Loop Autonomous Evolution Orchestrator**: 5-stage closed-loop pipeline (`MetaResearchOrchestrator` in `genesis/research/meta.py`): diagnostic evaluation against target benchmarks &rarr; synthetic remediation dataset curation &rarr; VRAM-bounded LoRA fine-tuning under 4.8 GB &rarr; regression defense comparison &rarr; deployment or automated rollback upon detected accuracy degradation.
+  - **Meta REST API**: Endpoints mounted under `/api/meta`: `/api/meta/cycles/run`, `/api/meta/cycles`, `/api/meta/cycles/{id}`, `/api/meta/route`, `/api/meta/routes`, `/api/meta/routes/{category}`, `/api/meta/benchmark/expand` (`genesis/api/routes/meta.py`).
+  - **Interactive Web Dashboard Module**: Dedicated "Meta-Evolution" tab (`#pane-meta`) and modal (`#meta-cycle-modal`) with live cycle history, real-time router playground with routing rationale feedback, model route configuration table, and benchmark expansion controls (`genesis/web/`).
+  - **Database Schema V8**: Added `meta_cycles` and `model_routes` tables with indexes and default route seed insertions (`genesis/core/database.py`).
+  - **Architecture Decision Record**: ADR-009 Autonomous Meta-Improvement Cycles, Dynamic Multi-Model Dispatch, and Automated Benchmark Expansion.
+  - **Comprehensive Test Suite**: 24 new unit and API tests across router, benchmark expansion, meta cycles, and REST API, expanding the total repository baseline to 195 passing tests (100% pass rate).
+
 ## [0.8.0] — 2026-10-15
 
 ### Added

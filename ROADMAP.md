@@ -1,6 +1,6 @@
 # ROADMAP
 
-## Current Milestone: Phase 7 Complete ✅ → Phase 8: Autonomous Meta-Improvement (Next)
+## Current Milestone: Phase 8 Complete ✅ → Phase 9: Multi-Agent Specialization & Long-Horizon Evolution (Next)
 
 
 ## Phase 0: Discovery and Baseline ✅
@@ -102,9 +102,22 @@
 
 **Acceptance criterion:** Verified (The platform discovers multi-device compute topologies and computes optimal layer offload plans, provides a persistent crash-resilient queue with lease-locking and background worker daemon, and integrates code synthesis and knowledge synthesis as first-class tools in the bounded task orchestrator).
 
-## Phase 8: Autonomous Meta-Improvement and Continuous Evolution ⏳
-- [ ] Closed-loop autonomous research cycles (evaluation -> failure diagnosis -> synthetic data generation -> LoRA fine-tuning -> validation -> deployment)
-- [ ] Dynamic task routing and multi-model dispatch (e.g., routing coding tasks to coder models, lightweight checks to small models)
-- [ ] Automated benchmark expansion from edge-case discovery
-- [ ] Long-horizon multi-step research synthesis and self-updating knowledge base
+## Phase 8: Autonomous Meta-Improvement and Continuous Evolution ✅
+- [x] Dynamic task routing and multi-model dispatch (`genesis/models/router.py`)
+- [x] Hardware-aware VRAM headroom safety checks and fallback model resolution (`genesis/core/device.py`)
+- [x] Automated benchmark expansion from failure edge-case mining (`genesis/evaluation/expansion.py`)
+- [x] Closed-loop autonomous research cycles: evaluation -> failure diagnosis -> synthetic remediation dataset curation -> LoRA fine-tuning -> regression defense -> deployment or rollback (`genesis/research/meta.py`)
+- [x] Meta REST API mounted at `/api/meta` (`genesis/api/routes/meta.py`)
+- [x] Interactive Web Dashboard Meta-Evolution tab and modal (`genesis/web/`)
+- [x] Database Schema Version 8 migrations (`genesis/core/database.py`)
+- [x] Architecture Decision Record ADR-009
+- [x] 195/195 comprehensive tests passing (100% pass rate)
+
+**Acceptance criterion:** Verified (The platform autonomously routes tasks to optimal specialized models with VRAM safety checks, expands benchmark test suites from runtime failure traces, and executes closed-loop evolution cycles that fine-tune adapters and enforce automatic rollback defenses upon regression).
+
+## Phase 9: Multi-Agent Specialization & Long-Horizon Evolution ⏳
+- [ ] Role-specialized autonomous agent teams (Researcher, Architect, Implementer, Reviewer)
+- [ ] Asynchronous multi-turn debate and consensus protocols
+- [ ] Autonomous long-horizon research campaign orchestration
+- [ ] Self-updating knowledge base and continuous automated benchmark discovery
 

@@ -1,10 +1,10 @@
 # PROJECT STATE
 
-> Last updated: 2026-10-15 by Senior AI/ML Engineer (Phase 7 completion & Phase 8 activation)
+> Last updated: 2026-10-15 by Senior AI/ML Engineer (Phase 8 completion & Phase 9 activation)
 
 ## Current Phase
 
-**Phase 7 Complete (Verified) → Phase 8: Autonomous Meta-Improvement and Continuous Evolution (Active)**
+**Phase 8 Complete (Verified) → Phase 9: Multi-Agent Specialization & Long-Horizon Evolution (Active)**
 
 ## Implemented
 
@@ -97,9 +97,20 @@
 - [x] Architecture Decision Record ADR-008 (`docs/decisions/ADR-008-hardware-topology-and-decoupled-worker-queue.md`)
 - [x] Comprehensive test suite in `tests/`: 171 tests covering all subsystems (100% passing)
 
+### Autonomous Meta-Improvement and Continuous Evolution Subsystem (Phase 8)
+- [x] Dynamic task router & multi-model dispatch (`genesis/models/router.py`): intent classification heuristics across coding, reasoning, fast_validation, embedding, and general categories with VRAM headroom safety checks and fallback model resolution
+- [x] Automated benchmark expansion (`genesis/evaluation/expansion.py`): failure mining from `code_experiments` and `eval_results`, deterministic `EvalCase` synthesis, and dynamic suite enrichment with automatic name collision disambiguation
+- [x] Closed-loop autonomous evolution orchestrator (`genesis/research/meta.py`): end-to-end 5-stage pipeline (`MetaResearchOrchestrator`) coordinating diagnostic evaluation, synthetic remediation dataset curation, VRAM-bounded LoRA fine-tuning, regression defense comparison, and model promotion or rollback
+- [x] Database Schema Version 8 migrations (`genesis/core/database.py`): added `meta_cycles` and `model_routes` tables with indexes and default route seed insertions
+- [x] Meta REST API endpoints (`genesis/api/routes/meta.py`): `/api/meta/cycles/run`, `/api/meta/cycles`, `/api/meta/cycles/{id}`, `/api/meta/route`, `/api/meta/routes`, `/api/meta/routes/{category}`, `/api/meta/benchmark/expand`
+- [x] Interactive Web Dashboard Meta-Evolution tab (`genesis/web/`): `#pane-meta` and `#meta-cycle-modal`, evolution cycles monitor, real-time router playground with live routing explanations, route configuration table, and benchmark expansion controls
+- [x] Architecture Decision Record ADR-009 (`docs/decisions/ADR-009-autonomous-meta-improvement-and-model-routing.md`)
+- [x] Comprehensive test suite in `tests/`: 195 tests covering all subsystems (100% passing)
+
 ## Verified
 
-- [x] **171/171 unit and integration tests pass (100% passing)** across all modules
+- [x] **195/195 unit and integration tests pass (100% passing)** across all modules
+- [x] **Phase 8 Acceptance Criterion verified**: The platform autonomously routes tasks to optimal specialized models with VRAM safety checks, expands benchmark test suites from runtime failure traces, and executes closed-loop evolution cycles that fine-tune adapters and enforce automatic rollback defenses upon regression
 - [x] **Phase 7 Acceptance Criterion verified**: The platform discovers multi-device compute topologies and computes optimal layer offload plans, provides a persistent crash-resilient queue with lease-locking and background worker daemon, and integrates code synthesis and knowledge synthesis as first-class tools in the bounded task orchestrator
 - [x] **Phase 6 Acceptance Criterion verified**: The platform profiles inference latency and KV-cache VRAM consumption, autonomously synthesizes and verifies Python code in an isolated sandbox with self-repair, exports verified samples into Phase 5 datasets, and executes multi-source citation-verified knowledge synthesis consolidated into memory
 - [x] **Phase 5 Acceptance Criterion verified**: The platform ingests and normalizes multi-format datasets, defends against evaluation benchmark contamination, executes VRAM-bounded LoRA fine-tuning under 4.8 GB, exports Ollama Modelfiles, and triggers automatic rollback when regressions are detected by Phase 4
@@ -137,10 +148,10 @@
 | Node.js | 24.17.0 |
 | Git | 2.54.0 |
 
-## Next Steps (Phase 8: Autonomous Meta-Improvement and Continuous Evolution)
+## Next Steps (Phase 9: Multi-Agent Specialization & Long-Horizon Evolution)
 
-1. **Closed-Loop Autonomous Research Cycles:** Implement meta-orchestrator coordinating continuous self-directed cycles (benchmark evaluation -> gap identification -> synthetic dataset generation via code/knowledge synthesis -> LoRA fine-tuning -> validation -> deployment or rollback).
-2. **Dynamic Task Routing & Multi-Model Dispatch:** Route tasks dynamically across locally installed models based on task type and complexity (e.g. `qwen2.5-coder:7b` for code synthesis, `qwen2.5:7b` for reasoning and planning, `qwen2.5-coder:1.5b-base` for fast validation checks).
-3. **Automated Benchmark Expansion:** Automatically generate new challenging benchmark test cases from novel edge-case failures discovered during task execution.
-4. **Long-Horizon Multi-Step Research Synthesis:** Enable autonomous deep dive investigations that iteratively query documents, formulate hypotheses, test them in sandboxes, and synthesize publication-grade research reports.
+1. **Role-Specialized Autonomous Agent Teams:** Architect multi-agent ensembles (Researcher, Architect, Implementer, Reviewer) each routed to domain-optimized models.
+2. **Debate & Consensus Protocols:** Implement structured multi-turn debate rounds where agents critique hypotheses, challenge assumptions, and synthesize consensus prior to code modification.
+3. **Autonomous Long-Horizon Research Campaigns:** Enable multi-day research workflows that autonomously explore open-ended research questions, execute experimental sweeps, and compile research papers.
+4. **Continuous Automated Benchmark Evolution:** Run recurring background jobs that periodically expand benchmarks, run regression suites, and update persistent knowledge graphs.
 
