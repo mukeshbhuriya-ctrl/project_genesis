@@ -61,6 +61,9 @@ class TestDatabaseInitialization:
             assert "knowledge_edges" in tables
             assert "research_papers" in tables
             assert "visual_inspections" in tables
+            assert "compiled_extensions" in tables
+            assert "fleet_nodes" in tables
+            assert "fleet_sync_logs" in tables
         finally:
             conn.close()
 

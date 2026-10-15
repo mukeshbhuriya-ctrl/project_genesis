@@ -23,7 +23,7 @@
         </div>
         <div class="brand-title">
           <span class="brand-name">GENESIS</span>
-          <span class="brand-tag">v0.10.0 • Local-First</span>
+          <span class="brand-tag">v0.12.0 • Local-First</span>
         </div>
       </div>
 
@@ -60,6 +60,9 @@
         </button>
         <button class="nav-tab" data-tab="graph" id="tab-graph-btn">
           <span class="tab-icon">🕸️</span> Meta-Graph &amp; Papers
+        </button>
+        <button class="nav-tab" data-tab="fleet" id="tab-fleet-btn">
+          <span class="tab-icon">🌐</span> Fleet &amp; Compilers
         </button>
         <button class="nav-tab" data-tab="hardware" id="tab-hardware-btn">
           <span class="tab-icon">⚡</span> System &amp; Hardware
@@ -1409,6 +1412,139 @@
           </div>
         </div>
       </section>
+
+      <!-- 13. DISTRIBUTED FLEET & NATIVE SELF-COMPILATION TAB -->
+      <section class="tab-content" id="pane-fleet">
+        <div class="knowledge-container">
+          <!-- Header and controls -->
+          <div class="content-header" style="flex-direction:column; align-items:flex-start; gap:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+              <div>
+                <h2>Distributed Multi-Workstation Fleet &amp; Native Extensions</h2>
+                <p style="color:var(--text-muted); font-size:0.88rem; margin-top:2px;">
+                  Phase 11: Real-time C/Rust extension synthesis, tensor acceleration kernels with pure Python fallbacks, and peer-to-peer delta synchronization.
+                </p>
+              </div>
+              <div class="header-actions" style="display:flex; gap:8px;">
+                <button class="btn btn-sm btn-primary" id="btn-open-register-fleet-modal">+ Register Peer Workstation</button>
+                <button class="btn btn-sm btn-secondary" id="btn-refresh-fleet">🔄 Refresh</button>
+                <button class="btn btn-sm btn-secondary" id="btn-export-fleet-delta">📦 Export Delta</button>
+                <button class="btn btn-sm btn-secondary" id="btn-open-import-fleet-modal">📥 Import Delta</button>
+              </div>
+            </div>
+
+            <!-- Global Status Bar -->
+            <div class="dashboard-stats-grid" style="grid-template-columns: repeat(4, 1fr); width:100%; margin-top:4px;">
+              <div class="stat-card">
+                <span class="stat-label">Host Compilers</span>
+                <span class="stat-val" id="stat-host-compilers" style="font-size:1.3rem;">Scanning...</span>
+                <span class="stat-sub" id="stat-host-compiler-sub">clang, gcc, cl, rustc</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">Compiled Kernels</span>
+                <span class="stat-val" id="stat-compiled-kernels" style="font-size:1.3rem;">0</span>
+                <span class="stat-sub">Active Hot-Path Extensions</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">Fleet Peer Nodes</span>
+                <span class="stat-val" id="stat-fleet-nodes" style="font-size:1.3rem;">1</span>
+                <span class="stat-sub">Local cluster workstations</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">Delta Replications</span>
+                <span class="stat-val" id="stat-sync-events" style="font-size:1.3rem;">0</span>
+                <span class="stat-sub">Logged cross-node sync events</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 1: Self-Compilation & Hot-Path Kernels -->
+          <div class="card" style="margin-top:16px;">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h3 style="font-size:1.05rem; margin:0;">⚡ Host Compilers &amp; Native Extension Kernels</h3>
+                <p style="color:var(--text-muted); font-size:0.8rem; margin:2px 0 0 0;">
+                  Dynamic C/Rust shared libraries with zero-overhead Python fallbacks for hot tensor operations.
+                </p>
+              </div>
+              <button class="btn btn-sm btn-primary" id="btn-compile-builtin-kernels">⚡ Compile Built-in Kernels</button>
+            </div>
+            <div class="card-body">
+              <div id="compiler-detection-summary" style="display:flex; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+                <div class="loading-spinner">Detecting compiler toolchains...</div>
+              </div>
+
+              <div class="table-container">
+                <table class="data-table" id="extensions-table">
+                  <thead>
+                    <tr>
+                      <th>Kernel Name</th>
+                      <th>Language</th>
+                      <th>Status</th>
+                      <th>Compiler Used</th>
+                      <th>Speedup Factor</th>
+                      <th>Created</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="extensions-tbody">
+                    <tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:20px;">No compiled extensions loaded. Click 'Compile Built-in Kernels' to register.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Fleet Peer Nodes Topology -->
+          <div class="card" style="margin-top:16px;">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h3 style="font-size:1.05rem; margin:0;">🌐 Distributed Multi-Workstation Fleet</h3>
+                <p style="color:var(--text-muted); font-size:0.8rem; margin:2px 0 0 0;">
+                  Cluster topology of local workstations participating in peer-to-peer knowledge graph replication.
+                </p>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="fleet-nodes-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap:16px;">
+                <div class="loading-spinner">Discovering fleet nodes...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Delta Synchronization Audit Logs -->
+          <div class="card" style="margin-top:16px;">
+            <div class="card-header">
+              <h3 style="font-size:1.05rem; margin:0;">📜 Delta Synchronization Audit Log</h3>
+              <p style="color:var(--text-muted); font-size:0.8rem; margin:2px 0 0 0;">
+                Immutable SQLite journal of delta exports, peer imports, and conflict resolution events.
+              </p>
+            </div>
+            <div class="card-body">
+              <div class="table-container">
+                <table class="data-table" id="fleet-logs-table">
+                  <thead>
+                    <tr>
+                      <th>Log ID</th>
+                      <th>Workstation Node</th>
+                      <th>Direction</th>
+                      <th>Entity Type</th>
+                      <th>Items Synced</th>
+                      <th>Status</th>
+                      <th>Checksum</th>
+                      <th>Timestamp</th>
+                    </tr>
+                  </thead>
+                  <tbody id="fleet-logs-tbody">
+                    <tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:20px;">No sync events recorded yet.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
     </main>
 
   </div>
@@ -1735,6 +1871,70 @@
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" id="btn-cancel-vision">Cancel</button>
           <button type="submit" class="btn btn-primary" id="btn-submit-vision">👁️ Execute Inspection</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Registering Fleet Peer Node -->
+  <div class="modal-backdrop" id="fleet-register-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3>Register Peer Workstation Node</h3>
+        <button class="modal-close-btn" id="btn-close-fleet-register-modal">&times;</button>
+      </div>
+      <form id="register-fleet-form" class="standard-form">
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="fleet-hostname">Workstation Hostname:</label>
+            <input type="text" id="fleet-hostname" class="form-input" placeholder="e.g. rig-titan-02" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="fleet-address">IP Address or LAN Hostname:</label>
+            <input type="text" id="fleet-address" class="form-input" placeholder="e.g. 192.168.1.150" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="fleet-port">API Port:</label>
+            <input type="number" id="fleet-port" class="form-input" value="8000" min="1" max="65535" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="fleet-gpu">GPU Hardware Name:</label>
+            <input type="text" id="fleet-gpu" class="form-input" placeholder="e.g. RTX 4090 24GB">
+          </div>
+          <div class="form-group flex-1">
+            <label for="fleet-vram">VRAM (GB):</label>
+            <input type="number" id="fleet-vram" class="form-input" value="24.0" step="0.5" min="0">
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-fleet-register">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-fleet-register">🌐 Register Peer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Importing Delta Bundle -->
+  <div class="modal-backdrop" id="fleet-import-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 640px;">
+      <div class="modal-header">
+        <h3>Import Peer Delta Bundle</h3>
+        <button class="modal-close-btn" id="btn-close-fleet-import-modal">&times;</button>
+      </div>
+      <form id="import-fleet-form" class="standard-form">
+        <div class="form-group">
+          <label for="fleet-import-source-node">Originating Peer Node ID / Name:</label>
+          <input type="text" id="fleet-import-source-node" class="form-input" value="manual-offline-import" required>
+        </div>
+        <div class="form-group">
+          <label for="fleet-import-payload">JSON Delta Bundle Payload:</label>
+          <textarea id="fleet-import-payload" class="form-textarea" rows="8" placeholder='{"version": 11, "checksum": "...", "entities": {"knowledge_nodes": [], "knowledge_edges": [], "research_papers": []}}' required></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-fleet-import">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-fleet-import">📥 Merge Delta Bundle</button>
         </div>
       </form>
     </div>

@@ -1218,4 +1218,109 @@ body {
   margin: 2px;
 }
 
+/* ── Phase 11: Fleet & Self-Compilation Subsystem ── */
+.compiler-card {
+  flex: 1 1 200px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.compiler-card.detected {
+  border-color: rgba(34, 197, 94, 0.4);
+  background: rgba(34, 197, 94, 0.06);
+}
+.compiler-card.absent {
+  opacity: 0.75;
+}
+.compiler-name {
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-main);
+}
+.compiler-sub {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
+.fleet-node-card {
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+.fleet-node-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.12);
+  transform: translateY(-1px);
+}
+.fleet-node-card.self-node {
+  border-left: 3px solid #06b6d4;
+}
+.fleet-node-card.peer-node {
+  border-left: 3px solid #a855f7;
+}
+
+.node-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.node-card-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.node-card-endpoint {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.node-card-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 8px;
+  border-radius: 4px;
+}
+.node-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 6px;
+}
+
+.speedup-pill {
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+.speedup-pill.fallback {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.3);
+}

@@ -1,10 +1,10 @@
 # PROJECT STATE
 
-> Last updated: 2026-10-15 by Senior AI/ML Engineer (Phase 10 completion & Phase 11 activation)
+> Last updated: 2026-10-15 by Senior AI/ML Engineer (Phase 11 completion & Phase 12 activation)
 
 ## Current Phase
 
-**Phase 10 Complete (Verified) → Phase 11: Real-Time Self-Compilation & Distributed Fleet Synchronization (Active)**
+**Phase 11 Complete (Verified) → Phase 12: Autonomous Kernel Synthesis & Cross-Fleet Model Merging (Active)**
 
 ## Implemented
 
@@ -126,9 +126,23 @@
 - [x] Architecture Decision Record ADR-011 (`docs/decisions/ADR-011-multimodal-inspection-knowledge-graphs-and-autonomous-research-daemon.md`)
 - [x] Comprehensive test suite in `tests/`: 228 tests covering all subsystems (100% passing)
 
+### Real-Time Self-Compilation & Distributed Fleet Synchronization (Phase 11)
+- [x] Host compiler toolchain discovery (`genesis/core/compiler.py`): automatic detection for `clang`, `gcc`, `cl.exe`, and `rustc` via `shutil.which`
+- [x] Native extension compilation & dynamic loading (`genesis/core/compiler.py`): dynamic C/Rust source generation, compiler execution with `-O3` / `/O2` and `-shared -fPIC` / `/LD`, `.dll`/`.so` artifact emission, and signature binding via `ctypes.CDLL`
+- [x] Transparent zero-overhead pure Python fallback engine (`genesis/core/compiler.py`): automatic graceful degradation with status `fallback_python` when compilers are missing, ensuring zero runtime exceptions
+- [x] Canonical built-in hot-path tensor acceleration kernels (`genesis/core/compiler.py`): `vector_dot_product`, `fast_quantize_int8` (SIMD-style float-to-int8 quantization), and `matrix_vector_mul` with benchmark profiling and speedup factor tracking
+- [x] Distributed peer-to-peer fleet node manager (`genesis/deployment/fleet.py`): local host self-registration (`is_self: True`), peer node CRUD, hardware capability discovery, and live heartbeat updates
+- [x] Incremental delta bundle synchronization (`genesis/deployment/fleet.py`): delta export with SHA-256 integrity checksums, timestamp-based conflict-resolving import (`excluded.updated_at >= existing.updated_at`), parent campaign existence verification, and auto-registration of unknown origin nodes
+- [x] SQLite database schema v11 (`compiled_extensions`, `fleet_nodes`, `fleet_sync_logs` tables with full index coverage and automated migrations) (`genesis/core/database.py`)
+- [x] Phase 11 REST API routes (`genesis/api/routes/compiler.py`, `genesis/api/routes/fleet.py`): mounted at `/api/compiler` and `/api/fleet`
+- [x] Interactive Web Dashboard Module (`genesis/web/`): dedicated "Fleet & Compilers" navigation tab (`#pane-fleet`), toolchain inspection cards, kernel registry table with one-click benchmark triggers, cluster topology grid, delta audit logs table, and modals for peer node registration and offline delta bundle imports
+- [x] Architecture Decision Record ADR-012 (`docs/decisions/ADR-012-native-extension-self-compilation-and-distributed-fleet-synchronization.md`)
+- [x] Comprehensive test suite in `tests/`: 241 tests covering all subsystems (100% passing)
+
 ## Verified
 
-- [x] **228/228 unit and integration tests pass (100% passing)** across all modules
+- [x] **241/241 unit and integration tests pass (100% passing)** across all modules
+- [x] **Phase 11 Acceptance Criterion verified**: The platform dynamically detects host compilers, compiles hot-path tensor routines with transparent Python fallbacks and benchmark profiling, coordinates distributed fleet nodes with heartbeat tracking, and performs air-gapped or network delta bundle synchronization with timestamp conflict resolution
 - [x] **Phase 10 Acceptance Criterion verified**: The platform autonomously parses and validates visual artifacts, weaves cross-campaign concepts, debates, and experiments into a searchable meta-memory knowledge graph, and continuously runs closed-loop scientific research cycles publishing peer-structured IMRaD papers
 - [x] **Phase 9 Acceptance Criterion verified**: The platform coordinates specialized cognitive agent ensembles, runs multi-round dialectic consensus debates synthesizing agreement and logging dissenting views, and advances multi-stage research campaigns from hypothesis to sandboxed execution and memory consolidation
 - [x] **Phase 8 Acceptance Criterion verified**: The platform autonomously routes tasks to optimal specialized models with VRAM safety checks, expands benchmark test suites from runtime failure traces, and executes closed-loop evolution cycles that fine-tune adapters and enforce automatic rollback defenses upon regression
@@ -169,9 +183,9 @@
 | Node.js | 24.17.0 |
 | Git | 2.54.0 |
 
-## Next Steps (Phase 11: Real-Time Self-Compilation & Distributed Fleet Synchronization)
+## Next Steps (Phase 12: Autonomous Kernel Synthesis & Cross-Fleet Model Merging)
 
-1. **Automated C/Rust Native Extension Compilation:** Implement an autonomous compiler subsystem that identifies hot-path Python loops (e.g. vector dot products, KV-cache operations) and generates, compiles, and loads native C or Rust shared libraries.
-2. **Distributed Multi-Workstation Fleet Synchronization:** Create peer-to-peer sync protocols to replicate LoRA weights, knowledge graph delta updates, and debate transcripts across local network nodes.
+1. **Automated LLM-Driven Kernel Synthesis & Iterative Compilation:** Develop an autonomous loop where the coding model iteratively synthesizes C/CUDA/SIMD kernels, benchmarks speedup against baselines, and refines assembly or algorithm structure.
+2. **Cross-Fleet Distributed Model Parameter Merging:** Implement parameter-space weight merging algorithms (TIES-Merging, DARE, SLERP) to combine LoRA fine-tuned adapters produced across different workstation fleet nodes without retraining.
 3. **Interactive Human-in-the-Loop Steering Controls:** Provide real-time steering and intervention hooks for the background research daemon via WebSocket channels.
 

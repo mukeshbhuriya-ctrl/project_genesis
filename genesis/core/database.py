@@ -559,6 +559,56 @@ CREATE TABLE IF NOT EXISTS visual_inspections (
 CREATE INDEX IF NOT EXISTS idx_visual_inspections_type ON visual_inspections(artifact_type, created_at DESC);
 """
 
+SCHEMA_V11 = """
+-- Native Compiled Binary Extensions (hot-path acceleration kernels)
+CREATE TABLE IF NOT EXISTS compiled_extensions (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    language TEXT NOT NULL CHECK (language IN ('c', 'rust', 'cpp')),
+    source_code TEXT NOT NULL,
+    binary_path TEXT,
+    status TEXT NOT NULL CHECK (status IN ('compiled', 'fallback_python', 'failed')),
+    compiler_used TEXT,
+    speedup_factor REAL NOT NULL DEFAULT 1.0,
+    checksum TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_compiled_extensions_name ON compiled_extensions(name);
+CREATE INDEX IF NOT EXISTS idx_compiled_extensions_status ON compiled_extensions(status);
+
+-- Distributed Fleet Peer Nodes
+CREATE TABLE IF NOT EXISTS fleet_nodes (
+    id TEXT PRIMARY KEY,
+    hostname TEXT NOT NULL,
+    address TEXT NOT NULL,
+    port INTEGER NOT NULL DEFAULT 8000,
+    gpu_device TEXT,
+    vram_gb REAL DEFAULT 0.0,
+    status TEXT NOT NULL CHECK (status IN ('online', 'unreachable', 'syncing', 'offline')) DEFAULT 'online',
+    last_heartbeat TEXT NOT NULL DEFAULT (datetime('now')),
+    sync_cursor TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_fleet_nodes_status ON fleet_nodes(status);
+CREATE INDEX IF NOT EXISTS idx_fleet_nodes_address ON fleet_nodes(address, port);
+
+-- Fleet Delta Synchronization Audit Logs
+CREATE TABLE IF NOT EXISTS fleet_sync_logs (
+    id TEXT PRIMARY KEY,
+    node_id TEXT NOT NULL REFERENCES fleet_nodes(id) ON DELETE CASCADE,
+    entity_type TEXT NOT NULL,
+    direction TEXT NOT NULL CHECK (direction IN ('push', 'pull', 'bidirectional')),
+    items_synced INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL CHECK (status IN ('success', 'failed', 'conflict_resolved')) DEFAULT 'success',
+    checksum TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_fleet_sync_logs_node ON fleet_sync_logs(node_id, created_at DESC);
+"""
+
 
 def get_sync_connection(db_path: str | Path) -> sqlite3.Connection:
     """Create a synchronous SQLite connection with recommended pragmas."""
@@ -690,6 +740,16 @@ def initialize_database(db_path: str | Path) -> None:
             )
             conn.commit()
             log.info("Schema v10 applied successfully.")
+
+        if current_version < 11:
+            log.info("Applying schema v11...")
+            conn.executescript(SCHEMA_V11)
+            conn.execute(
+                "INSERT OR REPLACE INTO schema_migrations (version, description) "
+                "VALUES (11, 'Schema v11: compiled extensions, fleet nodes, and fleet sync logs')"
+            )
+            conn.commit()
+            log.info("Schema v11 applied successfully.")
         else:
             log.info(f"Database schema is at version {current_version}, up to date.")
 

@@ -111,3 +111,14 @@ def reset_settings() -> None:
     """Reset settings (useful for testing)."""
     global _settings
     _settings = None
+
+
+from genesis.core.compiler import CompilationResult, NativeExtensionManager
+
+__all__ = [
+    "GenesisSettings",
+    "get_settings",
+    "reset_settings",
+    "CompilationResult",
+    "NativeExtensionManager",
+]

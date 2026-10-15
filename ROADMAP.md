@@ -1,6 +1,6 @@
 # ROADMAP
 
-## Current Milestone: Phase 10 Complete ✅ → Phase 11: Real-Time Self-Compilation & Distributed Fleet Synchronization (Next)
+## Current Milestone: Phase 11 Complete ✅ → Phase 12: Autonomous Kernel Synthesis & Cross-Fleet Model Merging (Next)
 
 
 ## Phase 0: Discovery and Baseline ✅
@@ -139,9 +139,26 @@
 
 **Acceptance criterion:** Verified (The platform autonomously parses and validates visual artifacts, weaves cross-campaign concepts, debates, and experiments into a searchable meta-memory knowledge graph, and continuously runs closed-loop scientific research cycles publishing peer-structured IMRaD papers).
 
-## Phase 11: Real-Time Self-Compilation & Distributed Fleet Synchronization ⏳
-- [ ] Automated C/Rust native extension compilation for hot-path tensor routines
-- [ ] Multi-workstation peer-to-peer fleet synchronization of LoRA adapters and knowledge graph delta updates
+## Phase 11: Real-Time Self-Compilation & Distributed Fleet Synchronization ✅
+- [x] Host compiler discovery (`clang`, `gcc`, `cl`, `rustc`) and dynamic C/Rust extension synthesis (`genesis/core/compiler.py`)
+- [x] Zero-overhead pure Python fallback kernel registration for systems without native toolchains
+- [x] Built-in canonical hot-path tensor acceleration kernels: `vector_dot_product`, `fast_quantize_int8`, `matrix_vector_mul`
+- [x] Automated benchmark profiling and SQLite speedup factor tracking
+- [x] Distributed peer-to-peer fleet node discovery, hardware detection, and heartbeat tracking (`genesis/deployment/fleet.py`)
+- [x] Incremental delta bundle export with SHA-256 integrity checksums
+- [x] Timestamp-based conflict-resolving delta bundle import with strict foreign key defense
+- [x] Immutable replication audit logging in `fleet_sync_logs`
+- [x] SQLite Schema Version 11 migrations (`compiled_extensions`, `fleet_nodes`, `fleet_sync_logs`) (`genesis/core/database.py`)
+- [x] Phase 11 REST API routes mounted under `/api/compiler` and `/api/fleet` (`genesis/api/app.py`)
+- [x] Interactive Web Dashboard UI: Fleet & Compilers tab (`#pane-fleet`), toolchain status cards, kernel benchmark triggers, cluster topology grid, and delta import/export modals (`genesis/web/`)
+- [x] Architecture Decision Record ADR-012 (`docs/decisions/ADR-012-native-extension-self-compilation-and-distributed-fleet-synchronization.md`)
+- [x] 241/241 comprehensive tests passing (100% pass rate)
+
+**Acceptance criterion:** Verified (The platform dynamically detects host compilers, compiles hot-path tensor routines with transparent Python fallbacks and benchmark profiling, coordinates distributed fleet nodes with heartbeat tracking, and performs air-gapped or network delta bundle synchronization with timestamp conflict resolution).
+
+## Phase 12: Autonomous Kernel Synthesis & Cross-Fleet Model Merging (Next) ⏳
+- [ ] Automated LLM-driven C/CUDA/SIMD kernel optimization and iterative compilation
+- [ ] Cross-workstation parameter merging (TIES, DARE, SLERP) for distributed LoRA adapters
 - [ ] Active interactive human-in-the-loop steering controls for background research daemon
 
 

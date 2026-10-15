@@ -38,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (target === 'meta') loadMetaData();
       if (target === 'agents') loadAgentsData();
       if (target === 'graph') loadGraphData();
+      if (target === 'fleet') loadFleetData();
     });
   });
 
@@ -3059,6 +3060,392 @@ document.addEventListener('DOMContentLoaded', () => {
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = '👁️ Execute Inspection';
+      }
+    });
+  }
+
+  // ── Fleet & Self-Compilation Controller (Phase 11) ──
+  const btnOpenRegisterFleetModal = document.getElementById('btn-open-register-fleet-modal');
+  const btnCloseRegisterFleetModal = document.getElementById('btn-close-fleet-register-modal');
+  const btnCancelFleetRegister = document.getElementById('btn-cancel-fleet-register');
+  const fleetRegisterModal = document.getElementById('fleet-register-modal');
+  const registerFleetForm = document.getElementById('register-fleet-form');
+
+  const btnOpenImportFleetModal = document.getElementById('btn-open-import-fleet-modal');
+  const btnCloseImportFleetModal = document.getElementById('btn-close-fleet-import-modal');
+  const btnCancelFleetImport = document.getElementById('btn-cancel-fleet-import');
+  const fleetImportModal = document.getElementById('fleet-import-modal');
+  const importFleetForm = document.getElementById('import-fleet-form');
+
+  const btnRefreshFleet = document.getElementById('btn-refresh-fleet');
+  const btnExportFleetDelta = document.getElementById('btn-export-fleet-delta');
+  const btnCompileBuiltinKernels = document.getElementById('btn-compile-builtin-kernels');
+
+  async function loadFleetData() {
+    await Promise.all([
+      loadCompilers(),
+      loadExtensions(),
+      loadFleetNodes(),
+      loadFleetLogs()
+    ]);
+  }
+
+  async function loadCompilers() {
+    const summaryEl = document.getElementById('compiler-detection-summary');
+    const statEl = document.getElementById('stat-host-compilers');
+    const subEl = document.getElementById('stat-host-compiler-sub');
+    if (!summaryEl) return;
+
+    try {
+      const res = await fetch('/api/compiler/compilers');
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      const compilers = data.compilers || {};
+      const foundCount = Object.keys(compilers).length;
+
+      if (statEl) {
+        statEl.textContent = foundCount > 0 ? `${foundCount} Toolchains` : 'Python Fallback';
+        statEl.style.color = foundCount > 0 ? '#22c55e' : '#f59e0b';
+      }
+      if (subEl) {
+        subEl.textContent = foundCount > 0 ? Object.keys(compilers).join(', ') : 'Zero-overhead Python Fallback';
+      }
+
+      const allCandidates = [
+        { id: 'clang', label: 'LLVM Clang', lang: 'C/C++' },
+        { id: 'gcc', label: 'GNU GCC', lang: 'C/C++' },
+        { id: 'cl', label: 'MSVC cl.exe', lang: 'C/C++' },
+        { id: 'rustc', label: 'Rust rustc', lang: 'Rust' }
+      ];
+
+      summaryEl.innerHTML = allCandidates.map(c => {
+        const path = compilers[c.id];
+        const isDetected = Boolean(path);
+        return `
+          <div class="compiler-card ${isDetected ? 'detected' : 'absent'}">
+            <div>
+              <div class="compiler-name">${c.label}</div>
+              <div class="compiler-sub" title="${path || 'Not detected on PATH'}">${path || 'Fallback Available'}</div>
+            </div>
+            <span class="badge ${isDetected ? 'badge-success' : 'badge-warning'}">
+              ${isDetected ? 'ACTIVE' : 'FALLBACK'}
+            </span>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      summaryEl.innerHTML = `<div class="error-msg">Failed to query compilers: ${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  async function loadExtensions() {
+    const tbody = document.getElementById('extensions-tbody');
+    const statEl = document.getElementById('stat-compiled-kernels');
+    if (!tbody) return;
+
+    try {
+      const res = await fetch('/api/compiler/extensions');
+      if (!res.ok) throw new Error(await res.text());
+      const exts = await res.json();
+
+      if (statEl) statEl.textContent = exts.length;
+
+      if (!exts || exts.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:20px;">No compiled extensions loaded. Click 'Compile Built-in Kernels' to register.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = exts.map(e => {
+        const isNative = e.status === 'compiled';
+        const speedupClass = isNative ? 'speedup-pill' : 'speedup-pill fallback';
+        return `
+          <tr>
+            <td style="font-family:var(--font-mono); font-weight:600; color:var(--text-main);">${escapeHtml(e.name)}</td>
+            <td><span class="badge badge-info">${escapeHtml(e.language.toUpperCase())}</span></td>
+            <td><span class="badge ${isNative ? 'badge-success' : 'badge-warning'}">${escapeHtml(e.status)}</span></td>
+            <td style="font-size:0.85rem; color:var(--text-muted);">${escapeHtml(e.compiler_used || 'Pure Python')}</td>
+            <td><span class="${speedupClass}">${e.speedup_factor}x</span></td>
+            <td style="font-size:0.8rem; color:var(--text-muted);">${formatDate(e.created_at)}</td>
+            <td>
+              <button class="btn btn-sm btn-secondary" onclick="window.benchmarkKernel('${escapeHtml(e.name)}')">⚡ Benchmark</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="7" class="error-msg">Error loading extensions: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  window.benchmarkKernel = async function(kernelName) {
+    try {
+      const res = await fetch(`/api/compiler/benchmark/${encodeURIComponent(kernelName)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ iterations: 500 })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      alert(`Benchmark Result for ${data.kernel}:\n\nSpeedup Factor: ${data.speedup_factor}x\nBaseline: ${data.baseline_ms} ms\nActive Kernel: ${data.active_ms} ms\nNative Shared Lib: ${data.is_native ? 'Yes' : 'No (Python Fallback)'}`);
+      loadExtensions();
+    } catch (err) {
+      alert(`Benchmark failed: ${err.message}`);
+    }
+  };
+
+  async function loadFleetNodes() {
+    const grid = document.getElementById('fleet-nodes-grid');
+    const statEl = document.getElementById('stat-fleet-nodes');
+    if (!grid) return;
+
+    try {
+      const res = await fetch('/api/fleet/nodes');
+      if (!res.ok) throw new Error(await res.text());
+      const nodes = await res.json();
+
+      if (statEl) statEl.textContent = nodes.length;
+
+      if (!nodes || nodes.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1 / -1; text-align:center; color:var(--text-muted); padding:24px;">No fleet nodes discovered.</div>`;
+        return;
+      }
+
+      grid.innerHTML = nodes.map(n => {
+        const isSelf = n.metadata && n.metadata.is_self;
+        const statusBadgeClass = n.status === 'online' ? 'badge-success' : (n.status === 'syncing' ? 'badge-info' : 'badge-warning');
+        return `
+          <div class="fleet-node-card ${isSelf ? 'self-node' : 'peer-node'}">
+            <div class="node-card-header">
+              <div class="node-card-title">
+                ${isSelf ? '🏠' : '🖥️'} ${escapeHtml(n.hostname)}
+                ${isSelf ? '<span class="badge badge-info" style="font-size:0.7rem;">THIS HOST</span>' : ''}
+              </div>
+              <span class="badge ${statusBadgeClass}">${escapeHtml(n.status.toUpperCase())}</span>
+            </div>
+            <div class="node-card-endpoint">${escapeHtml(n.address)}:${n.port}</div>
+            <div class="node-card-details">
+              <div><strong>GPU:</strong> ${escapeHtml(n.gpu_device || 'CPU-only')}</div>
+              <div><strong>VRAM:</strong> ${n.vram_gb > 0 ? n.vram_gb + ' GB' : 'N/A'}</div>
+              <div><strong>Heartbeat:</strong> ${formatDate(n.last_heartbeat)}</div>
+              ${n.sync_cursor ? `<div><strong>Sync Cursor:</strong> ${formatDate(n.sync_cursor)}</div>` : ''}
+            </div>
+            <div class="node-card-actions">
+              <button class="btn btn-sm btn-secondary" onclick="window.pingFleetNode('${escapeHtml(n.id)}')">📡 Ping</button>
+              ${!isSelf ? `
+                <button class="btn btn-sm btn-primary" onclick="window.syncFleetNode('${escapeHtml(n.id)}')">🔄 Sync Delta</button>
+                <button class="btn btn-sm btn-danger" onclick="window.removeFleetNode('${escapeHtml(n.id)}')">🗑️</button>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      grid.innerHTML = `<div class="error-msg">Failed to query fleet nodes: ${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  window.pingFleetNode = async function(nodeId) {
+    try {
+      const res = await fetch(`/api/fleet/nodes/${encodeURIComponent(nodeId)}/ping`, { method: 'POST' });
+      if (!res.ok) throw new Error(await res.text());
+      loadFleetNodes();
+    } catch (err) {
+      alert(`Ping failed: ${err.message}`);
+    }
+  };
+
+  window.syncFleetNode = async function(nodeId) {
+    try {
+      const res = await fetch(`/api/fleet/sync/${encodeURIComponent(nodeId)}`, { method: 'POST' });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      alert(`Sync completed: ${data.message || 'Success'} (Status: ${data.status})`);
+      loadFleetData();
+    } catch (err) {
+      alert(`Delta sync failed: ${err.message}`);
+    }
+  };
+
+  window.removeFleetNode = async function(nodeId) {
+    if (!confirm('Are you sure you want to remove this peer node from the cluster?')) return;
+    try {
+      const res = await fetch(`/api/fleet/nodes/${encodeURIComponent(nodeId)}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error(await res.text());
+      loadFleetNodes();
+    } catch (err) {
+      alert(`Remove failed: ${err.message}`);
+    }
+  };
+
+  async function loadFleetLogs() {
+    const tbody = document.getElementById('fleet-logs-tbody');
+    const statEl = document.getElementById('stat-sync-events');
+    if (!tbody) return;
+
+    try {
+      const res = await fetch('/api/fleet/logs?limit=50');
+      if (!res.ok) throw new Error(await res.text());
+      const logs = await res.json();
+
+      if (statEl) statEl.textContent = logs.length;
+
+      if (!logs || logs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:20px;">No sync events recorded yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = logs.map(l => {
+        const isSuccess = l.status === 'success';
+        return `
+          <tr>
+            <td style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-muted);">${escapeHtml(l.id)}</td>
+            <td style="font-weight:600;">${escapeHtml(l.node_id)}</td>
+            <td><span class="badge badge-info">${escapeHtml(l.direction.toUpperCase())}</span></td>
+            <td style="font-size:0.85rem;">${escapeHtml(l.entity_type)}</td>
+            <td style="font-weight:600; color:var(--primary);">${l.items_synced} items</td>
+            <td><span class="badge ${isSuccess ? 'badge-success' : 'badge-danger'}">${escapeHtml(l.status)}</span></td>
+            <td style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted);">${escapeHtml((l.checksum || '').slice(0, 12))}...</td>
+            <td style="font-size:0.8rem; color:var(--text-muted);">${formatDate(l.created_at)}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="8" class="error-msg">Error loading logs: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  // Built-in hot-path kernels
+  const C_DOT_PRODUCT_SRC = `#include <stddef.h>\\n#ifdef _WIN32\\n#define EXPORT __declspec(dllexport)\\n#else\\n#define EXPORT\\n#endif\\nEXPORT float dot_product(const float* a, const float* b, size_t n) {\\n    float sum = 0.0f;\\n    for (size_t i = 0; i < n; ++i) sum += a[i] * b[i];\\n    return sum;\\n}`;
+
+  if (btnCompileBuiltinKernels) {
+    btnCompileBuiltinKernels.addEventListener('click', async () => {
+      btnCompileBuiltinKernels.disabled = true;
+      btnCompileBuiltinKernels.textContent = '⚡ Synthesizing & Compiling...';
+      try {
+        const res = await fetch('/api/compiler/compile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: 'vector_dot_product',
+            language: 'c',
+            source_code: C_DOT_PRODUCT_SRC,
+            metadata: { built_in: true }
+          })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        alert(`Kernel '${data.name}' registered with status: ${data.status} (Compiler: ${data.compiler_used || 'Pure Python Fallback'})`);
+        loadExtensions();
+      } catch (err) {
+        alert(`Compilation failed: ${err.message}`);
+      } finally {
+        btnCompileBuiltinKernels.disabled = false;
+        btnCompileBuiltinKernels.textContent = '⚡ Compile Built-in Kernels';
+      }
+    });
+  }
+
+  if (btnRefreshFleet) {
+    btnRefreshFleet.addEventListener('click', () => { loadFleetData(); });
+  }
+
+  if (btnExportFleetDelta) {
+    btnExportFleetDelta.addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/fleet/export-delta');
+        if (!res.ok) throw new Error(await res.text());
+        const bundle = await res.json();
+        const jsonStr = JSON.stringify(bundle, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `genesis-fleet-delta-${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        alert(`Export failed: ${err.message}`);
+      }
+    });
+  }
+
+  // Modal Wiring: Register Fleet Node
+  if (btnOpenRegisterFleetModal && fleetRegisterModal) {
+    btnOpenRegisterFleetModal.addEventListener('click', () => { fleetRegisterModal.style.display = 'flex'; });
+  }
+  if (btnCloseRegisterFleetModal && fleetRegisterModal) {
+    btnCloseRegisterFleetModal.addEventListener('click', () => { fleetRegisterModal.style.display = 'none'; });
+  }
+  if (btnCancelFleetRegister && fleetRegisterModal) {
+    btnCancelFleetRegister.addEventListener('click', () => { fleetRegisterModal.style.display = 'none'; });
+  }
+  if (registerFleetForm) {
+    registerFleetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const hostname = document.getElementById('fleet-hostname').value.trim();
+      const address = document.getElementById('fleet-address').value.trim();
+      const port = parseInt(document.getElementById('fleet-port').value, 10) || 8000;
+      const gpu = document.getElementById('fleet-gpu').value.trim();
+      const vram = parseFloat(document.getElementById('fleet-vram').value) || 0.0;
+
+      try {
+        const res = await fetch('/api/fleet/nodes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            hostname: hostname,
+            address: address,
+            port: port,
+            gpu_device: gpu,
+            vram_gb: vram
+          })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        fleetRegisterModal.style.display = 'none';
+        registerFleetForm.reset();
+        loadFleetNodes();
+      } catch (err) {
+        alert(`Failed to register peer node: ${err.message}`);
+      }
+    });
+  }
+
+  // Modal Wiring: Import Fleet Delta
+  if (btnOpenImportFleetModal && fleetImportModal) {
+    btnOpenImportFleetModal.addEventListener('click', () => { fleetImportModal.style.display = 'flex'; });
+  }
+  if (btnCloseImportFleetModal && fleetImportModal) {
+    btnCloseImportFleetModal.addEventListener('click', () => { fleetImportModal.style.display = 'none'; });
+  }
+  if (btnCancelFleetImport && fleetImportModal) {
+    btnCancelFleetImport.addEventListener('click', () => { fleetImportModal.style.display = 'none'; });
+  }
+  if (importFleetForm) {
+    importFleetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const sourceNodeId = document.getElementById('fleet-import-source-node').value.trim();
+      const payloadStr = document.getElementById('fleet-import-payload').value.trim();
+
+      try {
+        const bundle = JSON.parse(payloadStr);
+        const res = await fetch('/api/fleet/import-delta', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bundle: bundle,
+            source_node_id: sourceNodeId || 'manual-offline-import'
+          })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        alert(`Delta import finished: ${data.message || 'Done'} (Synced: ${data.items_synced} entities)`);
+        fleetImportModal.style.display = 'none';
+        importFleetForm.reset();
+        loadFleetData();
+      } catch (err) {
+        alert(`Import failed: ${err.message}`);
       }
     });
   }

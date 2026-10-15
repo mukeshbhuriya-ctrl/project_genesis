@@ -2,6 +2,19 @@
 
 All notable changes to Project Genesis will be documented in this file.
 
+## [0.12.0] — 2026-10-15
+
+### Added
+- **Real-Time Self-Compilation, Native Binary Extensions, and Distributed Multi-Workstation Fleet Synchronization (Phase 11)**:
+  - **Host Toolchain Discovery & Native Extension Manager**: Automatic compiler detection for `clang`, `gcc`, `cl.exe`, and `rustc`. Dynamically compiles synthesized C/Rust hot-path kernels into native shared libraries (`.dll`/`.so`) with dynamic ctypes linking, and transparently degrades to zero-overhead pure Python fallbacks when compilers are absent (`genesis/core/compiler.py`).
+  - **Canonical Hot-Path Tensor Kernels**: Built-in implementations of `vector_dot_product`, `fast_quantize_int8` (SIMD-style float-to-int8 scaling), and `matrix_vector_mul` with benchmark profiling and SQLite speedup factor tracking (`genesis/core/compiler.py`).
+  - **Distributed Fleet Synchronization Engine**: Multi-workstation peer discovery, hardware detection, heartbeat monitoring, and delta synchronization. Supports incremental delta bundle exports with SHA-256 integrity checksums, timestamp-based conflict-resolving imports (`excluded.updated_at >= existing.updated_at`), and immutable replication auditing in `fleet_sync_logs` (`genesis/deployment/fleet.py`).
+  - **Database Schema V11**: Introduced `compiled_extensions`, `fleet_nodes`, and `fleet_sync_logs` tables with indexes and schema migration logic (`genesis/core/database.py`).
+  - **Phase 11 REST API Routes**: Mounted under `/api/compiler` (`/compilers`, `/compile`, `/extensions`, `/benchmark/{name}`, `/invoke/{name}`) and `/api/fleet` (`/nodes`, `/nodes/{id}`, `/nodes/{id}/ping`, `/export-delta`, `/import-delta`, `/sync/{id}`, `/logs`) in `genesis/api/app.py`.
+  - **Interactive Web Dashboard Module**: Dedicated "Fleet & Compilers" navigation tab (`#pane-fleet`), toolchain inspection cards, hot-path kernel registry table with one-click benchmark triggers, distributed workstation topology grid, delta audit logs table, and modals for peer node registration and offline delta bundle imports (`genesis/web/`).
+  - **Architecture Decision Record**: ADR-012 Real-Time Self-Compilation, Native Binary Extensions, and Distributed Multi-Workstation Fleet Synchronization.
+  - **Comprehensive Test Suite**: 14 new unit and API integration tests covering compiler detection, fallback math, kernel invocation, benchmarking, peer node registration, delta export/import conflict resolution, and REST endpoints, expanding repository baseline to 241 passing tests (100% pass rate).
+
 ## [0.11.0] — 2026-10-15
 
 ### Added
