@@ -2,6 +2,19 @@
 
 All notable changes to Project Genesis will be documented in this file.
 
+## [0.10.0] — 2026-10-15
+
+### Added
+- **Multi-Agent Specialization, Dialectic Consensus Debates, and Autonomous Research Campaigns (Phase 9)**:
+  - **Role-Specialized Cognitive Agent Ensembles**: Decomposition of the reasoning pipeline into specialized personas with distinct cognitive biases, task boundaries, and model dispatch requirements (`Researcher`, `Architect`, `Implementer`, `Reviewer`, `Synthesizer`). Each agent dynamically resolves its optimal local model via `ModelRouter` (`genesis/tasks/agents/`).
+  - **Dialectic Consensus Debate Engine**: Multi-round structured debate protocol (`ConsensusEngine`, `DebateSession`, `DebateTurn`) coordinating iterative proposals, adversarial critiques, implementation rebuttals, consensus synthesis, and dissenting opinion extraction (`genesis/tasks/consensus.py`).
+  - **Autonomous Long-Horizon Research Campaigns**: Phased research campaign orchestration (`CampaignManager`, `ResearchCampaign`, `ResearchMilestone`) guiding open-ended objectives across 4 milestones: hypothesis formulation &rarr; multi-agent consensus debate &rarr; code prototyping in `SafeCodeSandbox` &rarr; findings consolidation into structured memory (`genesis/research/campaigns.py`).
+  - **Database Schema V9**: Added `agent_teams`, `debate_sessions`, `debate_turns`, and `research_campaigns` relational tables in SQLite WAL mode with index coverage and default `team-genesis-core` seed insertion (`genesis/core/database.py`).
+  - **Multi-Agent REST API**: Mounted under `/api/agents`: `/api/agents/roles`, `/api/agents/teams`, `/api/agents/debate/run`, `/api/agents/debates`, `/api/agents/debates/{id}`, `/api/agents/campaigns`, `/api/agents/campaigns/{id}`, `/api/agents/campaigns/{id}/advance` (`genesis/api/routes/agents.py`).
+  - **Interactive Web Dashboard Module**: Dedicated "Multi-Agent & Campaigns" tab (`#pane-agents`), active team roster grid, dialectic consensus arena with color-coded turn streams and verdict banners, long-horizon campaign roadmap board with interactive milestone steppers, and modals (`#debate-modal`, `#campaign-modal`) (`genesis/web/`).
+  - **Architecture Decision Record**: ADR-010 Multi-Agent Specialization, Dialectic Consensus Debates, and Autonomous Long-Horizon Research Campaigns.
+  - **Comprehensive Test Suite**: 16 new unit and integration tests across agents, consensus engine, campaign manager, and agent REST API, expanding repository baseline to 211 passing tests (100% pass rate).
+
 ## [0.9.0] — 2026-10-15
 
 ### Added

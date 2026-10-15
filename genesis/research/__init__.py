@@ -10,6 +10,11 @@ Provides:
 
 from __future__ import annotations
 
+from genesis.research.campaigns import (
+    CampaignManager,
+    ResearchCampaign,
+    ResearchMilestone,
+)
 from genesis.research.coding import (
     CodeExperimentRecord,
     CodeSandbox,
@@ -38,5 +43,8 @@ __all__ = [
     "CycleStage",
     "MetaCycleRecord",
     "MetaResearchOrchestrator",
+    "CampaignManager",
+    "ResearchCampaign",
+    "ResearchMilestone",
 ]
 

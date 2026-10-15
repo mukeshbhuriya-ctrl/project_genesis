@@ -2,6 +2,7 @@
 Task planning and bounded execution subsystem for Project Genesis.
 """
 
+from genesis.tasks.consensus import ConsensusEngine, DebateSession, DebateTurn
 from genesis.tasks.executor import TaskExecutor
 from genesis.tasks.models import StepStatus, Task, TaskStatus, TaskStep
 from genesis.tasks.planner import TaskPlanner
@@ -15,4 +16,7 @@ __all__ = [
     "TaskPlanner",
     "TaskExecutor",
     "TaskVerifier",
+    "ConsensusEngine",
+    "DebateSession",
+    "DebateTurn",
 ]

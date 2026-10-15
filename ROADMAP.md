@@ -1,6 +1,6 @@
 # ROADMAP
 
-## Current Milestone: Phase 8 Complete ✅ → Phase 9: Multi-Agent Specialization & Long-Horizon Evolution (Next)
+## Current Milestone: Phase 9 Complete ✅ → Phase 10: Multi-Modal Integration & Autonomous Self-Expansion (Next)
 
 
 ## Phase 0: Discovery and Baseline ✅
@@ -115,9 +115,21 @@
 
 **Acceptance criterion:** Verified (The platform autonomously routes tasks to optimal specialized models with VRAM safety checks, expands benchmark test suites from runtime failure traces, and executes closed-loop evolution cycles that fine-tune adapters and enforce automatic rollback defenses upon regression).
 
-## Phase 9: Multi-Agent Specialization & Long-Horizon Evolution ⏳
-- [ ] Role-specialized autonomous agent teams (Researcher, Architect, Implementer, Reviewer)
-- [ ] Asynchronous multi-turn debate and consensus protocols
-- [ ] Autonomous long-horizon research campaign orchestration
-- [ ] Self-updating knowledge base and continuous automated benchmark discovery
+## Phase 9: Multi-Agent Specialization & Long-Horizon Evolution ✅
+- [x] Role-specialized autonomous agent ensembles (Researcher, Architect, Implementer, Reviewer, Synthesizer) with cognitive personas (`genesis/tasks/agents/`)
+- [x] Multi-agent dialectic consensus debate protocol with adversarial critique, implementation defense, and consensus synthesis (`genesis/tasks/consensus.py`)
+- [x] Autonomous long-horizon research campaigns with 4-stage workflows (hypothesis, consensus, experiment, memory consolidation) (`genesis/research/campaigns.py`)
+- [x] SQLite Schema Version 9 relational persistence (`agent_teams`, `debate_sessions`, `debate_turns`, `research_campaigns`) with pre-seeded `team-genesis-core` (`genesis/core/database.py`)
+- [x] Multi-Agent & Campaign REST API mounted at `/api/agents` (`genesis/api/routes/agents.py`)
+- [x] Interactive Web Dashboard UI: Multi-Agent & Campaigns tab (`#pane-agents`), active team roster, dialectic debate arena, and long-horizon campaign roadmap board (`genesis/web/`)
+- [x] Architecture Decision Record ADR-010 (`docs/decisions/ADR-010-multi-agent-specialization-consensus-debates-and-long-horizon-campaigns.md`)
+- [x] 211/211 comprehensive tests passing (100% pass rate)
+
+**Acceptance criterion:** Verified (The platform coordinates specialized cognitive agent ensembles, runs multi-round dialectic consensus debates synthesizing agreement and logging dissenting views, and advances multi-stage research campaigns from hypothesis to sandboxed execution and memory consolidation).
+
+## Phase 10: Multi-Modal Integration & Autonomous Self-Expansion ⏳
+- [ ] Multi-modal sensory processing (local vision model integration for architectural diagrams and UI evaluation)
+- [ ] Automated continuous background research loop with automated paper generation
+- [ ] Cross-campaign knowledge synthesis and meta-memory graph
+
 

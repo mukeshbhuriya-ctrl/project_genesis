@@ -23,7 +23,7 @@
         </div>
         <div class="brand-title">
           <span class="brand-name">GENESIS</span>
-          <span class="brand-tag">v0.8.0 • Local-First</span>
+          <span class="brand-tag">v0.10.0 • Local-First</span>
         </div>
       </div>
 
@@ -54,6 +54,9 @@
         </button>
         <button class="nav-tab" data-tab="meta" id="tab-meta-btn">
           <span class="tab-icon">🧬</span> Meta-Evolution
+        </button>
+        <button class="nav-tab" data-tab="agents" id="tab-agents-btn">
+          <span class="tab-icon">🤖</span> Multi-Agent &amp; Campaigns
         </button>
         <button class="nav-tab" data-tab="hardware" id="tab-hardware-btn">
           <span class="tab-icon">⚡</span> System &amp; Hardware
@@ -1127,6 +1130,120 @@
           </div>
         </div>
       </section>
+      <!-- ── MULTI-AGENT ENSEMBLES & CAMPAIGNS PANE ── -->
+      <section class="tab-content" id="pane-agents">
+        <div class="research-container">
+          <div class="section-header">
+            <div>
+              <h2>Multi-Agent Ensembles &amp; Dialectic Campaigns</h2>
+              <p class="section-subtitle">Autonomous specialized agent ensembles, dialectic consensus debates, and structured long-horizon research campaigns.</p>
+            </div>
+            <div class="header-action-group">
+              <button class="btn btn-secondary" id="btn-open-debate-modal">⚖️ Consensus Debate</button>
+              <button class="btn btn-primary" id="btn-open-campaign-modal">🚀 New Campaign</button>
+            </div>
+          </div>
+
+          <!-- Card 1: Active Team & Specialized Agent Roles -->
+          <div class="card research-card" style="margin-bottom: 24px;">
+            <div class="card-header">
+              <div>
+                <h3>Genesis Core Agent Ensemble</h3>
+                <span class="card-subtext" style="color:var(--text-muted); font-size:0.85rem;">Role-specialized cognitive personas dynamically dispatched via ModelRouter</span>
+              </div>
+              <span class="badge badge-info" id="active-team-badge">team-genesis-core</span>
+            </div>
+            <div class="card-body">
+              <div id="agents-roster-grid" class="roster-grid">
+                <div class="text-center text-muted" style="padding: 20px;">Loading specialized agent roster...</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Grid: Debates Arena & Research Campaigns -->
+          <div class="research-grid">
+            <!-- Card 2: Dialectic Consensus Debates -->
+            <div class="card research-card">
+              <div class="card-header">
+                <div>
+                  <h3>Dialectic Consensus Arena</h3>
+                  <span class="card-subtext" style="color:var(--text-muted); font-size:0.85rem;">Multi-round proposal, critique, defense &amp; synthesis</span>
+                </div>
+                <button class="btn btn-sm btn-secondary" id="btn-refresh-debates" title="Refresh Debates">🔄 Refresh</button>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive" style="max-height: 340px; overflow-y: auto;">
+                  <table class="data-table" id="debates-table">
+                    <thead>
+                      <tr>
+                        <th>Topic</th>
+                        <th>Team</th>
+                        <th>Rounds</th>
+                        <th>Status</th>
+                        <th>Verdict</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="debates-tbody">
+                      <tr><td colspan="6" class="text-center">Loading debates...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Live / Selected Debate Viewer -->
+                <div id="debate-detail-panel" style="display:none; margin-top:16px; border-top:1px solid var(--border-subtle); padding-top:16px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h4 id="debate-detail-title" style="margin:0; font-size:1rem; color:var(--text-main);">Debate Turns &amp; Synthesis</h4>
+                    <button class="btn btn-sm btn-secondary" id="btn-close-debate-detail">Close</button>
+                  </div>
+                  <div id="debate-verdict-box" class="verdict-banner" style="margin-bottom:12px;"></div>
+                  <div id="debate-turns-stream" class="debate-turns-container" style="max-height: 380px; overflow-y: auto;"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 3: Autonomous Research Campaigns -->
+            <div class="card research-card">
+              <div class="card-header">
+                <div>
+                  <h3>Long-Horizon Research Campaigns</h3>
+                  <span class="card-subtext" style="color:var(--text-muted); font-size:0.85rem;">Phased workflows: Hypothesis &rarr; Debate &rarr; Code &rarr; Memory</span>
+                </div>
+                <button class="btn btn-sm btn-secondary" id="btn-refresh-campaigns" title="Refresh Campaigns">🔄 Refresh</button>
+              </div>
+              <div class="card-body">
+                <div class="table-responsive" style="max-height: 340px; overflow-y: auto;">
+                  <table class="data-table" id="campaigns-table">
+                    <thead>
+                      <tr>
+                        <th>Campaign Title</th>
+                        <th>Status</th>
+                        <th>Current Stage</th>
+                        <th>Progress</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody id="campaigns-tbody">
+                      <tr><td colspan="5" class="text-center">Loading campaigns...</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Live / Selected Campaign Detail & Milestone Stepper -->
+                <div id="campaign-detail-panel" style="display:none; margin-top:16px; border-top:1px solid var(--border-subtle); padding-top:16px;">
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h4 id="campaign-detail-title" style="margin:0; font-size:1rem; color:var(--text-main);">Campaign Roadmap &amp; Artifacts</h4>
+                    <button class="btn btn-sm btn-secondary" id="btn-close-campaign-detail">Close</button>
+                  </div>
+                  <div id="campaign-milestones-stepper" class="milestone-stepper" style="margin-bottom:16px;"></div>
+                  <div id="campaign-artifacts-box" class="code-preview-box" style="margin-bottom:12px; font-size:0.85rem;"></div>
+                  <div id="campaign-action-bar" style="display:flex; gap:8px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
   </div>
@@ -1270,6 +1387,8 @@
         </div>
       </form>
     </div>
+  </div>
+
   <!-- Modal for Launching Autonomous Evolution Cycle -->
   <div class="modal-backdrop" id="meta-cycle-modal" style="display:none;">
     <div class="modal-card" style="max-width: 640px;">
@@ -1313,6 +1432,76 @@
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" id="btn-cancel-meta-cycle">Cancel</button>
           <button type="submit" class="btn btn-primary" id="btn-submit-meta-cycle">🚀 Launch Closed-Loop Cycle</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Launching Dialectic Consensus Debate -->
+  <div class="modal-backdrop" id="debate-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 640px;">
+      <div class="modal-header">
+        <h3>Launch Dialectic Consensus Debate</h3>
+        <button class="modal-close-btn" id="btn-close-debate-modal">&times;</button>
+      </div>
+      <form id="launch-debate-form" class="standard-form">
+        <div class="form-group">
+          <label for="debate-topic-input">Research Proposition / Architectural Question:</label>
+          <textarea id="debate-topic-input" class="form-textarea" rows="3" placeholder="e.g. Should Genesis adopt AST-guided rewriting instead of naive string replacement for code self-repair?" required></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="debate-team-select">Agent Ensemble Team:</label>
+            <select id="debate-team-select" class="form-select">
+              <option value="team-genesis-core" selected>Genesis Core Ensemble (5 Roles)</option>
+            </select>
+          </div>
+          <div class="form-group flex-1">
+            <label for="debate-rounds-input">Debate Rounds:</label>
+            <input type="number" id="debate-rounds-input" class="form-input" value="2" min="1" max="4">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="debate-context-input">Background Context &amp; Constraints (Optional):</label>
+          <textarea id="debate-context-input" class="form-textarea" rows="2" placeholder="Local VRAM constraints: 8GB. Target runtime: Python 3.12+ AST module."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-debate">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-debate">⚖️ Convene Agent Debate</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Launching Autonomous Research Campaign -->
+  <div class="modal-backdrop" id="campaign-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 640px;">
+      <div class="modal-header">
+        <h3>Launch Autonomous Research Campaign</h3>
+        <button class="modal-close-btn" id="btn-close-campaign-modal">&times;</button>
+      </div>
+      <form id="launch-campaign-form" class="standard-form">
+        <div class="form-group">
+          <label for="campaign-title-input">Campaign Title:</label>
+          <input type="text" id="campaign-title-input" class="form-input" placeholder="e.g. KV Cache Compression via Int8 Block Quantization" required>
+        </div>
+        <div class="form-group">
+          <label for="campaign-goal-input">Research Objective / Goal:</label>
+          <textarea id="campaign-goal-input" class="form-textarea" rows="2" placeholder="Formulate, debate, and prototype a block-wise int8 key-value cache compression routine for local 7B models." required></textarea>
+        </div>
+        <div class="form-group">
+          <label for="campaign-hypothesis-input">Initial Hypothesis (Optional):</label>
+          <textarea id="campaign-hypothesis-input" class="form-textarea" rows="2" placeholder="Per-channel symmetric scaling can retain >98% perplexity while saving ~40% KV cache memory on 8GB VRAM."></textarea>
+        </div>
+        <div class="form-group">
+          <label for="campaign-team-select">Assigned Agent Team:</label>
+          <select id="campaign-team-select" class="form-select">
+            <option value="team-genesis-core" selected>Genesis Core Ensemble (5 Roles)</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-campaign">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-campaign">🚀 Launch Research Campaign</button>
         </div>
       </form>
     </div>

@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (target === 'hardware') loadHardwareAndModels();
       if (target === 'backups') loadBackups();
       if (target === 'meta') loadMetaData();
+      if (target === 'agents') loadAgentsData();
     });
   });
 
@@ -2260,6 +2261,421 @@ document.addEventListener('DOMContentLoaded', () => {
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = '🚀 Launch Closed-Loop Cycle';
+      }
+    });
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // ── Multi-Agent & Campaign Subsystem ──
+  const agentsRosterGrid = document.getElementById('agents-roster-grid');
+  const debatesTbody = document.getElementById('debates-tbody');
+  const campaignsTbody = document.getElementById('campaigns-tbody');
+  const debateModal = document.getElementById('debate-modal');
+  const campaignModal = document.getElementById('campaign-modal');
+  const btnOpenDebateModal = document.getElementById('btn-open-debate-modal');
+  const btnCloseDebateModal = document.getElementById('btn-close-debate-modal');
+  const btnCancelDebate = document.getElementById('btn-cancel-debate');
+  const launchDebateForm = document.getElementById('launch-debate-form');
+  const btnOpenCampaignModal = document.getElementById('btn-open-campaign-modal');
+  const btnCloseCampaignModal = document.getElementById('btn-close-campaign-modal');
+  const btnCancelCampaign = document.getElementById('btn-cancel-campaign');
+  const launchCampaignForm = document.getElementById('launch-campaign-form');
+  const btnRefreshDebates = document.getElementById('btn-refresh-debates');
+  const btnRefreshCampaigns = document.getElementById('btn-refresh-campaigns');
+  const debateDetailPanel = document.getElementById('debate-detail-panel');
+  const btnCloseDebateDetail = document.getElementById('btn-close-debate-detail');
+  const campaignDetailPanel = document.getElementById('campaign-detail-panel');
+  const btnCloseCampaignDetail = document.getElementById('btn-close-campaign-detail');
+
+  const ROLE_ICONS = {
+    researcher: '🔬',
+    architect: '📐',
+    implementer: '💻',
+    reviewer: '🛡️',
+    synthesizer: '⚖️'
+  };
+
+  async function loadAgentsData() {
+    await Promise.all([
+      loadAgentRoles(),
+      loadAgentTeams(),
+      loadDebateSessions(),
+      loadResearchCampaigns()
+    ]);
+  }
+
+  async function loadAgentRoles() {
+    if (!agentsRosterGrid) return;
+    try {
+      const res = await fetch('/api/agents/roles');
+      if (!res.ok) throw new Error(await res.text());
+      const roles = await res.json();
+      if (!roles || roles.length === 0) {
+        agentsRosterGrid.innerHTML = '<div class="text-muted">No roles configured.</div>';
+        return;
+      }
+      agentsRosterGrid.innerHTML = roles.map(r => {
+        const icon = ROLE_ICONS[r.role] || '🤖';
+        return `
+          <div class="roster-role-card">
+            <div class="roster-role-header">
+              <span class="roster-role-title">${icon} ${r.role.toUpperCase()}</span>
+              <span class="badge badge-info" style="font-size:0.7rem;">Active</span>
+            </div>
+            <div class="roster-role-desc">${escapeHtml(r.description || '')}</div>
+            <div style="font-size:0.75rem; color:var(--text-dim); margin-top:4px;">
+              <code>${escapeHtml((r.prompt_preview || '').substring(0, 85))}...</code>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } catch (err) {
+      agentsRosterGrid.innerHTML = `<div class="text-danger">Failed to load roles: ${escapeHtml(err.message)}</div>`;
+    }
+  }
+
+  async function loadAgentTeams() {
+    try {
+      const res = await fetch('/api/agents/teams');
+      if (!res.ok) throw new Error(await res.text());
+      const teams = await res.json();
+      const debateSelect = document.getElementById('debate-team-select');
+      const campaignSelect = document.getElementById('campaign-team-select');
+      if (teams && teams.length > 0) {
+        const optionsHtml = teams.map(t => `<option value="${t.id}">${escapeHtml(t.name)} (${(t.members || []).length} agents)</option>`).join('');
+        if (debateSelect) debateSelect.innerHTML = optionsHtml;
+        if (campaignSelect) campaignSelect.innerHTML = optionsHtml;
+        const activeBadge = document.getElementById('active-team-badge');
+        if (activeBadge) activeBadge.textContent = teams[0].name;
+      }
+    } catch (err) {
+      console.warn('Could not load teams:', err);
+    }
+  }
+
+  async function loadDebateSessions() {
+    if (!debatesTbody) return;
+    try {
+      const res = await fetch('/api/agents/debates');
+      if (!res.ok) throw new Error(await res.text());
+      const debates = await res.json();
+      if (!debates || debates.length === 0) {
+        debatesTbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No debate sessions yet. Click "Consensus Debate" to convene one!</td></tr>';
+        return;
+      }
+      debatesTbody.innerHTML = debates.map(d => {
+        const verdictSnippet = d.consensus_verdict ? (d.consensus_verdict.substring(0, 50) + '...') : '<span class="text-muted">In Progress</span>';
+        const statusBadge = d.status === 'concluded' ? '<span class="badge badge-success">Concluded</span>' : '<span class="badge badge-warning">Active</span>';
+        return `
+          <tr>
+            <td><strong>${escapeHtml(d.topic || '')}</strong></td>
+            <td><code>${escapeHtml(d.team_id || 'default')}</code></td>
+            <td>${d.rounds || 1}</td>
+            <td>${statusBadge}</td>
+            <td><small>${verdictSnippet}</small></td>
+            <td>
+              <button class="btn btn-sm btn-secondary" onclick="window.viewDebateDetails('${d.id}')">View Turns</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      debatesTbody.innerHTML = `<tr><td colspan="6" class="text-danger">Failed to load debates: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  window.viewDebateDetails = async function(debateId) {
+    if (!debateDetailPanel) return;
+    try {
+      const res = await fetch(`/api/agents/debates/${debateId}`);
+      if (!res.ok) throw new Error(await res.text());
+      const debate = await res.json();
+      debateDetailPanel.style.display = 'block';
+
+      const titleEl = document.getElementById('debate-detail-title');
+      if (titleEl) titleEl.textContent = `Debate: "${debate.topic}"`;
+
+      const verdictBox = document.getElementById('debate-verdict-box');
+      if (verdictBox) {
+        let dissentingHtml = '';
+        if (debate.dissenting_views && debate.dissenting_views.length > 0) {
+          dissentingHtml = `<div style="margin-top:8px; font-size:0.8rem; color:#f59e0b;"><strong>Dissenting Opinions:</strong> ${debate.dissenting_views.map(escapeHtml).join('; ')}</div>`;
+        }
+        verdictBox.innerHTML = `
+          <div><strong>Consensus Verdict:</strong> ${escapeHtml(debate.consensus_verdict || 'Awaiting synthesis.')}</div>
+          ${dissentingHtml}
+        `;
+      }
+
+      const turnsStream = document.getElementById('debate-turns-stream');
+      if (turnsStream) {
+        const turns = debate.turns || [];
+        if (turns.length === 0) {
+          turnsStream.innerHTML = '<div class="text-muted">No turns recorded yet.</div>';
+        } else {
+          turnsStream.innerHTML = turns.map(t => {
+            const icon = ROLE_ICONS[t.speaker_role] || '🤖';
+            const roleClass = `role-${t.speaker_role}`;
+            return `
+              <div class="debate-turn-card ${roleClass}">
+                <div class="debate-turn-header">
+                  <span><strong>${icon} ${t.speaker_role.toUpperCase()}</strong> (${escapeHtml(t.agent_name || '')})</span>
+                  <span class="badge badge-info" style="font-size:0.7rem;">Round ${t.round_num}</span>
+                </div>
+                <div class="debate-turn-content">${escapeHtml(t.content || '')}</div>
+              </div>
+            `;
+          }).join('');
+        }
+      }
+      debateDetailPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (err) {
+      alert('Failed to load debate turns: ' + err.message);
+    }
+  };
+
+  async function loadResearchCampaigns() {
+    if (!campaignsTbody) return;
+    try {
+      const res = await fetch('/api/agents/campaigns');
+      if (!res.ok) throw new Error(await res.text());
+      const campaigns = await res.json();
+      if (!campaigns || campaigns.length === 0) {
+        campaignsTbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No research campaigns active. Click "New Campaign" to launch!</td></tr>';
+        return;
+      }
+      campaignsTbody.innerHTML = campaigns.map(c => {
+        const milestones = c.milestones || [];
+        const completedCount = milestones.filter(m => m.status === 'completed').length;
+        const totalCount = milestones.length || 4;
+        const progressPct = Math.round((completedCount / totalCount) * 100);
+        const statusBadge = c.status === 'completed'
+          ? '<span class="badge badge-success">Completed</span>'
+          : (c.status === 'active' ? '<span class="badge badge-info">Active</span>' : '<span class="badge badge-warning">Draft</span>');
+        const advanceBtn = (c.status !== 'completed' && c.status !== 'failed')
+          ? `<button class="btn btn-sm btn-primary" onclick="window.advanceCampaign('${c.id}')">⚡ Advance Step</button>`
+          : '';
+        return `
+          <tr>
+            <td><strong>${escapeHtml(c.title || '')}</strong></td>
+            <td>${statusBadge}</td>
+            <td><code>${c.current_milestone_index + 1}/${totalCount}: ${c.milestones && c.milestones[c.current_milestone_index] ? escapeHtml(c.milestones[c.current_milestone_index].name) : 'Done'}</code></td>
+            <td>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div style="flex:1; background:rgba(255,255,255,0.1); height:6px; border-radius:3px; overflow:hidden;">
+                  <div style="width:${progressPct}%; background:#38bdf8; height:100%;"></div>
+                </div>
+                <small>${progressPct}%</small>
+              </div>
+            </td>
+            <td>
+              <button class="btn btn-sm btn-secondary" onclick="window.viewCampaignDetails('${c.id}')" style="margin-right:4px;">View</button>
+              ${advanceBtn}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      campaignsTbody.innerHTML = `<tr><td colspan="5" class="text-danger">Failed to load campaigns: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  window.viewCampaignDetails = async function(campaignId) {
+    if (!campaignDetailPanel) return;
+    try {
+      const res = await fetch(`/api/agents/campaigns/${campaignId}`);
+      if (!res.ok) throw new Error(await res.text());
+      const campaign = await res.json();
+      campaignDetailPanel.style.display = 'block';
+
+      const titleEl = document.getElementById('campaign-detail-title');
+      if (titleEl) titleEl.textContent = `Campaign: "${campaign.title}"`;
+
+      const stepper = document.getElementById('campaign-milestones-stepper');
+      if (stepper) {
+        const milestones = campaign.milestones || [];
+        stepper.innerHTML = milestones.map((m, idx) => {
+          const isActive = idx === campaign.current_milestone_index && campaign.status !== 'completed';
+          const isDone = m.status === 'completed';
+          const cls = isDone ? 'completed' : (isActive ? 'active' : '');
+          const statusText = isDone ? '✓ Completed' : (isActive ? '● Active' : '○ Pending');
+          return `
+            <div class="milestone-step ${cls}">
+              <div class="milestone-step-name">${idx + 1}. ${escapeHtml(m.name)}</div>
+              <div class="milestone-step-status">${statusText}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      const artifactsBox = document.getElementById('campaign-artifacts-box');
+      if (artifactsBox) {
+        artifactsBox.textContent = `Goal: ${campaign.goal || ''}\n\n` +
+          `Artifacts:\n${JSON.stringify(campaign.artifacts || {}, null, 2)}`;
+      }
+
+      const actionBar = document.getElementById('campaign-action-bar');
+      if (actionBar) {
+        if (campaign.status !== 'completed' && campaign.status !== 'failed') {
+          actionBar.innerHTML = `<button class="btn btn-primary" onclick="window.advanceCampaign('${campaign.id}')">⚡ Execute Current Milestone</button>`;
+        } else {
+          actionBar.innerHTML = `<span class="badge badge-success">Research Campaign Concluded</span>`;
+        }
+      }
+      campaignDetailPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (err) {
+      alert('Failed to load campaign: ' + err.message);
+    }
+  };
+
+  window.advanceCampaign = async function(campaignId) {
+    try {
+      const res = await fetch(`/api/agents/campaigns/${campaignId}/advance`, {
+        method: 'POST'
+      });
+      if (!res.ok) throw new Error(await res.text());
+      await loadResearchCampaigns();
+      await window.viewCampaignDetails(campaignId);
+    } catch (err) {
+      alert('Failed to advance campaign: ' + err.message);
+    }
+  };
+
+  // Wire Debates UI
+  if (btnOpenDebateModal && debateModal) {
+    btnOpenDebateModal.addEventListener('click', () => {
+      debateModal.style.display = 'flex';
+    });
+  }
+  if (btnCloseDebateModal && debateModal) {
+    btnCloseDebateModal.addEventListener('click', () => {
+      debateModal.style.display = 'none';
+    });
+  }
+  if (btnCancelDebate && debateModal) {
+    btnCancelDebate.addEventListener('click', () => {
+      debateModal.style.display = 'none';
+    });
+  }
+  if (btnRefreshDebates) {
+    btnRefreshDebates.addEventListener('click', loadDebateSessions);
+  }
+  if (btnCloseDebateDetail && debateDetailPanel) {
+    btnCloseDebateDetail.addEventListener('click', () => {
+      debateDetailPanel.style.display = 'none';
+    });
+  }
+
+  if (launchDebateForm) {
+    launchDebateForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('btn-submit-debate');
+      const topic = document.getElementById('debate-topic-input').value.trim();
+      const teamId = document.getElementById('debate-team-select').value;
+      const rounds = parseInt(document.getElementById('debate-rounds-input').value, 10) || 2;
+      const context = document.getElementById('debate-context-input').value.trim();
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = '⚖️ Convening Agent Debate...';
+
+      try {
+        const res = await fetch('/api/agents/debate/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            topic,
+            team_id: teamId,
+            rounds,
+            context
+          })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        debateModal.style.display = 'none';
+        launchDebateForm.reset();
+        await loadDebateSessions();
+        if (data.id) {
+          await window.viewDebateDetails(data.id);
+        }
+      } catch (err) {
+        alert('Debate execution failed: ' + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '⚖️ Convene Agent Debate';
+      }
+    });
+  }
+
+  // Wire Campaigns UI
+  if (btnOpenCampaignModal && campaignModal) {
+    btnOpenCampaignModal.addEventListener('click', () => {
+      campaignModal.style.display = 'flex';
+    });
+  }
+  if (btnCloseCampaignModal && campaignModal) {
+    btnCloseCampaignModal.addEventListener('click', () => {
+      campaignModal.style.display = 'none';
+    });
+  }
+  if (btnCancelCampaign && campaignModal) {
+    btnCancelCampaign.addEventListener('click', () => {
+      campaignModal.style.display = 'none';
+    });
+  }
+  if (btnRefreshCampaigns) {
+    btnRefreshCampaigns.addEventListener('click', loadResearchCampaigns);
+  }
+  if (btnCloseCampaignDetail && campaignDetailPanel) {
+    btnCloseCampaignDetail.addEventListener('click', () => {
+      campaignDetailPanel.style.display = 'none';
+    });
+  }
+
+  if (launchCampaignForm) {
+    launchCampaignForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('btn-submit-campaign');
+      const title = document.getElementById('campaign-title-input').value.trim();
+      const goal = document.getElementById('campaign-goal-input').value.trim();
+      const initialHypothesis = document.getElementById('campaign-hypothesis-input').value.trim();
+      const teamId = document.getElementById('campaign-team-select').value;
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = '🚀 Launching Campaign...';
+
+      try {
+        const res = await fetch('/api/agents/campaigns', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title,
+            goal,
+            team_id: teamId,
+            initial_hypothesis: initialHypothesis
+          })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        campaignModal.style.display = 'none';
+        launchCampaignForm.reset();
+        await loadResearchCampaigns();
+        if (data.id) {
+          await window.viewCampaignDetails(data.id);
+        }
+      } catch (err) {
+        alert('Campaign launch failed: ' + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🚀 Launch Research Campaign';
       }
     });
   }

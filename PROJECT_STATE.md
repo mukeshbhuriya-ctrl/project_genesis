@@ -1,10 +1,10 @@
 # PROJECT STATE
 
-> Last updated: 2026-10-15 by Senior AI/ML Engineer (Phase 8 completion & Phase 9 activation)
+> Last updated: 2026-10-15 by Senior AI/ML Engineer (Phase 9 completion & Phase 10 activation)
 
 ## Current Phase
 
-**Phase 8 Complete (Verified) → Phase 9: Multi-Agent Specialization & Long-Horizon Evolution (Active)**
+**Phase 9 Complete (Verified) → Phase 10: Multi-Modal Integration & Autonomous Self-Expansion (Active)**
 
 ## Implemented
 
@@ -107,9 +107,20 @@
 - [x] Architecture Decision Record ADR-009 (`docs/decisions/ADR-009-autonomous-meta-improvement-and-model-routing.md`)
 - [x] Comprehensive test suite in `tests/`: 195 tests covering all subsystems (100% passing)
 
+### Multi-Agent Ensembles, Consensus Debates, and Autonomous Campaigns (Phase 9)
+- [x] Role-specialized cognitive agent ensembles (`genesis/tasks/agents/`): discrete cognitive personas (`Researcher`, `Architect`, `Implementer`, `Reviewer`, `Synthesizer`) with task boundaries, system instructions, and dynamic model routing dispatch via `ModelRouter`
+- [x] Multi-agent dialectic consensus debate protocol (`genesis/tasks/consensus.py`): multi-round proposal, adversarial critique, implementation defense, consensus verdict synthesis, and dissenting opinion tracking
+- [x] Autonomous long-horizon research campaigns (`genesis/research/campaigns.py`): phased 4-stage pipeline (hypothesis formulation &rarr; dialectic consensus &rarr; sandbox code prototyping &rarr; memory consolidation) with persistent artifacts
+- [x] Database Schema Version 9 migrations (`genesis/core/database.py`): added `agent_teams`, `debate_sessions`, `debate_turns`, and `research_campaigns` relational tables in SQLite WAL mode with index coverage and default `team-genesis-core` seed
+- [x] Multi-Agent & Campaign REST API (`genesis/api/routes/agents.py`): mounted at `/api/agents` (`/roles`, `/teams`, `/debate/run`, `/debates`, `/debates/{id}`, `/campaigns`, `/campaigns/{id}`, `/campaigns/{id}/advance`)
+- [x] Interactive Web Dashboard Multi-Agent & Campaigns tab (`genesis/web/`): `#pane-agents`, active team roster grid, dialectic consensus arena with color-coded turn streams and verdict banners, long-horizon campaign roadmap board with milestone steppers, and modals (`#debate-modal`, `#campaign-modal`)
+- [x] Architecture Decision Record ADR-010 (`docs/decisions/ADR-010-multi-agent-specialization-consensus-debates-and-long-horizon-campaigns.md`)
+- [x] Comprehensive test suite in `tests/`: 211 tests covering all subsystems (100% passing)
+
 ## Verified
 
-- [x] **195/195 unit and integration tests pass (100% passing)** across all modules
+- [x] **211/211 unit and integration tests pass (100% passing)** across all modules
+- [x] **Phase 9 Acceptance Criterion verified**: The platform coordinates specialized cognitive agent ensembles, runs multi-round dialectic consensus debates synthesizing agreement and logging dissenting views, and advances multi-stage research campaigns from hypothesis to sandboxed execution and memory consolidation
 - [x] **Phase 8 Acceptance Criterion verified**: The platform autonomously routes tasks to optimal specialized models with VRAM safety checks, expands benchmark test suites from runtime failure traces, and executes closed-loop evolution cycles that fine-tune adapters and enforce automatic rollback defenses upon regression
 - [x] **Phase 7 Acceptance Criterion verified**: The platform discovers multi-device compute topologies and computes optimal layer offload plans, provides a persistent crash-resilient queue with lease-locking and background worker daemon, and integrates code synthesis and knowledge synthesis as first-class tools in the bounded task orchestrator
 - [x] **Phase 6 Acceptance Criterion verified**: The platform profiles inference latency and KV-cache VRAM consumption, autonomously synthesizes and verifies Python code in an isolated sandbox with self-repair, exports verified samples into Phase 5 datasets, and executes multi-source citation-verified knowledge synthesis consolidated into memory
@@ -148,10 +159,9 @@
 | Node.js | 24.17.0 |
 | Git | 2.54.0 |
 
-## Next Steps (Phase 9: Multi-Agent Specialization & Long-Horizon Evolution)
+## Next Steps (Phase 10: Multi-Modal Integration & Autonomous Self-Expansion)
 
-1. **Role-Specialized Autonomous Agent Teams:** Architect multi-agent ensembles (Researcher, Architect, Implementer, Reviewer) each routed to domain-optimized models.
-2. **Debate & Consensus Protocols:** Implement structured multi-turn debate rounds where agents critique hypotheses, challenge assumptions, and synthesize consensus prior to code modification.
-3. **Autonomous Long-Horizon Research Campaigns:** Enable multi-day research workflows that autonomously explore open-ended research questions, execute experimental sweeps, and compile research papers.
-4. **Continuous Automated Benchmark Evolution:** Run recurring background jobs that periodically expand benchmarks, run regression suites, and update persistent knowledge graphs.
+1. **Multi-Modal Local Vision Models:** Integrate local vision-language models (e.g. `llama3.2-vision:11b` or `minicpm-v`) to enable visual inspection of generated architecture diagrams, web UI screenshots, and multimodal benchmarks.
+2. **Autonomous Background Research Daemon:** Establish continuous background research looping that iteratively formulates hypotheses, executes code prototyping campaigns, and compiles structured findings reports.
+3. **Cross-Campaign Meta-Memory Graph:** Connect episodic campaign artifacts into a relational and semantic knowledge graph for cross-domain synthesis.
 

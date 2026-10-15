@@ -428,6 +428,76 @@ VALUES
     ('route-general', 'general', 'qwen2.5:7b', 'qwen2.5:7b', 4000.0, '{"description": "Default general-purpose conversational and instruction model"}');
 """
 
+SCHEMA_V9 = """
+-- Agent Teams / Ensembles
+CREATE TABLE IF NOT EXISTS agent_teams (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    description TEXT,
+    roles_json TEXT NOT NULL DEFAULT '[]',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+
+-- Multi-Agent Consensus Debate Sessions
+CREATE TABLE IF NOT EXISTS debate_sessions (
+    id TEXT PRIMARY KEY,
+    topic TEXT NOT NULL,
+    team_id TEXT,
+    status TEXT NOT NULL CHECK (status IN ('pending', 'in_progress', 'consensus_reached', 'consensus_failed', 'cancelled')),
+    rounds INTEGER NOT NULL DEFAULT 1,
+    consensus_verdict TEXT,
+    dissenting_opinions TEXT DEFAULT '[]',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    completed_at TEXT,
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_debate_sessions_status ON debate_sessions(status, created_at DESC);
+
+-- Individual Debate Turns & Critiques
+CREATE TABLE IF NOT EXISTS debate_turns (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL REFERENCES debate_sessions(id) ON DELETE CASCADE,
+    round_num INTEGER NOT NULL,
+    agent_role TEXT NOT NULL,
+    model_id TEXT NOT NULL,
+    stance TEXT NOT NULL CHECK (stance IN ('propose', 'critique', 'rebut', 'concur', 'dissent')),
+    content TEXT NOT NULL,
+    critique_target_id TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_debate_turns_session ON debate_turns(session_id, round_num);
+
+-- Long-Horizon Autonomous Research Campaigns
+CREATE TABLE IF NOT EXISTS research_campaigns (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    objective TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('draft', 'active', 'paused', 'completed', 'failed')),
+    current_milestone INTEGER NOT NULL DEFAULT 0,
+    total_milestones INTEGER NOT NULL DEFAULT 1,
+    hypotheses_json TEXT NOT NULL DEFAULT '[]',
+    findings_json TEXT NOT NULL DEFAULT '[]',
+    milestones_json TEXT NOT NULL DEFAULT '[]',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    completed_at TEXT,
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_campaigns_status ON research_campaigns(status, created_at DESC);
+
+-- Default system agent team seed
+INSERT OR IGNORE INTO agent_teams (id, name, description, roles_json, metadata)
+VALUES (
+    'team-genesis-core',
+    'Genesis Core Dialectic Ensemble',
+    'Primary four-role dialectic team consisting of Researcher, Architect, Implementer, and Reviewer',
+    '["researcher", "architect", "implementer", "reviewer"]',
+    '{"system_seeded": true}'
+);
+"""
+
 
 def get_sync_connection(db_path: str | Path) -> sqlite3.Connection:
     """Create a synchronous SQLite connection with recommended pragmas."""
@@ -539,6 +609,16 @@ def initialize_database(db_path: str | Path) -> None:
             )
             conn.commit()
             log.info("Schema v8 applied successfully.")
+
+        if current_version < 9:
+            log.info("Applying schema v9...")
+            conn.executescript(SCHEMA_V9)
+            conn.execute(
+                "INSERT OR REPLACE INTO schema_migrations (version, description) "
+                "VALUES (9, 'Schema v9: multi-agent teams, debate consensus sessions, and research campaigns')"
+            )
+            conn.commit()
+            log.info("Schema v9 applied successfully.")
         else:
             log.info(f"Database schema is at version {current_version}, up to date.")
 

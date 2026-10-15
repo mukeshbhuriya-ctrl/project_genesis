@@ -53,6 +53,27 @@ class TestDatabaseInitialization:
             assert "work_jobs" in tables
             assert "meta_cycles" in tables
             assert "model_routes" in tables
+            assert "agent_teams" in tables
+            assert "debate_sessions" in tables
+            assert "debate_turns" in tables
+            assert "research_campaigns" in tables
+        finally:
+            conn.close()
+
+    def test_default_agent_team_seeded(self, tmp_db_path: Path):
+        """Default agent team should be seeded on initialization."""
+        initialize_database(tmp_db_path)
+
+        conn = get_sync_connection(tmp_db_path)
+        try:
+            cursor = conn.execute("SELECT id, name, roles_json FROM agent_teams WHERE id = 'team-genesis-core'")
+            team = cursor.fetchone()
+            assert team is not None
+            assert team["name"] == "Genesis Core Dialectic Ensemble"
+            assert "researcher" in team["roles_json"]
+            assert "architect" in team["roles_json"]
+            assert "implementer" in team["roles_json"]
+            assert "reviewer" in team["roles_json"]
         finally:
             conn.close()
 
