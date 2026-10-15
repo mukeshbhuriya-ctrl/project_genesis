@@ -16,7 +16,7 @@ def create_app() -> FastAPI:
     from genesis import __version__
     from genesis.core import get_settings
     from genesis.core.logging import setup_logging
-    from genesis.api.routes import health, chat, memory, models, knowledge, backup, tools, tasks, evaluation, training, research, deployment, meta, agents, graph, multimodal, papers, compiler, fleet
+    from genesis.api.routes import health, chat, memory, models, knowledge, backup, tools, tasks, evaluation, training, research, deployment, meta, agents, graph, multimodal, papers, compiler, fleet, merging, kernel_synthesis, steering
 
     settings = get_settings()
     setup_logging(level=settings.log_level, log_dir=settings.data_dir / "logs")
@@ -58,6 +58,9 @@ def create_app() -> FastAPI:
     app.include_router(papers.router, prefix="/api", tags=["Autonomous Research Daemon"])
     app.include_router(compiler.router, prefix="/api", tags=["Self-Compilation & Native Kernels"])
     app.include_router(fleet.router, prefix="/api", tags=["Distributed Fleet Synchronization"])
+    app.include_router(merging.router, prefix="/api", tags=["Cross-Fleet Model Parameter Merging"])
+    app.include_router(kernel_synthesis.router, prefix="/api", tags=["Autonomous Kernel Synthesis"])
+    app.include_router(steering.router, prefix="/api", tags=["Human-in-the-Loop Steering"])
 
 
     # Static Web UI Assets

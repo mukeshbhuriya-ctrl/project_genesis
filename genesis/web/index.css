@@ -1324,3 +1324,22 @@ body {
   color: #f59e0b;
   border-color: rgba(245, 158, 11, 0.3);
 }
+
+/* Phase 12: Kernel Synthesis, Model Merging & Steering Directives */
+.badge-applied {
+  background: rgba(148, 163, 184, 0.2);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.density-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.table-code-cell {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}

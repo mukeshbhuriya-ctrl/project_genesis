@@ -1,10 +1,10 @@
 # PROJECT STATE
 
-> Last updated: 2026-10-15 by Senior AI/ML Engineer (Phase 11 completion & Phase 12 activation)
+> Last updated: 2026-10-15 by Senior AI/ML Engineer (Phase 12 completion & Phase 13 activation)
 
 ## Current Phase
 
-**Phase 11 Complete (Verified) → Phase 12: Autonomous Kernel Synthesis & Cross-Fleet Model Merging (Active)**
+**Phase 12 Complete (Verified) → Phase 13: Continual Online Learning & Neuro-Symbolic Verification Engine (Active)**
 
 ## Implemented
 
@@ -139,9 +139,20 @@
 - [x] Architecture Decision Record ADR-012 (`docs/decisions/ADR-012-native-extension-self-compilation-and-distributed-fleet-synchronization.md`)
 - [x] Comprehensive test suite in `tests/`: 241 tests covering all subsystems (100% passing)
 
+### Autonomous Kernel Synthesis & Cross-Fleet Model Merging (Phase 12)
+- [x] Autonomous LLM-Driven Kernel Synthesis Engine (`genesis/research/kernel_synthesis.py`): iterative C tensor kernel generator (`KernelSynthesisExperiment`, `KernelSynthesisEngine`) targeting hot computational primitives (`gelu`, `rmsnorm`, `swiglu`, `quantize_int8`, `dot_product`). Includes canonical mathematical reference baselines, platform SIMD hints, ground-truth numerical tolerance verification (`max_abs_error <= 1e-4`), and reflective self-repair loops with graceful pure Python degradation
+- [x] Cross-Fleet Model Parameter Merging Engine (`genesis/training/merging.py`): multi-task parameter fusion framework (`ModelMergeRecipe`, `ModelMergeManager`) supporting four mathematical merging strategies: Weighted Linear Averaging, Spherical Linear Interpolation (SLERP with collinear fallback), Task Arithmetic with Trimming & Sign Consensus (TIES-Merging), and Drop-and-Rescale with Masking (DARE-Merging)
+- [x] Interactive Human-in-the-Loop Steering Controller (`genesis/research/steering.py`): real-time researcher intervention subsystem (`SteeringEvent`, `SteeringController`) enabling operator directives (`pause`, `resume`, `critique`, `override_hypothesis`, `abort`, `inject_guidance`) with status lifecycle management (`received` -> `applied`)
+- [x] SQLite database schema v12 (`kernel_experiments`, `model_merges`, `steering_events` tables with foreign key cascades, indexes, and automated migrations) (`genesis/core/database.py`)
+- [x] Phase 12 REST API routes mounted under `/api/kernel-synthesis`, `/api/merging`, and `/api/steering` (`genesis/api/app.py`)
+- [x] Interactive Web Dashboard UI (`genesis/web/`): Autonomous Kernel Synthesis runner and C code viewer, Cross-Fleet Parameter Merging recipe trigger with density slider, and Human-in-the-Loop Operator Steering Console
+- [x] Architecture Decision Record ADR-013 (`docs/decisions/ADR-013-autonomous-kernel-synthesis-and-cross-fleet-model-merging.md`)
+- [x] Comprehensive test suite in `tests/`: 254 tests covering all subsystems (100% passing)
+
 ## Verified
 
-- [x] **241/241 unit and integration tests pass (100% passing)** across all modules
+- [x] **254/254 unit and integration tests pass (100% passing)** across all modules
+- [x] **Phase 12 Acceptance Criterion verified**: The platform autonomously synthesizes, validates against ground-truth math, and reflectively repairs C/SIMD tensor acceleration kernels, performs cross-fleet parameter merging via SLERP, TIES, DARE, and Linear methods, and exposes live human-in-the-loop steering controls for operator oversight
 - [x] **Phase 11 Acceptance Criterion verified**: The platform dynamically detects host compilers, compiles hot-path tensor routines with transparent Python fallbacks and benchmark profiling, coordinates distributed fleet nodes with heartbeat tracking, and performs air-gapped or network delta bundle synchronization with timestamp conflict resolution
 - [x] **Phase 10 Acceptance Criterion verified**: The platform autonomously parses and validates visual artifacts, weaves cross-campaign concepts, debates, and experiments into a searchable meta-memory knowledge graph, and continuously runs closed-loop scientific research cycles publishing peer-structured IMRaD papers
 - [x] **Phase 9 Acceptance Criterion verified**: The platform coordinates specialized cognitive agent ensembles, runs multi-round dialectic consensus debates synthesizing agreement and logging dissenting views, and advances multi-stage research campaigns from hypothesis to sandboxed execution and memory consolidation
@@ -183,9 +194,9 @@
 | Node.js | 24.17.0 |
 | Git | 2.54.0 |
 
-## Next Steps (Phase 12: Autonomous Kernel Synthesis & Cross-Fleet Model Merging)
+## Next Steps (Phase 13: Continual Online Learning & Neuro-Symbolic Verification Engine)
 
-1. **Automated LLM-Driven Kernel Synthesis & Iterative Compilation:** Develop an autonomous loop where the coding model iteratively synthesizes C/CUDA/SIMD kernels, benchmarks speedup against baselines, and refines assembly or algorithm structure.
-2. **Cross-Fleet Distributed Model Parameter Merging:** Implement parameter-space weight merging algorithms (TIES-Merging, DARE, SLERP) to combine LoRA fine-tuned adapters produced across different workstation fleet nodes without retraining.
-3. **Interactive Human-in-the-Loop Steering Controls:** Provide real-time steering and intervention hooks for the background research daemon via WebSocket channels.
+1. **Streaming Memory Replay Buffers with EWC Regularization:** Implement an online replay mechanism that computes diagonal Fisher information matrices during fine-tuning to prevent catastrophic forgetting of core reasoning and tool use capabilities.
+2. **Neuro-Symbolic Constraint Verification:** Build a formal verification pipeline coupling LLM code synthesis with static symbolic constraints, Z3-based SAT/SMT assertions, and mathematical invariant checkers.
+3. **Dynamic Prompt Prefix Tuning & Fleet Task Distillation:** Orchestrate parameter-efficient soft prompt prefix distribution across workstation fleet nodes to distill specialized task capabilities into lightweight adapters.
 

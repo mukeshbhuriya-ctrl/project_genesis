@@ -609,6 +609,58 @@ CREATE TABLE IF NOT EXISTS fleet_sync_logs (
 CREATE INDEX IF NOT EXISTS idx_fleet_sync_logs_node ON fleet_sync_logs(node_id, created_at DESC);
 """
 
+SCHEMA_V12 = """
+-- Autonomous LLM-Driven Kernel Synthesis Experiments
+CREATE TABLE IF NOT EXISTS kernel_experiments (
+    id TEXT PRIMARY KEY,
+    kernel_name TEXT NOT NULL,
+    operation_type TEXT NOT NULL CHECK (operation_type IN ('activation', 'quantization', 'normalization', 'reduction', 'gemm')),
+    iteration INTEGER NOT NULL DEFAULT 1,
+    status TEXT NOT NULL CHECK (status IN ('synthesizing', 'compiling', 'validating', 'success', 'failed')),
+    c_source TEXT NOT NULL,
+    speedup_factor REAL NOT NULL DEFAULT 1.0,
+    max_abs_error REAL NOT NULL DEFAULT 0.0,
+    passed_numerical_check INTEGER NOT NULL DEFAULT 0,
+    error_message TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_kernel_exp_name ON kernel_experiments(kernel_name);
+CREATE INDEX IF NOT EXISTS idx_kernel_exp_status ON kernel_experiments(status);
+
+-- Cross-Fleet Model Parameter Merging (Linear, SLERP, TIES, DARE)
+CREATE TABLE IF NOT EXISTS model_merges (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    merge_method TEXT NOT NULL CHECK (merge_method IN ('linear', 'slerp', 'ties', 'dare')),
+    target_model TEXT NOT NULL,
+    source_adapters_json TEXT NOT NULL DEFAULT '[]',
+    weights_json TEXT NOT NULL DEFAULT '[]',
+    density REAL NOT NULL DEFAULT 1.0,
+    status TEXT NOT NULL CHECK (status IN ('pending', 'merging', 'completed', 'failed')),
+    output_path TEXT,
+    metrics_json TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_model_merges_method ON model_merges(merge_method);
+CREATE INDEX IF NOT EXISTS idx_model_merges_status ON model_merges(status);
+
+-- Interactive Human-in-the-Loop Steering Events
+CREATE TABLE IF NOT EXISTS steering_events (
+    id TEXT PRIMARY KEY,
+    target_type TEXT NOT NULL CHECK (target_type IN ('daemon_cycle', 'campaign', 'debate', 'kernel_synthesis')),
+    target_id TEXT NOT NULL,
+    action TEXT NOT NULL CHECK (action IN ('pause', 'resume', 'critique', 'override_hypothesis', 'abort', 'inject_guidance')),
+    payload_json TEXT NOT NULL DEFAULT '{}',
+    status TEXT NOT NULL CHECK (status IN ('received', 'applied', 'rejected')) DEFAULT 'received',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_steering_target ON steering_events(target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_steering_status ON steering_events(status);
+"""
+
 
 def get_sync_connection(db_path: str | Path) -> sqlite3.Connection:
     """Create a synchronous SQLite connection with recommended pragmas."""
@@ -750,6 +802,16 @@ def initialize_database(db_path: str | Path) -> None:
             )
             conn.commit()
             log.info("Schema v11 applied successfully.")
+
+        if current_version < 12:
+            log.info("Applying schema v12...")
+            conn.executescript(SCHEMA_V12)
+            conn.execute(
+                "INSERT OR REPLACE INTO schema_migrations (version, description) "
+                "VALUES (12, 'Schema v12: autonomous kernel experiments, cross-fleet model merges, and steering events')"
+            )
+            conn.commit()
+            log.info("Schema v12 applied successfully.")
         else:
             log.info(f"Database schema is at version {current_version}, up to date.")
 

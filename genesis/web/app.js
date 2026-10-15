@@ -1545,6 +1545,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadResearchData() {
     await loadContextBudget();
     await loadResearchHistory(activeResearchSubtab);
+    await loadSteeringDirectives();
 
     // Populate dataset select
     try {
@@ -3085,6 +3086,8 @@ document.addEventListener('DOMContentLoaded', () => {
     await Promise.all([
       loadCompilers(),
       loadExtensions(),
+      loadKernelExperiments(),
+      loadModelMerges(),
       loadFleetNodes(),
       loadFleetLogs()
     ]);
@@ -3446,6 +3449,397 @@ document.addEventListener('DOMContentLoaded', () => {
         loadFleetData();
       } catch (err) {
         alert(`Import failed: ${err.message}`);
+      }
+    });
+  }
+
+  // ── Helper: Format Date ──
+  function formatDate(isoStr) {
+    if (!isoStr) return 'N/A';
+    try {
+      const d = new Date(isoStr);
+      return isNaN(d.getTime()) ? String(isoStr).slice(0, 19).replace('T', ' ') : d.toLocaleString();
+    } catch {
+      return String(isoStr).slice(0, 19).replace('T', ' ');
+    }
+  }
+
+  // ── Phase 12: Autonomous Kernel Synthesis Controller ──
+  let cachedKernelExperiments = [];
+
+  async function loadKernelExperiments() {
+    const tbody = document.getElementById('kernel-experiments-tbody');
+    const statEl = document.getElementById('stat-kernel-experiments');
+    if (!tbody) return;
+
+    try {
+      const res = await fetch('/api/kernel-synthesis/experiments');
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      const exps = Array.isArray(data) ? data : (data.experiments || []);
+      cachedKernelExperiments = exps;
+
+      if (statEl) statEl.textContent = exps.length;
+
+      if (!exps || exps.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding:20px;">No kernel synthesis experiments recorded yet. Click 'Run Synthesis Loop' to launch.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = exps.map(e => {
+        const isSuccess = e.status === 'success' || e.status === 'repair_succeeded';
+        const statusBadge = isSuccess ? 'badge-success' : (e.status === 'fallback_python' ? 'badge-warning' : 'badge-danger');
+        const numCheck = e.numerical_check_passed ? '<span class="badge badge-success">PASSED</span>' : '<span class="badge badge-danger">FAILED</span>';
+        const speedup = typeof e.speedup_factor === 'number' ? `${e.speedup_factor.toFixed(2)}x` : '1.00x';
+        const maxErr = typeof e.max_abs_error === 'number' ? e.max_abs_error.toExponential(2) : '0.00e+0';
+
+        return `
+          <tr>
+            <td style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-muted);">${escapeHtml(e.id)}</td>
+            <td style="font-weight:600; font-family:var(--font-mono);">${escapeHtml(e.operation_type)}</td>
+            <td><span class="badge ${statusBadge}">${escapeHtml(e.status)}</span></td>
+            <td style="font-weight:600; color:var(--primary);">${escapeHtml(speedup)}</td>
+            <td style="font-family:var(--font-mono); font-size:0.85rem;">${escapeHtml(maxErr)}</td>
+            <td>${numCheck}</td>
+            <td style="text-align:center; font-weight:600;">${e.iteration_count || 1}</td>
+            <td style="font-size:0.8rem; color:var(--text-muted);">${formatDate(e.created_at)}</td>
+            <td>
+              <button class="btn btn-sm btn-secondary" onclick="window.viewKernelSource('${escapeHtml(e.id)}')">🔍 View C</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="9" class="error-msg">Error loading kernel experiments: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  window.viewKernelSource = function(expId) {
+    const exp = cachedKernelExperiments.find(x => x.id === expId);
+    const modal = document.getElementById('kernel-code-modal');
+    const title = document.getElementById('kernel-code-title');
+    const pre = document.getElementById('kernel-code-pre');
+    if (!modal || !pre) return;
+
+    if (exp) {
+      if (title) title.textContent = `Generated C Kernel: ${exp.operation_type} (${exp.status})`;
+      pre.textContent = exp.c_source || '// No C source available for this run.';
+    } else {
+      if (title) title.textContent = 'Kernel Source';
+      pre.textContent = `Experiment ${expId} not found in cache.`;
+    }
+    modal.style.display = 'flex';
+  };
+
+  const kernelCodeModal = document.getElementById('kernel-code-modal');
+  const btnCloseKernelCodeModal = document.getElementById('btn-close-kernel-code-modal');
+  const btnCloseKernelCodeBtn = document.getElementById('btn-close-kernel-code-btn');
+  if (btnCloseKernelCodeModal && kernelCodeModal) {
+    btnCloseKernelCodeModal.addEventListener('click', () => { kernelCodeModal.style.display = 'none'; });
+  }
+  if (btnCloseKernelCodeBtn && kernelCodeModal) {
+    btnCloseKernelCodeBtn.addEventListener('click', () => { kernelCodeModal.style.display = 'none'; });
+  }
+
+  // Kernel Synthesis Modal Wiring
+  const kernelModal = document.getElementById('kernel-synthesis-modal');
+  const btnOpenKernelModal = document.getElementById('btn-open-kernel-synthesis-modal');
+  const btnOpenKernelModalAlt = document.getElementById('btn-open-kernel-synthesis-modal-alt');
+  const btnCloseKernelModal = document.getElementById('btn-close-kernel-modal');
+  const btnCancelKernelModal = document.getElementById('btn-cancel-kernel-modal');
+  const kernelForm = document.getElementById('kernel-synthesis-form');
+
+  [btnOpenKernelModal, btnOpenKernelModalAlt].forEach(btn => {
+    if (btn && kernelModal) {
+      btn.addEventListener('click', () => { kernelModal.style.display = 'flex'; });
+    }
+  });
+  [btnCloseKernelModal, btnCancelKernelModal].forEach(btn => {
+    if (btn && kernelModal) {
+      btn.addEventListener('click', () => { kernelModal.style.display = 'none'; });
+    }
+  });
+
+  if (kernelForm) {
+    kernelForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const op = document.getElementById('kernel-op-select').value;
+      const iters = parseInt(document.getElementById('kernel-iterations').value, 10) || 3;
+      const tol = parseFloat(document.getElementById('kernel-tolerance').value) || 0.0001;
+      const submitBtn = document.getElementById('btn-submit-kernel-modal');
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⚡ Synthesizing & Verifying...';
+      }
+
+      try {
+        const res = await fetch('/api/kernel-synthesis/run', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            operation_type: op,
+            max_iterations: iters,
+            tolerance: tol
+          })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        alert(`Kernel synthesis finished!\nOperation: ${data.operation_type}\nStatus: ${data.status}\nSpeedup: ${data.speedup_factor}x\nNumerical check: ${data.numerical_check_passed ? 'PASSED' : 'FAILED'}`);
+        if (kernelModal) kernelModal.style.display = 'none';
+        kernelForm.reset();
+        await loadKernelExperiments();
+      } catch (err) {
+        alert(`Synthesis failed: ${err.message}`);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '⚡ Launch Synthesis Loop';
+        }
+      }
+    });
+  }
+
+  // ── Phase 12: Model Parameter Merging Controller ──
+  async function loadModelMerges() {
+    const tbody = document.getElementById('model-merges-tbody');
+    const statEl = document.getElementById('stat-model-merges');
+    if (!tbody) return;
+
+    try {
+      const res = await fetch('/api/merging/merges');
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      const merges = Array.isArray(data) ? data : (data.merges || []);
+
+      if (statEl) statEl.textContent = merges.length;
+
+      if (!merges || merges.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:20px;">No model parameter merges registered yet. Click 'Execute Model Merge' to start.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = merges.map(m => {
+        const densityPct = typeof m.density === 'number' ? `${(m.density * 100).toFixed(0)}%` : '100%';
+        const paramCount = m.metrics && m.metrics.merged_parameters_count ? m.metrics.merged_parameters_count : (m.metrics && m.metrics.parameters_merged ? m.metrics.parameters_merged : 'N/A');
+
+        return `
+          <tr>
+            <td style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-muted);">${escapeHtml(m.id)}</td>
+            <td style="font-weight:600;">${escapeHtml(m.name)}</td>
+            <td><code>${escapeHtml(m.base_model || 'default')}</code></td>
+            <td><span class="badge badge-info">${escapeHtml(m.method ? m.method.toUpperCase() : 'LINEAR')}</span></td>
+            <td style="font-weight:600; color:var(--primary);">${escapeHtml(densityPct)}</td>
+            <td style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted);" title="${escapeHtml(m.output_path || '')}">${escapeHtml((m.output_path || '').slice(0, 24))}...</td>
+            <td style="font-weight:600;">${escapeHtml(String(paramCount))}</td>
+            <td style="font-size:0.8rem; color:var(--text-muted);">${formatDate(m.created_at)}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="8" class="error-msg">Error loading model merges: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  // Model Merge Modal Wiring
+  const mergeModal = document.getElementById('model-merge-modal');
+  const btnOpenMergeModal = document.getElementById('btn-open-model-merge-modal');
+  const btnOpenMergeModalAlt = document.getElementById('btn-open-model-merge-modal-alt');
+  const btnCloseMergeModal = document.getElementById('btn-close-merge-modal');
+  const btnCancelMergeModal = document.getElementById('btn-cancel-merge-modal');
+  const mergeForm = document.getElementById('model-merge-form');
+  const mergeDensitySlider = document.getElementById('merge-density');
+  const mergeDensityVal = document.getElementById('merge-density-val');
+
+  if (mergeDensitySlider && mergeDensityVal) {
+    mergeDensitySlider.addEventListener('input', () => {
+      mergeDensityVal.textContent = parseFloat(mergeDensitySlider.value).toFixed(2);
+    });
+  }
+
+  [btnOpenMergeModal, btnOpenMergeModalAlt].forEach(btn => {
+    if (btn && mergeModal) {
+      btn.addEventListener('click', () => { mergeModal.style.display = 'flex'; });
+    }
+  });
+  [btnCloseMergeModal, btnCancelMergeModal].forEach(btn => {
+    if (btn && mergeModal) {
+      btn.addEventListener('click', () => { mergeModal.style.display = 'none'; });
+    }
+  });
+
+  if (mergeForm) {
+    mergeForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('merge-recipe-name').value.trim();
+      const method = document.getElementById('merge-method-select').value;
+      const baseModel = document.getElementById('merge-base-model').value.trim();
+      const density = parseFloat(document.getElementById('merge-density').value) || 0.8;
+      const weightsRaw = document.getElementById('merge-weights').value.trim();
+
+      let weightsList = [0.5, 0.5];
+      if (weightsRaw) {
+        try {
+          if (weightsRaw.startsWith('[')) {
+            weightsList = JSON.parse(weightsRaw);
+          } else {
+            weightsList = weightsRaw.split(',').map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+          }
+        } catch {
+          weightsList = [0.5, 0.5];
+        }
+      }
+
+      const submitBtn = document.getElementById('btn-submit-merge-modal');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '🔀 Merging Model Parameters...';
+      }
+
+      try {
+        const res = await fetch('/api/merging/execute', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: name,
+            method: method,
+            base_model: baseModel,
+            density: density,
+            weights: weightsList,
+            adapter_paths: ['data/adapters/adapter_a.pt', 'data/adapters/adapter_b.pt']
+          })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        alert(`Model parameter merge executed successfully!\nMerge ID: ${data.id}\nMethod: ${data.method.toUpperCase()}\nOutput Path: ${data.output_path}`);
+        if (mergeModal) mergeModal.style.display = 'none';
+        mergeForm.reset();
+        await loadModelMerges();
+      } catch (err) {
+        alert(`Merge execution failed: ${err.message}`);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '🔀 Execute Merge';
+        }
+      }
+    });
+  }
+
+  // ── Phase 12: Human-in-the-Loop Operator Steering Controller ──
+  async function loadSteeringDirectives() {
+    const tbody = document.getElementById('steering-directives-tbody');
+    if (!tbody) return;
+
+    try {
+      const res = await fetch('/api/steering/directives');
+      if (!res.ok) throw new Error(await res.text());
+      const directives = await res.json();
+
+      if (!directives || directives.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">No steering directives active.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = directives.map(d => {
+        const isApplied = d.status === 'applied';
+        const statusBadge = isApplied ? 'badge-success' : 'badge-warning';
+        const actionBadge = d.action === 'abort' ? 'badge-danger' : (d.action === 'pause' ? 'badge-warning' : 'badge-info');
+
+        let payloadStr = '';
+        if (d.payload) {
+          if (typeof d.payload === 'string') {
+            payloadStr = d.payload;
+          } else if (d.payload.notes || d.payload.guidance || d.payload.critique) {
+            payloadStr = d.payload.notes || d.payload.guidance || d.payload.critique;
+          } else {
+            payloadStr = JSON.stringify(d.payload);
+          }
+        }
+
+        return `
+          <tr>
+            <td style="font-family:var(--font-mono); font-size:0.8rem; color:var(--text-muted);">${escapeHtml(d.id)}</td>
+            <td><span class="badge ${actionBadge}">${escapeHtml(d.action ? d.action.toUpperCase() : 'DIRECTIVE')}</span></td>
+            <td><code>${escapeHtml(d.target_subsystem || 'general')}</code></td>
+            <td><span class="badge ${statusBadge}">${escapeHtml(d.status ? d.status.toUpperCase() : 'RECEIVED')}</span></td>
+            <td style="font-size:0.85rem; max-width:280px; word-break:break-word;">${escapeHtml(payloadStr.slice(0, 100))}</td>
+            <td style="font-size:0.8rem; color:var(--text-muted);">${formatDate(d.created_at)}</td>
+            <td>
+              ${!isApplied ? `<button class="btn btn-sm btn-primary" onclick="window.applySteeringDirective('${escapeHtml(d.id)}')">✓ Mark Applied</button>` : `<span style="color:var(--text-muted); font-size:0.8rem;">Applied</span>`}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="7" class="error-msg">Error loading steering directives: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  window.applySteeringDirective = async function(directiveId) {
+    try {
+      const res = await fetch(`/api/steering/directives/${encodeURIComponent(directiveId)}/apply`, {
+        method: 'POST'
+      });
+      if (!res.ok) throw new Error(await res.text());
+      await loadSteeringDirectives();
+    } catch (err) {
+      alert(`Failed to apply directive: ${err.message}`);
+    }
+  };
+
+  // Steering Directive Modal Wiring
+  const steeringModal = document.getElementById('steering-modal');
+  const btnOpenSteeringModal = document.getElementById('btn-open-steering-modal');
+  const btnCloseSteeringModal = document.getElementById('btn-close-steering-modal');
+  const btnCancelSteeringModal = document.getElementById('btn-cancel-steering-modal');
+  const steeringForm = document.getElementById('steering-directive-form');
+
+  if (btnOpenSteeringModal && steeringModal) {
+    btnOpenSteeringModal.addEventListener('click', () => { steeringModal.style.display = 'flex'; });
+  }
+  [btnCloseSteeringModal, btnCancelSteeringModal].forEach(btn => {
+    if (btn && steeringModal) {
+      btn.addEventListener('click', () => { steeringModal.style.display = 'none'; });
+    }
+  });
+
+  if (steeringForm) {
+    steeringForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const action = document.getElementById('steering-action-select').value;
+      const targetSubsystem = document.getElementById('steering-target-select').value;
+      const notes = document.getElementById('steering-notes').value.trim();
+
+      const submitBtn = document.getElementById('btn-submit-steering-modal');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = '🎯 Transmitting...';
+      }
+
+      try {
+        const res = await fetch('/api/steering/directives', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: action,
+            target_subsystem: targetSubsystem,
+            payload: { notes: notes, timestamp: new Date().toISOString() }
+          })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        alert(`Steering directive '${data.action.toUpperCase()}' dispatched successfully!`);
+        if (steeringModal) steeringModal.style.display = 'none';
+        steeringForm.reset();
+        await loadSteeringDirectives();
+      } catch (err) {
+        alert(`Failed to issue steering directive: ${err.message}`);
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = '🎯 Transmit Directive';
+        }
       }
     });
   }

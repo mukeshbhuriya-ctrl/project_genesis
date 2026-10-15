@@ -2,6 +2,19 @@
 
 All notable changes to Project Genesis will be documented in this file.
 
+## [0.13.0] — 2026-10-15
+
+### Added
+- **Autonomous LLM-Driven Kernel Synthesis, Cross-Fleet Model Parameter Merging, and Human-in-the-Loop Steering (Phase 12)**:
+  - **Autonomous LLM-Driven Kernel Synthesis Engine**: Iterative C tensor kernel generator (`KernelSynthesisExperiment`, `KernelSynthesisEngine`) targeting hot computational primitives (`gelu`, `rmsnorm`, `swiglu`, `quantize_int8`, `dot_product`). Includes canonical mathematical reference baselines, platform SIMD hints, ground-truth numerical tolerance verification (`max_abs_error <= 1e-4`), and reflective self-repair loops with graceful pure Python degradation (`genesis/research/kernel_synthesis.py`).
+  - **Cross-Fleet Model Parameter Merging Engine**: Multi-task parameter fusion framework (`ModelMergeRecipe`, `ModelMergeManager`) supporting four mathematical merging strategies: Weighted Linear Averaging, Spherical Linear Interpolation (SLERP with collinear fallback), Task Arithmetic with Trimming & Sign Consensus (TIES-Merging), and Drop-and-Rescale with Masking (DARE-Merging) (`genesis/training/merging.py`).
+  - **Interactive Human-in-the-Loop Steering Controller**: Real-time researcher intervention subsystem (`SteeringEvent`, `SteeringController`) enabling operator directives (`pause`, `resume`, `critique`, `override_hypothesis`, `abort`, `inject_guidance`) with status lifecycle management (`received` -> `applied`) (`genesis/research/steering.py`).
+  - **Database Schema V12**: Introduced `kernel_experiments`, `model_merges`, and `steering_events` relational tables with strict foreign key validation, schema version migration, and index coverage (`genesis/core/database.py`).
+  - **Phase 12 REST API Endpoints**: Mounted `/api/kernel-synthesis/*` (templates, run, experiments), `/api/merging/*` (methods, execute, merges, merges/{id}), and `/api/steering/*` (directives, directives/{id}/apply) in `genesis/api/app.py`.
+  - **Interactive Web Dashboard Module**: Autonomous Kernel Synthesis runner and C code viewer, Cross-Fleet Parameter Merging recipe trigger with density slider, and Human-in-the-Loop Operator Steering Console (`genesis/web/`).
+  - **Architecture Decision Record**: ADR-013 Autonomous LLM-Driven Kernel Synthesis, Cross-Fleet Model Parameter Merging, and Human-in-the-Loop Steering.
+  - **Comprehensive Test Suite**: 13 new unit and integration tests across mathematical merge formulations, synthesis loops, reflective repair, and REST APIs, expanding repository baseline to 254 passing tests (100% pass rate).
+
 ## [0.12.0] — 2026-10-15
 
 ### Added

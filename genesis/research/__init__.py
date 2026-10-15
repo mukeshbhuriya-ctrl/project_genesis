@@ -25,10 +25,18 @@ from genesis.research.daemon import (
     AutonomousResearchDaemon,
     ResearchPaper,
 )
+from genesis.research.kernel_synthesis import (
+    KernelSynthesisEngine,
+    KernelSynthesisExperiment,
+)
 from genesis.research.meta import (
     CycleStage,
     MetaCycleRecord,
     MetaResearchOrchestrator,
+)
+from genesis.research.steering import (
+    SteeringController,
+    SteeringEvent,
 )
 from genesis.research.synthesis import (
     AdaptiveKnowledgeSynthesizer,
@@ -52,5 +60,9 @@ __all__ = [
     "ResearchMilestone",
     "AutonomousResearchDaemon",
     "ResearchPaper",
+    "KernelSynthesisEngine",
+    "KernelSynthesisExperiment",
+    "SteeringController",
+    "SteeringEvent",
 ]
 

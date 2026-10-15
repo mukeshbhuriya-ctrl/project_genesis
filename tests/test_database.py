@@ -64,6 +64,9 @@ class TestDatabaseInitialization:
             assert "compiled_extensions" in tables
             assert "fleet_nodes" in tables
             assert "fleet_sync_logs" in tables
+            assert "kernel_experiments" in tables
+            assert "model_merges" in tables
+            assert "steering_events" in tables
         finally:
             conn.close()
 

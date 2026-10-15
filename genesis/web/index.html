@@ -23,7 +23,7 @@
         </div>
         <div class="brand-title">
           <span class="brand-name">GENESIS</span>
-          <span class="brand-tag">v0.12.0 • Local-First</span>
+          <span class="brand-tag">v0.13.0 • Local-First</span>
         </div>
       </div>
 
@@ -820,6 +820,40 @@
               </div>
             </div>
           </div>
+
+          <!-- Section 3: Human-in-the-Loop Operator Steering Console (Phase 12) -->
+          <div class="card research-card" style="margin-top: 16px;">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h3 style="margin:0;">🎯 Human-in-the-Loop Operator Steering Console</h3>
+                <p style="color:var(--text-muted); font-size:0.8rem; margin:2px 0 0 0;">
+                  Phase 12: Real-time steering directives (pause, resume, critique, override hypothesis, abort, inject guidance) for autonomous research and synthesis cycles.
+                </p>
+              </div>
+              <button class="btn btn-sm btn-primary" id="btn-open-steering-modal">⚡ Issue Steering Directive</button>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="data-table" id="steering-directives-table">
+                  <thead>
+                    <tr>
+                      <th>Directive ID</th>
+                      <th>Action</th>
+                      <th>Target Subsystem</th>
+                      <th>Status</th>
+                      <th>Payload / Guidance</th>
+                      <th>Created</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="steering-directives-tbody">
+                    <tr><td colspan="7" class="text-center text-muted">No steering directives active.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -1420,13 +1454,15 @@
           <div class="content-header" style="flex-direction:column; align-items:flex-start; gap:12px;">
             <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
               <div>
-                <h2>Distributed Multi-Workstation Fleet &amp; Native Extensions</h2>
+                <h2>Distributed Fleet, Kernel Synthesis &amp; Model Merging</h2>
                 <p style="color:var(--text-muted); font-size:0.88rem; margin-top:2px;">
-                  Phase 11: Real-time C/Rust extension synthesis, tensor acceleration kernels with pure Python fallbacks, and peer-to-peer delta synchronization.
+                  Phase 11-12: Autonomous LLM-driven kernel synthesis, cross-fleet model parameter merging (SLERP, TIES, DARE, Linear), and peer-to-peer delta synchronization.
                 </p>
               </div>
               <div class="header-actions" style="display:flex; gap:8px;">
-                <button class="btn btn-sm btn-primary" id="btn-open-register-fleet-modal">+ Register Peer Workstation</button>
+                <button class="btn btn-sm btn-primary" id="btn-open-kernel-synthesis-modal">⚡ Synthesize Kernel</button>
+                <button class="btn btn-sm btn-primary" id="btn-open-model-merge-modal">🔀 Merge Models</button>
+                <button class="btn btn-sm btn-secondary" id="btn-open-register-fleet-modal">+ Register Peer Workstation</button>
                 <button class="btn btn-sm btn-secondary" id="btn-refresh-fleet">🔄 Refresh</button>
                 <button class="btn btn-sm btn-secondary" id="btn-export-fleet-delta">📦 Export Delta</button>
                 <button class="btn btn-sm btn-secondary" id="btn-open-import-fleet-modal">📥 Import Delta</button>
@@ -1434,7 +1470,7 @@
             </div>
 
             <!-- Global Status Bar -->
-            <div class="dashboard-stats-grid" style="grid-template-columns: repeat(4, 1fr); width:100%; margin-top:4px;">
+            <div class="dashboard-stats-grid" style="grid-template-columns: repeat(6, 1fr); width:100%; margin-top:4px;">
               <div class="stat-card">
                 <span class="stat-label">Host Compilers</span>
                 <span class="stat-val" id="stat-host-compilers" style="font-size:1.3rem;">Scanning...</span>
@@ -1446,6 +1482,16 @@
                 <span class="stat-sub">Active Hot-Path Extensions</span>
               </div>
               <div class="stat-card">
+                <span class="stat-label">Kernel Syntheses</span>
+                <span class="stat-val" id="stat-kernel-experiments" style="font-size:1.3rem;">0</span>
+                <span class="stat-sub">Autonomous SIMD runs</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-label">Model Merges</span>
+                <span class="stat-val" id="stat-model-merges" style="font-size:1.3rem;">0</span>
+                <span class="stat-sub">SLERP / TIES / DARE</span>
+              </div>
+              <div class="stat-card">
                 <span class="stat-label">Fleet Peer Nodes</span>
                 <span class="stat-val" id="stat-fleet-nodes" style="font-size:1.3rem;">1</span>
                 <span class="stat-sub">Local cluster workstations</span>
@@ -1453,7 +1499,7 @@
               <div class="stat-card">
                 <span class="stat-label">Delta Replications</span>
                 <span class="stat-val" id="stat-sync-events" style="font-size:1.3rem;">0</span>
-                <span class="stat-sub">Logged cross-node sync events</span>
+                <span class="stat-sub">Logged sync events</span>
               </div>
             </div>
           </div>
@@ -1495,7 +1541,76 @@
             </div>
           </div>
 
-          <!-- Section 2: Fleet Peer Nodes Topology -->
+          <!-- Section 2: Autonomous LLM-Driven Kernel Synthesis (Phase 12) -->
+          <div class="card" style="margin-top:16px;">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h3 style="font-size:1.05rem; margin:0;">⚡ Autonomous LLM-Driven Kernel Synthesis &amp; SIMD Benchmarks</h3>
+                <p style="color:var(--text-muted); font-size:0.8rem; margin:2px 0 0 0;">
+                  Autonomous generation of optimized C tensor kernels with SIMD vectorization hints, ground-truth tolerance validation, and reflective self-repair.
+                </p>
+              </div>
+              <button class="btn btn-sm btn-primary" id="btn-open-kernel-synthesis-modal-alt">⚡ Run Synthesis Loop</button>
+            </div>
+            <div class="card-body">
+              <div class="table-container">
+                <table class="data-table" id="kernel-experiments-table">
+                  <thead>
+                    <tr>
+                      <th>Experiment ID</th>
+                      <th>Operation Type</th>
+                      <th>Status</th>
+                      <th>Speedup Factor</th>
+                      <th>Max Error</th>
+                      <th>Numerical Check</th>
+                      <th>Iterations</th>
+                      <th>Created At</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="kernel-experiments-tbody">
+                    <tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding:20px;">No kernel synthesis experiments recorded yet. Click 'Run Synthesis Loop' to launch.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Cross-Fleet Model Parameter Merging (Phase 12) -->
+          <div class="card" style="margin-top:16px;">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h3 style="font-size:1.05rem; margin:0;">🔀 Cross-Fleet Model Parameter Merging (SLERP / TIES / DARE / Linear)</h3>
+                <p style="color:var(--text-muted); font-size:0.8rem; margin:2px 0 0 0;">
+                  Multi-task model consolidation via spherical interpolation, sign consensus election, and drop-and-rescale adapter fusing.
+                </p>
+              </div>
+              <button class="btn btn-sm btn-primary" id="btn-open-model-merge-modal-alt">🔀 Execute Model Merge</button>
+            </div>
+            <div class="card-body">
+              <div class="table-container">
+                <table class="data-table" id="model-merges-table">
+                  <thead>
+                    <tr>
+                      <th>Merge ID</th>
+                      <th>Recipe Name</th>
+                      <th>Target Model</th>
+                      <th>Method</th>
+                      <th>Density</th>
+                      <th>Output Path</th>
+                      <th>Parameters Merged</th>
+                      <th>Created At</th>
+                    </tr>
+                  </thead>
+                  <tbody id="model-merges-tbody">
+                    <tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:20px;">No model parameter merges registered yet. Click 'Execute Model Merge' to start.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Fleet Peer Nodes Topology -->
           <div class="card" style="margin-top:16px;">
             <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
               <div>
@@ -1937,6 +2052,147 @@
           <button type="submit" class="btn btn-primary" id="btn-submit-fleet-import">📥 Merge Delta Bundle</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal for Kernel Synthesis (Phase 12) -->
+  <div class="modal-backdrop" id="kernel-synthesis-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3>⚡ Run Autonomous Kernel Synthesis</h3>
+        <button class="modal-close-btn" id="btn-close-kernel-modal">&times;</button>
+      </div>
+      <form id="kernel-synthesis-form" class="standard-form">
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="kernel-op-select">Target Operation:</label>
+            <select id="kernel-op-select" class="form-select" required>
+              <option value="gelu">GELU Activation (Gaussian Error Linear Unit)</option>
+              <option value="rmsnorm">RMSNorm (Root Mean Square Layer Normalization)</option>
+              <option value="swiglu">SwiGLU (Swish Gated Linear Unit)</option>
+              <option value="quantize_int8">INT8 Symmetric Quantization (Scale/Clamp)</option>
+              <option value="dot_product">Vector Dot Product (SIMD Reduction)</option>
+            </select>
+          </div>
+          <div class="form-group flex-1">
+            <label for="kernel-iterations">Max Iterations (Reflective Loops):</label>
+            <input type="number" id="kernel-iterations" class="form-input" value="3" min="1" max="10" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="kernel-tolerance">Numerical Tolerance (Max Absolute Error):</label>
+          <input type="number" id="kernel-tolerance" class="form-input" value="0.0001" step="0.00001" min="0.000001" required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-kernel-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-kernel-modal">⚡ Launch Synthesis Loop</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Model Parameter Merging (Phase 12) -->
+  <div class="modal-backdrop" id="model-merge-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 640px;">
+      <div class="modal-header">
+        <h3>🔀 Configure Model Parameter Merge</h3>
+        <button class="modal-close-btn" id="btn-close-merge-modal">&times;</button>
+      </div>
+      <form id="model-merge-form" class="standard-form">
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="merge-recipe-name">Recipe Name:</label>
+            <input type="text" id="merge-recipe-name" class="form-input" placeholder="e.g. qwen-coder-reasoning-ties-v1" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="merge-method-select">Merge Method:</label>
+            <select id="merge-method-select" class="form-select" required>
+              <option value="slerp">SLERP (Spherical Linear Interpolation - 2 Adapters)</option>
+              <option value="ties">TIES (Trimming, Sign Consensus &amp; Disjoint Merge)</option>
+              <option value="dare">DARE (Drop And REscale with Masking)</option>
+              <option value="linear">Linear Weighted Average</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="merge-base-model">Target Base Model:</label>
+            <input type="text" id="merge-base-model" class="form-input" value="qwen2.5-coder:7b" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="merge-density">Density Fraction: <strong id="merge-density-val">0.80</strong></label>
+            <input type="range" id="merge-density" min="0.1" max="1.0" step="0.05" value="0.8">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="merge-adapters">Adapter Weights JSON / Weights List:</label>
+          <input type="text" id="merge-weights" class="form-input" value="0.5, 0.5" placeholder="e.g. 0.5, 0.5">
+          <small style="color:var(--text-muted); font-size:0.75rem;">Weights for combining source adapters or checkpoints.</small>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-merge-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-merge-modal">🔀 Execute Merge</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Operator Steering Directive (Phase 12) -->
+  <div class="modal-backdrop" id="steering-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 600px;">
+      <div class="modal-header">
+        <h3>🎯 Issue Operator Steering Directive</h3>
+        <button class="modal-close-btn" id="btn-close-steering-modal">&times;</button>
+      </div>
+      <form id="steering-directive-form" class="standard-form">
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="steering-action-select">Intervention Action:</label>
+            <select id="steering-action-select" class="form-select" required>
+              <option value="pause">⏸ Pause Subsystem Execution</option>
+              <option value="resume">▶ Resume Execution</option>
+              <option value="critique">💬 Operator Critique / Reflection Guidance</option>
+              <option value="override_hypothesis">🔀 Override Current Hypothesis</option>
+              <option value="abort">🛑 Emergency Abort Operation</option>
+              <option value="inject_guidance">💡 Inject Domain Guidance</option>
+            </select>
+          </div>
+          <div class="form-group flex-1">
+            <label for="steering-target-select">Target Subsystem:</label>
+            <select id="steering-target-select" class="form-select" required>
+              <option value="research_daemon">Research Daemon</option>
+              <option value="fine_tuning">Fine-Tuning Engine</option>
+              <option value="kernel_synthesis">Kernel Synthesis</option>
+              <option value="fleet_sync">Fleet Peer Sync</option>
+              <option value="general">General Autonomous Loop</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="steering-notes">Guidance / Critique / Hypothesis Payload:</label>
+          <textarea id="steering-notes" class="form-textarea" rows="4" placeholder="Enter human operator instructions, guidance, critique, or hypothesis override details..." required></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-steering-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-steering-modal">🎯 Transmit Directive</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Kernel C Source Viewer -->
+  <div class="modal-backdrop" id="kernel-code-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 720px;">
+      <div class="modal-header">
+        <h3 id="kernel-code-title">Generated C Kernel Source</h3>
+        <button class="modal-close-btn" id="btn-close-kernel-code-modal">&times;</button>
+      </div>
+      <div style="padding:16px;">
+        <pre id="kernel-code-pre" style="background:var(--bg-card); color:var(--text-main); padding:16px; border-radius:6px; font-family:var(--font-mono); font-size:0.85rem; overflow-x:auto; max-height:400px; border:1px solid var(--border-color);"></pre>
+      </div>
+      <div class="modal-actions" style="padding:16px; border-top:1px solid var(--border-color);">
+        <button type="button" class="btn btn-secondary" id="btn-close-kernel-code-btn">Close</button>
+      </div>
     </div>
   </div>
 

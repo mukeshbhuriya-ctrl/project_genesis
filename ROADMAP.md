@@ -1,6 +1,6 @@
 # ROADMAP
 
-## Current Milestone: Phase 11 Complete ✅ → Phase 12: Autonomous Kernel Synthesis & Cross-Fleet Model Merging (Next)
+## Current Milestone: Phase 12 Complete ✅ → Phase 13: Continual Online Learning & Neuro-Symbolic Verification Engine (Next)
 
 
 ## Phase 0: Discovery and Baseline ✅
@@ -156,9 +156,21 @@
 
 **Acceptance criterion:** Verified (The platform dynamically detects host compilers, compiles hot-path tensor routines with transparent Python fallbacks and benchmark profiling, coordinates distributed fleet nodes with heartbeat tracking, and performs air-gapped or network delta bundle synchronization with timestamp conflict resolution).
 
-## Phase 12: Autonomous Kernel Synthesis & Cross-Fleet Model Merging (Next) ⏳
-- [ ] Automated LLM-driven C/CUDA/SIMD kernel optimization and iterative compilation
-- [ ] Cross-workstation parameter merging (TIES, DARE, SLERP) for distributed LoRA adapters
-- [ ] Active interactive human-in-the-loop steering controls for background research daemon
+## Phase 12: Autonomous Kernel Synthesis & Cross-Fleet Model Merging ✅
+- [x] Automated LLM-driven C/SIMD kernel optimization, numerical tolerance validation, and reflective repair loop (`genesis/research/kernel_synthesis.py`)
+- [x] Cross-workstation parameter merging (Linear, SLERP, TIES, DARE) for distributed LoRA adapters and model weights (`genesis/training/merging.py`)
+- [x] Active interactive human-in-the-loop steering controller for operator directives (`genesis/research/steering.py`)
+- [x] SQLite Schema Version 12 migrations (`kernel_experiments`, `model_merges`, `steering_events`) (`genesis/core/database.py`)
+- [x] Phase 12 REST API routes mounted under `/api/kernel-synthesis`, `/api/merging`, and `/api/steering` (`genesis/api/app.py`)
+- [x] Interactive Web Dashboard UI: Autonomous Kernel Synthesis runner, C code modal, Model Merging controls with density slider, and Operator Steering Console (`genesis/web/`)
+- [x] Architecture Decision Record ADR-013 (`docs/decisions/ADR-013-autonomous-kernel-synthesis-and-cross-fleet-model-merging.md`)
+- [x] 254/254 comprehensive tests passing (100% pass rate)
+
+**Acceptance criterion:** Verified (The platform autonomously synthesizes, validates against ground-truth math, and reflectively repairs C/SIMD tensor acceleration kernels, performs cross-fleet parameter merging via SLERP, TIES, DARE, and Linear methods, and exposes live human-in-the-loop steering controls for operator oversight).
+
+## Phase 13: Continual Online Learning & Neuro-Symbolic Verification Engine (Next) ⏳
+- [ ] Streaming memory replay buffers with Elastic Weight Consolidation (EWC) regularization against catastrophic forgetting
+- [ ] Neuro-symbolic constraint verification & formal logic checking for self-generated code and mathematical assertions
+- [ ] Dynamic parameter prefix tuning and zero-shot task distillation across local cluster nodes
 
 
