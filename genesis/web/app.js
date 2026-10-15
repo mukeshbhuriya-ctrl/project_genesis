@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Refresh data on tab switch
       if (target === 'memory') loadMemories();
       if (target === 'knowledge') loadDocuments();
+      if (target === 'tasks') { loadTools(); loadTasks(); }
       if (target === 'hardware') loadHardwareAndModels();
       if (target === 'backups') loadBackups();
     });
@@ -594,6 +595,81 @@ document.addEventListener('DOMContentLoaded', () => {
       btnCreateBackup.disabled = false;
     }
   });
+
+  // ── Tools & Tasks Subsystem ──
+  const toolsGrid = document.getElementById('tools-grid');
+  const tasksTableBody = document.getElementById('tasks-table-body');
+  const btnRefreshTasks = document.getElementById('btn-refresh-tasks');
+
+  async function loadTools() {
+    try {
+      const res = await fetch('/api/tools');
+      const data = await res.json();
+      toolsGrid.innerHTML = '';
+
+      if (!data.tools || data.tools.length === 0) {
+        toolsGrid.innerHTML = '<p class="text-muted">No tools registered.</p>';
+        return;
+      }
+
+      data.tools.forEach(tool => {
+        const card = document.createElement('div');
+        card.className = 'tool-card card';
+        const isReadOnly = tool.permission === 'read_only';
+        card.innerHTML = `
+          <div class="card-header-flex">
+            <h4>${tool.name}</h4>
+            <span class="badge ${isReadOnly ? 'badge-info' : 'badge-warning'}">${tool.permission}</span>
+          </div>
+          <p class="tool-desc mt-2" style="font-size: 0.85rem; color: var(--text-muted);">${tool.description}</p>
+          <div class="tool-params mt-3">
+            <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); font-weight: 600;">Parameters:</span>
+            <code style="display: block; font-size: 0.75rem; color: var(--accent-light); margin-top: 4px;">
+              ${tool.parameters.map(p => `${p.name}${p.required ? '*' : ''}`).join(', ') || 'none'}
+            </code>
+          </div>
+        `;
+        toolsGrid.appendChild(card);
+      });
+    } catch (e) {
+      toolsGrid.innerHTML = `<p class="text-muted">Error loading tools: ${e.message}</p>`;
+    }
+  }
+
+  async function loadTasks() {
+    try {
+      const res = await fetch('/api/tasks');
+      const data = await res.json();
+      tasksTableBody.innerHTML = '';
+
+      if (!data.tasks || data.tasks.length === 0) {
+        tasksTableBody.innerHTML = '<tr><td colspan="5" class="text-center">No task traces recorded</td></tr>';
+        return;
+      }
+
+      data.tasks.forEach(task => {
+        const row = document.createElement('tr');
+        const isCompleted = task.status === 'completed';
+        const isFailed = task.status === 'failed';
+        const badgeClass = isCompleted ? 'online' : (isFailed ? 'offline' : 'pending');
+
+        row.innerHTML = `
+          <td><code style="font-size: 0.75rem;">${task.id.substring(0, 8)}...</code></td>
+          <td><strong>${task.goal}</strong></td>
+          <td><span class="status-indicator ${badgeClass}">${task.status}</span></td>
+          <td>${task.current_step} / ${task.total_steps}</td>
+          <td>${new Date(task.created_at).toLocaleTimeString()}</td>
+        `;
+        tasksTableBody.appendChild(row);
+      });
+    } catch (e) {
+      tasksTableBody.innerHTML = `<tr><td colspan="5" class="text-center">Error loading tasks: ${e.message}</td></tr>`;
+    }
+  }
+
+  if (btnRefreshTasks) {
+    btnRefreshTasks.addEventListener('click', loadTasks);
+  }
 
   // ── Initial Bootstrap ──
   loadConversations();

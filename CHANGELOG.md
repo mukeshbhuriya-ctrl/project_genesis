@@ -2,6 +2,26 @@
 
 All notable changes to Project Genesis will be documented in this file.
 
+## [0.4.0] — 2026-10-15
+
+### Added
+- **Typed Tool Registry Subsystem**: Strongly-typed tool parameter schema validation and Ollama/OpenAI function calling specification generation (`genesis/tools/base.py`, `genesis/tools/registry.py`).
+- **Tiered Security and Path Sandboxing**: Permission enforcement (`READ_ONLY`, `MUTATING`, `DANGEROUS`) with strict workspace path boundary verification, blocking traversal escapes, drive roots, and protected system files (`genesis/tools/permissions.py`).
+- **Standard Built-in Local Tools**:
+  - `read_file`: Line-range selective text file reading inside workspace (`genesis/tools/builtin/file_reader.py`).
+  - `write_file`: Confined workspace file creation and atomic overwriting (`genesis/tools/builtin/file_writer.py`).
+  - `list_directory`: Recursive and flat directory listing with size/type introspection (`genesis/tools/builtin/dir_lister.py`).
+  - `calculator`: Pure AST mathematical evaluation supporting operators, math functions, and constants without `eval()` (`genesis/tools/builtin/calculator.py`).
+  - `python_eval`: Subprocess-isolated Python code execution with bounded memory, timeout, and output capture (`genesis/tools/builtin/python_eval.py`).
+- **Tool Execution Engine**: `ToolExecutor` with permission validation, execution timing, error trapping, and async timeout enforcement (`genesis/tools/executor.py`).
+- **Bounded Task Orchestrator**: `TaskPlanner` with local LLM decomposition, step bounding, and fallback plan generation (`genesis/tasks/planner.py`).
+- **Task Audit Log & State Persistence (Schema V3)**: `TaskExecutor` tracking step states (`pending`, `running`, `success`, `failed`, `skipped`) and full audit execution traces in SQLite (`tasks` and `task_steps` tables).
+- **Artifact Verification**: `TaskVerifier` checking file existence, non-empty byte thresholds, required substring content, and numeric tolerances (`genesis/tasks/verifier.py`).
+- **REST Endpoints**: `/api/tools`, `/api/tools/execute`, `/api/tasks`, `/api/tasks/plan`, `/api/tasks/run`, `/api/tasks/{task_id}`, `/api/tasks/{task_id}/verify`.
+- **Interactive Web UI Tools & Tasks Tab**: Live registered tools visualizer, permission badges, and real-time execution trace monitor (`genesis/web/`).
+- **Architecture Decision Record**: ADR-004 Tool Registry, Permission Boundaries, and Bounded Task Orchestration.
+- **Test Suite**: 30 new tests across tools, tasks, API, and live E2E (`test_tools.py`, `test_tasks.py`, `test_api_tools_tasks.py`, `test_tool_orchestration_e2e.py`), bringing total passing test suite to 88 tests.
+
 ## [0.3.0] — 2026-10-15
 
 ### Added

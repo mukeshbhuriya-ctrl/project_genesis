@@ -39,17 +39,17 @@
 
 **Acceptance criterion:** Verified (Information saved with 768-dim vector embeddings, retrieved in later sessions via hybrid search, inspected via Web UI, consolidated, backed up, and deleted).
 
-## Phase 3: Tools and Task Orchestration 🔄 (Active)
-- [ ] Typed tool registry
-- [ ] Permission model
-- [ ] Bounded planning and execution
-- [ ] Task states and error recovery
-- [ ] Execution logging
-- [ ] Result verification
+## Phase 3: Tools and Task Orchestration ✅
+- [x] Typed tool registry
+- [x] Permission model
+- [x] Bounded planning and execution
+- [x] Task states and error recovery
+- [x] Execution logging
+- [x] Result verification
 
-**Acceptance criterion:** The AI can complete and verify a safe, bounded task using a real local tool.
+**Acceptance criterion:** Verified (AI decomposes goals with local model, executes safe bounded steps using real local tools, verifies disk artifacts with TaskVerifier, and records full audit log in SQLite).
 
-## Phase 4: Evaluation and Feedback ⏳
+## Phase 4: Evaluation and Feedback 🔄 (Active)
 - [ ] Fixed baseline benchmarks
 - [ ] Task outcome recording
 - [ ] Failure analysis

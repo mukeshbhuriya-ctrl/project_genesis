@@ -4,7 +4,7 @@
 
 ## Current Phase
 
-**Phase 2 Complete (Verified) → Phase 3: Tools & Task Orchestration (Active)**
+**Phase 3 Complete (Verified) → Phase 4: Evaluation and Feedback (Active)**
 
 ## Implemented
 
@@ -19,7 +19,7 @@
 - [x] `ROADMAP.md` — milestone tracker
 - [x] `CHANGELOG.md` — change log
 - [x] `docs/architecture.md` — modular architecture specification
-- [x] `docs/decisions/` — ADR-001 (Tech selection), ADR-002 (Ollama/Storage isolation), ADR-003 (Vector memory & indexing)
+- [x] `docs/decisions/` — ADR-001 (Tech selection), ADR-002 (Ollama/Storage isolation), ADR-003 (Vector memory & indexing), ADR-004 (Tool registry & orchestration)
 - [x] Python package scaffolding (`genesis/`)
 - [x] Core configuration module (`genesis/core/__init__.py`)
 - [x] Logging module (`genesis/core/logging.py`)
@@ -29,7 +29,7 @@
 - [x] Ollama v0.40.4 installed, persistent service running with storage on `D:\project_genesis\data\models\ollama`
 - [x] Models pulled & verified: `qwen2.5:7b` (4.7 GB), `qwen2.5-coder:7b` (4.7 GB), `qwen2.5-coder:1.5b-base` (986 MB), `nomic-embed-text` (274 MB)
 - [x] CLI entry point (`genesis/cli.py`) with init, hardware, status, and serve commands
-- [x] Database initialization (`genesis/core/database.py`) with Schema Version 2 migrations
+- [x] Database initialization (`genesis/core/database.py`) with Schema Version 3 migrations
 
 ### Memory & Knowledge Subsystem (Phase 2)
 - [x] Persistent structured memory store (`genesis/memory/__init__.py`) with CRUD, categories, confidence, metadata, versioning
@@ -38,13 +38,24 @@
 - [x] Memory consolidation & deduplication (`genesis/memory/consolidation.py`) with similarity suppression ($\ge 0.90$) and version bumping
 - [x] Knowledge document indexer (`genesis/knowledge/indexer.py`) with paragraph/window chunking, SHA256 checksum change detection, document tracking, and semantic passage search
 - [x] Atomic SQLite backup & disaster recovery (`genesis/core/backup.py`) with online backup API, integrity verification (`PRAGMA integrity_check`), restore, and backup rotation
-- [x] REST API endpoints (`genesis/api/routes/`): `/api/memories` (hybrid/semantic/lexical search, consolidation), `/api/knowledge/` (index-file, documents, search), `/api/backups/` (create, list)
+- [x] REST API endpoints: `/api/memories` (hybrid/semantic/lexical search, consolidation), `/api/knowledge/` (index-file, documents, search), `/api/backups/` (create, list)
 - [x] Interactive Web Dashboard UI (`genesis/web/`): single-page app (Chat, Memory inspector, Knowledge document search, Hardware diagnostics, Backup management) mounted at `/` and `/static/`
-- [x] Comprehensive test suite in `tests/`: 58 tests covering all subsystems (100% passing)
+
+### Tools & Task Orchestration Subsystem (Phase 3)
+- [x] Strongly-typed tool registry (`genesis/tools/base.py`, `genesis/tools/registry.py`) with parameter validation and Ollama/OpenAI schema export
+- [x] Tiered permission model (`genesis/tools/permissions.py`) with workspace path confinement, directory traversal blocking, and system path protection
+- [x] Safe built-in local tools (`genesis/tools/builtin/`): `read_file`, `write_file`, `list_directory`, `calculator`, `python_eval`
+- [x] Tool execution engine (`genesis/tools/executor.py`) with timeout protection, error isolation, and execution latency metrics
+- [x] Bounded task planner (`genesis/tasks/planner.py`) decomposing goals into discrete steps with local model (`qwen2.5:7b`), max step bounds, and fallback plan protection
+- [x] Task executor (`genesis/tasks/executor.py`) with step status progression, error recovery, and audit log persistence in SQLite (`tasks` and `task_steps` tables)
+- [x] Task verifier (`genesis/tasks/verifier.py`) with file existence, non-empty byte count, substring content, and numeric tolerance validation
+- [x] REST API endpoints (`genesis/api/routes/`): `/api/tools`, `/api/tools/execute`, `/api/tasks`, `/api/tasks/plan`, `/api/tasks/run`, `/api/tasks/{task_id}`, `/api/tasks/{task_id}/verify`
+- [x] Interactive Web Dashboard Tools & Tasks tab (`genesis/web/`): live tool registry browser, permission badges, and real-time task execution monitor
+- [x] Comprehensive test suite in `tests/`: 88 tests covering all subsystems (100% passing)
 
 ## Verified
 
-- [x] **58/58 unit and integration tests pass (100% passing)** across all modules
+- [x] **88/88 unit and integration tests pass (100% passing)** across all modules
 - [x] **Local model responds** — `qwen2.5:7b` verified via Ollama API and Python `OllamaProvider`
 - [x] **GPU acceleration verified** via `nvidia-smi` (all 29 layers offloaded, ~4.6 GB VRAM utilized on RTX 2000 Ada)
 - [x] **Dense vector embeddings verified** — `nomic-embed-text` produces 768-dimensional embeddings via Ollama `/api/embed`
@@ -52,6 +63,9 @@
 - [x] **Knowledge document indexing verified** — chunking, SHA256 deduplication, cascade deletions, passage search
 - [x] **Memory consolidation verified** — semantic duplicates identified and suppressed
 - [x] **Online atomic backup & restore verified** — SQLite integrity verified across snapshot and restore operations
+- [x] **Bounded tool execution verified** — AI decomposes goals with local model (`qwen2.5:7b`), executes local tools, and produces verified file artifacts on disk
+- [x] **Audit trace logging verified** — every step's status, tool name, arguments, output, and duration persisted in SQLite
+- [x] **Filesystem sandboxing verified** — path escapes, traversal attacks, and external drive roots rejected with SecurityError
 - [x] **Conversation persists across restart** — verified end-to-end via `test_real_model_chat_and_restart_survival`
 - [x] **Web dashboard responsive** — `/` and `/static/` serve interactive UI; API endpoints operational
 
@@ -75,11 +89,10 @@
 | Node.js | 24.17.0 |
 | Git | 2.54.0 |
 
-## Next Steps (Phase 3: Tools and Task Orchestration)
+## Next Steps (Phase 4: Evaluation and Feedback)
 
-1. **Typed Tool Registry (`genesis/tools/registry.py`):** Define JSON schema / Pydantic schemas, tool definitions, typed input/output validation, and metadata.
-2. **Permission Model (`genesis/tools/permissions.py`):** Establish execution security levels (`READ_ONLY`, `MUTATING`, `DANGEROUS`) with permission checks and sandboxing.
-3. **Built-in Safe Tools (`genesis/tools/builtin/`):** Implement `read_file`, `write_file`, `list_directory`, `calculator`, `python_eval` (restricted evaluator).
-4. **Sandboxed Executor (`genesis/tools/executor.py`):** Enforce strict timeout, execution limits, working directory confinement, and stderr/stdout capture.
-5. **Task Orchestration (`genesis/tasks/`):** Implement `TaskPlanner`, `StepExecutor`, task states (`PENDING`, `RUNNING`, `COMPLETED`, `FAILED`), step-by-step trace logging in SQLite.
-6. **Integration Verification:** Demonstrate an autonomous, bounded multi-step task execution using `qwen2.5:7b` / `qwen2.5-coder:7b` with real tools, verified outputs, and full audit trail.
+1. **Fixed Baseline Benchmarks (`genesis/evaluation/benchmarks.py`):** Define standard reasoning, coding, and tool invocation benchmark tasks with deterministic evaluation rubrics.
+2. **Task Outcome Recording (`genesis/evaluation/models.py`):** Track benchmark pass rates, latencies, token consumption, and regression metrics over time in SQLite.
+3. **Failure Analysis Engine (`genesis/evaluation/analysis.py`):** Automatic error taxonomy categorization (syntax error, tool misuse, timeout, hallucination, missing parameter).
+4. **Regression Test Runner (`genesis/evaluation/regression.py`):** Automated benchmark verification before and after prompt updates, model swaps, or fine-tuning runs.
+5. **Comparison Reports (`genesis/evaluation/reports.py`):** Generate markdown and visual evaluation comparisons between baseline and candidate configurations.

@@ -15,7 +15,7 @@ from genesis.core.logging import get_logger
 log = get_logger("database")
 
 # ── Schema version history ──
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 SCHEMA_V1 = """
 -- Conversations
@@ -135,6 +135,40 @@ CREATE TABLE IF NOT EXISTS knowledge_chunks (
 CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_doc ON knowledge_chunks(document_id, chunk_index);
 """
 
+SCHEMA_V3 = """
+-- Tasks table for bounded orchestration
+CREATE TABLE IF NOT EXISTS tasks (
+    id TEXT PRIMARY KEY,
+    goal TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('pending', 'planning', 'running', 'completed', 'failed', 'cancelled')),
+    plan TEXT DEFAULT '[]',
+    current_step INTEGER NOT NULL DEFAULT 0,
+    total_steps INTEGER NOT NULL DEFAULT 0,
+    result TEXT,
+    error TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+
+-- Task steps audit log / trace
+CREATE TABLE IF NOT EXISTS task_steps (
+    id TEXT PRIMARY KEY,
+    task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+    step_number INTEGER NOT NULL,
+    description TEXT NOT NULL,
+    tool_name TEXT,
+    tool_arguments TEXT DEFAULT '{}',
+    tool_result TEXT DEFAULT '{}',
+    status TEXT NOT NULL CHECK (status IN ('pending', 'running', 'success', 'failed', 'skipped')),
+    error TEXT,
+    started_at TEXT,
+    completed_at TEXT,
+    duration_ms REAL DEFAULT 0.0
+);
+CREATE INDEX IF NOT EXISTS idx_task_steps_task ON task_steps(task_id, step_number);
+"""
+
 
 def get_sync_connection(db_path: str | Path) -> sqlite3.Connection:
     """Create a synchronous SQLite connection with recommended pragmas."""
@@ -186,6 +220,16 @@ def initialize_database(db_path: str | Path) -> None:
             )
             conn.commit()
             log.info("Schema v2 applied successfully.")
+
+        if current_version < 3:
+            log.info("Applying schema v3...")
+            conn.executescript(SCHEMA_V3)
+            conn.execute(
+                "INSERT OR REPLACE INTO schema_migrations (version, description) "
+                "VALUES (3, 'Schema v3: tasks and task_steps for bounded orchestration')"
+            )
+            conn.commit()
+            log.info("Schema v3 applied successfully.")
         else:
             log.info(f"Database schema is at version {current_version}, up to date.")
 

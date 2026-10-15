@@ -34,6 +34,11 @@ class TestDatabaseInitialization:
             assert "models" in tables
             assert "experiments" in tables
             assert "schema_migrations" in tables
+            assert "memory_embeddings" in tables
+            assert "knowledge_documents" in tables
+            assert "knowledge_chunks" in tables
+            assert "tasks" in tables
+            assert "task_steps" in tables
         finally:
             conn.close()
 

@@ -23,7 +23,7 @@
         </div>
         <div class="brand-title">
           <span class="brand-name">GENESIS</span>
-          <span class="brand-tag">v0.2.0 • Local-First</span>
+          <span class="brand-tag">v0.3.0 • Local-First</span>
         </div>
       </div>
 
@@ -36,6 +36,9 @@
         </button>
         <button class="nav-tab" data-tab="knowledge" id="tab-knowledge-btn">
           <span class="tab-icon">📚</span> Knowledge Index
+        </button>
+        <button class="nav-tab" data-tab="tasks" id="tab-tasks-btn">
+          <span class="tab-icon">🛠️</span> Tools &amp; Tasks
         </button>
         <button class="nav-tab" data-tab="hardware" id="tab-hardware-btn">
           <span class="tab-icon">⚡</span> System &amp; Hardware
@@ -296,7 +299,52 @@
         </div>
       </section>
 
-      <!-- 5. BACKUPS TAB -->
+      <!-- 5. TOOLS & TASKS TAB -->
+      <section class="tab-content" id="pane-tasks">
+        <div class="module-container">
+          <div class="module-header">
+            <div>
+              <h2>Tools &amp; Bounded Task Orchestration</h2>
+              <p>Registered local tools, permission boundaries, and multi-step execution traces.</p>
+            </div>
+            <button class="btn btn-primary" id="btn-create-task-modal">⚡ Launch New Task</button>
+          </div>
+
+          <!-- Tools Registry Grid -->
+          <div class="card mt-4">
+            <h3>Registered Local Tools</h3>
+            <div id="tools-grid" class="tools-grid">
+              <p class="text-muted">Loading registered tools...</p>
+            </div>
+          </div>
+
+          <!-- Task Execution History -->
+          <div class="card mt-4">
+            <div class="card-header-flex">
+              <h3>Recent Task Executions</h3>
+              <button class="btn btn-secondary btn-sm" id="btn-refresh-tasks">🔄 Refresh</button>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table" id="tasks-table">
+                <thead>
+                  <tr>
+                    <th>Task ID</th>
+                    <th>Goal</th>
+                    <th>Status</th>
+                    <th>Steps</th>
+                    <th>Created</th>
+                  </tr>
+                </thead>
+                <tbody id="tasks-table-body">
+                  <tr><td colspan="5" class="text-center">Loading task traces...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. BACKUPS TAB -->
       <section class="tab-content" id="pane-backups">
         <div class="module-container">
           <div class="module-header">

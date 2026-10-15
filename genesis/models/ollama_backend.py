@@ -27,7 +27,7 @@ DEFAULT_OLLAMA_URL = "http://127.0.0.1:11434"
 class OllamaProvider(ModelProvider):
     """Model provider backed by a local Ollama server."""
 
-    def __init__(self, base_url: str = DEFAULT_OLLAMA_URL, timeout: float = 120.0):
+    def __init__(self, base_url: str = DEFAULT_OLLAMA_URL, timeout: float = 240.0):
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
 

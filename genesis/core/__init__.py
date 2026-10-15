@@ -62,6 +62,16 @@ class GenesisSettings(BaseSettings):
     max_ram_gb: float | None = None
     max_vram_gb: float | None = None
 
+    @property
+    def project_root(self) -> Path:
+        """Root directory of the Genesis project."""
+        return Path(__file__).resolve().parent.parent.parent
+
+    @property
+    def database_url(self) -> str:
+        """Return the effective database URL."""
+        return self.get_db_url()
+
     def get_db_url(self) -> str:
         """Return the database URL, defaulting to a SQLite file inside data_dir."""
         if self.db_url:
