@@ -77,6 +77,12 @@ class TestDatabaseInitialization:
             assert "dream_trajectories" in tables
             assert "mcts_search_runs" in tables
             assert "modal_alignments" in tables
+            assert "metacognitive_evaluations" in tables
+            assert "swarm_nodes" in tables
+            assert "swarm_consensus_sessions" in tables
+            assert "self_compiled_targets" in tables
+            assert "pareto_experiments" in tables
+            assert "pareto_frontiers" in tables
         finally:
             conn.close()
 

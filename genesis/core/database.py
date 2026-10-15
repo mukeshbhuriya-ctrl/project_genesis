@@ -831,6 +831,101 @@ CREATE TABLE IF NOT EXISTS modal_alignments (
 CREATE INDEX IF NOT EXISTS idx_modal_alignments_score ON modal_alignments(similarity_score DESC);
 """
 
+SCHEMA_V16 = """
+-- Metacognitive Introspection & Calibration Logs
+CREATE TABLE IF NOT EXISTS metacognitive_evaluations (
+    id TEXT PRIMARY KEY,
+    prompt TEXT NOT NULL,
+    confidence_score REAL NOT NULL DEFAULT 0.0,
+    epistemic_uncertainty REAL NOT NULL DEFAULT 0.0,
+    perplexity REAL NOT NULL DEFAULT 1.0,
+    lexical_complexity REAL NOT NULL DEFAULT 0.0,
+    decision TEXT NOT NULL CHECK (decision IN ('fast_path', 'reflective_repair', 'swarm_escalation')),
+    calibration_error REAL NOT NULL DEFAULT 0.0,
+    latency_ms REAL NOT NULL DEFAULT 0.0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_metacog_decision ON metacognitive_evaluations(decision);
+CREATE INDEX IF NOT EXISTS idx_metacog_conf ON metacognitive_evaluations(confidence_score DESC);
+
+-- Swarm Reasoning Nodes
+CREATE TABLE IF NOT EXISTS swarm_nodes (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    model_name TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'reasoner',
+    reputation_weight REAL NOT NULL DEFAULT 1.0,
+    byzantine_faults INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL CHECK (status IN ('active', 'byzantine_flagged', 'slashed', 'offline')) DEFAULT 'active',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_swarm_nodes_status ON swarm_nodes(status);
+
+-- Swarm Consensus Sessions & Byzantine Proof Hash Chains
+CREATE TABLE IF NOT EXISTS swarm_consensus_sessions (
+    id TEXT PRIMARY KEY,
+    task_prompt TEXT NOT NULL,
+    leader_node_id TEXT REFERENCES swarm_nodes(id) ON DELETE SET NULL,
+    rounds_executed INTEGER NOT NULL DEFAULT 1,
+    quorum_reached INTEGER NOT NULL DEFAULT 0,
+    consensus_verdict TEXT NOT NULL,
+    confidence REAL NOT NULL DEFAULT 0.0,
+    proof_chain_hash TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('proposing', 'validating', 'consensus_reached', 'quorum_failed', 'aborted')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_swarm_sessions_status ON swarm_consensus_sessions(status);
+
+-- Self-Hosting Evolutionary Compiler Optimization Targets
+CREATE TABLE IF NOT EXISTS self_compiled_targets (
+    id TEXT PRIMARY KEY,
+    target_name TEXT NOT NULL UNIQUE,
+    module_path TEXT NOT NULL,
+    c_source TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('profiling', 'compiled_native', 'fallback_python', 'failed')),
+    compiler_used TEXT,
+    speedup_factor REAL NOT NULL DEFAULT 1.0,
+    numerical_error REAL NOT NULL DEFAULT 0.0,
+    checksum TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_self_compiled_target ON self_compiled_targets(target_name);
+CREATE INDEX IF NOT EXISTS idx_self_compiled_status ON self_compiled_targets(status);
+
+-- Continuous Multi-Objective Pareto Optimization Experiments
+CREATE TABLE IF NOT EXISTS pareto_experiments (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    population_size INTEGER NOT NULL DEFAULT 16,
+    generations INTEGER NOT NULL DEFAULT 5,
+    pareto_front_size INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL CHECK (status IN ('optimizing', 'completed', 'failed')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_pareto_exp_status ON pareto_experiments(status);
+
+-- Discovered Pareto Frontiers
+CREATE TABLE IF NOT EXISTS pareto_frontiers (
+    id TEXT PRIMARY KEY,
+    experiment_id TEXT NOT NULL REFERENCES pareto_experiments(id) ON DELETE CASCADE,
+    rank INTEGER NOT NULL DEFAULT 0,
+    config_json TEXT NOT NULL DEFAULT '{}',
+    latency_ms REAL NOT NULL,
+    vram_mb REAL NOT NULL,
+    throughput_tps REAL NOT NULL,
+    accuracy_score REAL NOT NULL,
+    crowding_distance REAL NOT NULL DEFAULT 0.0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_pareto_front_exp ON pareto_frontiers(experiment_id, rank);
+"""
+
 
 def get_sync_connection(db_path: str | Path) -> sqlite3.Connection:
     """Create a synchronous SQLite connection with recommended pragmas."""
@@ -1012,6 +1107,16 @@ def initialize_database(db_path: str | Path) -> None:
             )
             conn.commit()
             log.info("Schema v15 applied successfully.")
+
+        if current_version < 16:
+            log.info("Applying schema v16...")
+            conn.executescript(SCHEMA_V16)
+            conn.execute(
+                "INSERT OR REPLACE INTO schema_migrations (version, description) "
+                "VALUES (16, 'Schema v16: metacognitive evaluations, swarm consensus, self-compiled targets, and pareto frontiers')"
+            )
+            conn.commit()
+            log.info("Schema v16 applied successfully.")
         else:
             log.info(f"Database schema is at version {current_version}, up to date.")
 

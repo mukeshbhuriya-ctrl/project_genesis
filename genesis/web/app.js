@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (target === 'fleet') loadFleetData();
       if (target === 'architect') loadArchitectData();
       if (target === 'world') loadWorldData();
+      if (target === 'metaswarm') loadMetaswarmData();
     });
   });
 
@@ -3844,6 +3845,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     });
+  }
+
   // ── Phase 13: Continual Online Learning & Dynamic Experience Replay ──
   async function loadReplayBuffer() {
     const tbody = document.getElementById('replay-samples-tbody');
@@ -4801,6 +4804,412 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(`MCTS search failed: ${err.message}`);
       } finally {
         if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '🌲 Start Tree Search'; }
+      }
+    });
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // ── PHASE 16: METACOGNITION, SWARMS & PARETO OPTIMIZATION ──
+  // ══════════════════════════════════════════════════════════════
+
+  async function loadMetaswarmData() {
+    await Promise.all([
+      loadMetacognitiveData(),
+      loadSwarmData(),
+      loadSelfCompilerData(),
+      loadParetoData(),
+    ]);
+  }
+
+  // 1. Metacognitive Calibration & Introspections
+  async function loadMetacognitiveData() {
+    try {
+      const summaryRes = await fetch('/api/metacognition/summary');
+      if (summaryRes.ok) {
+        const summary = await summaryRes.json();
+        const elTotal = document.getElementById('stat-metacog-total');
+        const elConf = document.getElementById('stat-metacog-conf');
+        const elECE = document.getElementById('stat-metacog-ece');
+        const elPPL = document.getElementById('stat-metacog-ppl');
+        if (elTotal) elTotal.textContent = summary.total_evaluations;
+        if (elConf) elConf.textContent = summary.mean_confidence.toFixed(2);
+        if (elECE) elECE.textContent = summary.ece.toFixed(3);
+        if (elPPL) elPPL.textContent = summary.mean_perplexity.toFixed(2);
+      }
+    } catch (_) {}
+
+    const tbody = document.getElementById('metacog-evals-tbody');
+    if (!tbody) return;
+    try {
+      const res = await fetch('/api/metacognition/evaluations?limit=30');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:20px;">No metacognitive introspections recorded yet. Click \'Evaluate Confidence\' to run.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(ev => {
+        let decisionClass = 'badge-metacog';
+        if (ev.decision === 'reflective_repair') decisionClass = 'badge-metacog badge-metacog-repair';
+        else if (ev.decision === 'swarm_escalation') decisionClass = 'badge-metacog badge-metacog-swarm';
+
+        const promptPreview = ev.prompt.length > 36 ? ev.prompt.slice(0, 36) + '...' : ev.prompt;
+        return `
+          <tr>
+            <td><code>${escapeHtml(ev.id)}</code></td>
+            <td title="${escapeHtml(ev.prompt)}"><strong>${escapeHtml(promptPreview)}</strong></td>
+            <td><strong style="color:var(--accent-success);">${ev.confidence.toFixed(2)}</strong></td>
+            <td>${ev.uncertainty.toFixed(2)}</td>
+            <td>${ev.perplexity.toFixed(2)}</td>
+            <td>${ev.lexical_complexity.toFixed(2)}</td>
+            <td><span class="${decisionClass}">${escapeHtml(ev.decision)}</span></td>
+            <td>${ev.latency_ms.toFixed(1)} ms</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--accent-danger); padding:20px;">Failed to load introspections: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  // 2. Swarm Consensus Arena
+  async function loadSwarmData() {
+    const nodesContainer = document.getElementById('swarm-nodes-badges');
+    try {
+      const nodesRes = await fetch('/api/swarm/nodes');
+      if (nodesRes.ok) {
+        const nodes = await nodesRes.json();
+        if (nodesContainer) {
+          if (!nodes || nodes.length === 0) {
+            nodesContainer.innerHTML = '<span class="badge">No peer nodes found</span>';
+          } else {
+            nodesContainer.innerHTML = nodes.map(n => `
+              <span class="badge badge-info" style="font-size:0.8rem; padding:4px 8px;">
+                ⚡ <strong>${escapeHtml(n.name)}</strong> (${escapeHtml(n.role)} / rep: ${n.reputation.toFixed(1)})
+              </span>
+            `).join('');
+          }
+        }
+      }
+    } catch (_) {}
+
+    const tbody = document.getElementById('swarm-sessions-tbody');
+    if (!tbody) return;
+    try {
+      const res = await fetch('/api/swarm/sessions?limit=20');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding:20px;">No swarm sessions run yet. Click \'Swarm Consensus\' to execute.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(s => {
+        const statusBadge = s.status === 'completed'
+          ? '<span class="badge badge-success">✓ Completed</span>'
+          : `<span class="badge badge-warning">${escapeHtml(s.status)}</span>`;
+        const promptPreview = s.task_prompt.length > 30 ? s.task_prompt.slice(0, 30) + '...' : s.task_prompt;
+        const proofTag = s.proof_hash ? `<span class="proof-chain-tag" title="${escapeHtml(s.proof_hash)}">${escapeHtml(s.proof_hash.slice(0, 10))}...</span>` : '—';
+        return `
+          <tr>
+            <td><code>${escapeHtml(s.id)}</code></td>
+            <td title="${escapeHtml(s.task_prompt)}"><strong>${escapeHtml(promptPreview)}</strong></td>
+            <td><code>${escapeHtml(s.leader_id)}</code></td>
+            <td>${s.rounds}</td>
+            <td>${(s.quorum_ratio * 100).toFixed(0)}%</td>
+            <td><strong style="color:var(--accent-success);">${s.confidence.toFixed(2)}</strong></td>
+            <td><span class="badge badge-info">${escapeHtml(s.verdict)}</span></td>
+            <td>${proofTag}</td>
+            <td>${statusBadge}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--accent-danger); padding:20px;">Failed to load swarm sessions: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  // 3. Self-Compiler Targets
+  async function loadSelfCompilerData() {
+    const tbody = document.getElementById('self-compiler-tbody');
+    if (!tbody) return;
+    try {
+      const res = await fetch('/api/self-compiler/targets');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:20px;">No self-compiled targets registered. Click \'Recompile All Targets\' to profile and optimize.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(t => {
+        const statusBadge = t.status === 'verified'
+          ? '<span class="badge badge-success">✓ Verified</span>'
+          : `<span class="badge badge-warning">${escapeHtml(t.status)}</span>`;
+        return `
+          <tr>
+            <td><code>${escapeHtml(t.name)}</code></td>
+            <td><small>${escapeHtml(t.module_path)}</small></td>
+            <td>${statusBadge}</td>
+            <td><span class="badge badge-info">${escapeHtml(t.compiler_used)}</span></td>
+            <td><strong style="color:var(--accent-success); font-size:1.05rem;">${t.speedup_factor.toFixed(2)}x</strong></td>
+            <td><code>${t.max_numerical_error.toExponential(2)}</code></td>
+            <td><code style="font-size:0.75rem;">${escapeHtml(t.checksum.slice(0, 10))}...</code></td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--accent-danger); padding:20px;">Failed to load compiler targets: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  // 4. Pareto Optimization Experiments
+  async function loadParetoData() {
+    const tbody = document.getElementById('pareto-experiments-tbody');
+    if (!tbody) return;
+    try {
+      const res = await fetch('/api/pareto/experiments?limit=20');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">No Pareto optimization runs recorded yet. Click \'Pareto Search\' to launch.</td></tr>';
+        return;
+      }
+      
+      const rows = [];
+      for (const exp of data) {
+        let chipsHtml = '—';
+        try {
+          const frontRes = await fetch(`/api/pareto/experiments/${encodeURIComponent(exp.id)}/frontiers`);
+          if (frontRes.ok) {
+            const front = await frontRes.json();
+            if (front && front.length > 0) {
+              chipsHtml = front.slice(0, 3).map(p => `
+                <span class="pareto-point-chip" title="Throughput: ${p.throughput_tps.toFixed(1)} tok/s, Acc: ${p.accuracy_score.toFixed(2)}">
+                  ⚡ ${p.latency_ms.toFixed(0)}ms | ${p.vram_mb.toFixed(0)}MB | ${p.throughput_tps.toFixed(0)}tps
+                </span>
+              `).join('');
+              if (front.length > 3) chipsHtml += `<small style="color:var(--text-muted);">+${front.length - 3} more</small>`;
+            }
+          }
+        } catch (_) {}
+
+        const statusBadge = exp.status === 'completed'
+          ? '<span class="badge badge-success">Completed</span>'
+          : `<span class="badge badge-info">${escapeHtml(exp.status)}</span>`;
+
+        rows.push(`
+          <tr>
+            <td><strong>${escapeHtml(exp.name)}</strong><br><small style="color:var(--text-muted);"><code>${escapeHtml(exp.id)}</code></small></td>
+            <td>${exp.population_size} pop / ${exp.generations} gens</td>
+            <td><strong style="color:var(--accent-success);">${exp.frontier_size} points</strong></td>
+            <td>${statusBadge}</td>
+            <td>${chipsHtml}</td>
+          </tr>
+        `);
+      }
+      tbody.innerHTML = rows.join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--accent-danger); padding:20px;">Failed to load Pareto experiments: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  // Modals & Forms wiring
+  const introspectModal = document.getElementById('introspect-modal');
+  const swarmModal = document.getElementById('swarm-modal');
+  const paretoModal = document.getElementById('pareto-modal');
+
+  const btnOpenIntrospect = document.getElementById('btn-open-introspect-modal');
+  if (btnOpenIntrospect && introspectModal) btnOpenIntrospect.addEventListener('click', () => { introspectModal.style.display = 'flex'; });
+  const btnCloseIntrospect = document.getElementById('btn-close-introspect-modal');
+  if (btnCloseIntrospect && introspectModal) btnCloseIntrospect.addEventListener('click', () => { introspectModal.style.display = 'none'; });
+  const btnCancelIntrospect = document.getElementById('btn-cancel-introspect-modal');
+  if (btnCancelIntrospect && introspectModal) btnCancelIntrospect.addEventListener('click', () => { introspectModal.style.display = 'none'; });
+
+  const btnOpenSwarm = document.getElementById('btn-open-swarm-modal');
+  if (btnOpenSwarm && swarmModal) btnOpenSwarm.addEventListener('click', () => { swarmModal.style.display = 'flex'; });
+  const btnCloseSwarm = document.getElementById('btn-close-swarm-modal');
+  if (btnCloseSwarm && swarmModal) btnCloseSwarm.addEventListener('click', () => { swarmModal.style.display = 'none'; });
+  const btnCancelSwarm = document.getElementById('btn-cancel-swarm-modal');
+  if (btnCancelSwarm && swarmModal) btnCancelSwarm.addEventListener('click', () => { swarmModal.style.display = 'none'; });
+
+  const btnOpenPareto = document.getElementById('btn-open-pareto-modal');
+  if (btnOpenPareto && paretoModal) btnOpenPareto.addEventListener('click', () => { paretoModal.style.display = 'flex'; });
+  const btnClosePareto = document.getElementById('btn-close-pareto-modal');
+  if (btnClosePareto && paretoModal) btnClosePareto.addEventListener('click', () => { paretoModal.style.display = 'none'; });
+  const btnCancelPareto = document.getElementById('btn-cancel-pareto-modal');
+  if (btnCancelPareto && paretoModal) btnCancelPareto.addEventListener('click', () => { paretoModal.style.display = 'none'; });
+
+  const btnRefreshMetacog = document.getElementById('btn-refresh-metacog');
+  if (btnRefreshMetacog) btnRefreshMetacog.addEventListener('click', () => loadMetacognitiveData());
+  const btnRefreshSwarm = document.getElementById('btn-refresh-swarm');
+  if (btnRefreshSwarm) btnRefreshSwarm.addEventListener('click', () => loadSwarmData());
+  const btnRefreshPareto = document.getElementById('btn-refresh-pareto');
+  if (btnRefreshPareto) btnRefreshPareto.addEventListener('click', () => loadParetoData());
+
+  // Button: Recompile Targets
+  const btnRecompileTargets = document.getElementById('btn-recompile-targets');
+  if (btnRecompileTargets) {
+    btnRecompileTargets.addEventListener('click', async () => {
+      btnRecompileTargets.disabled = true;
+      btnRecompileTargets.textContent = '⏳ Compiling Targets...';
+      try {
+        const res = await fetch('/api/self-compiler/compile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        await loadSelfCompilerData();
+        alert('All hot-path compiler targets profiled and compiled successfully!');
+      } catch (err) {
+        alert(`Compilation failed: ${err.message}`);
+      } finally {
+        btnRecompileTargets.disabled = false;
+        btnRecompileTargets.textContent = '⚡ Recompile All Targets';
+      }
+    });
+  }
+
+  // Form: Metacognitive Introspection
+  const introspectForm = document.getElementById('introspect-form');
+  if (introspectForm) {
+    introspectForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('btn-submit-introspect');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '⏳ Evaluating...'; }
+      try {
+        const candOutput = document.getElementById('introspect-candidate-output').value.trim();
+        const accVal = parseFloat(document.getElementById('introspect-acc-input').value);
+        const payload = {
+          prompt: document.getElementById('introspect-prompt-input').value.trim(),
+          candidate_output: candOutput || null,
+          historical_accuracy: isNaN(accVal) ? null : accVal,
+        };
+        const res = await fetch('/api/metacognition/introspect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${res.status}`);
+        }
+        const evalRes = await res.json();
+        const resultBox = document.getElementById('introspect-results-box');
+        const badge = document.getElementById('introspect-decision-badge');
+        const details = document.getElementById('introspect-result-details');
+        if (resultBox && badge && details) {
+          resultBox.style.display = 'block';
+          badge.textContent = evalRes.decision;
+          badge.className = evalRes.decision === 'fast_path' ? 'badge badge-success' : 'badge badge-warning';
+          details.innerHTML = `
+            <div><strong>Confidence:</strong> ${(evalRes.confidence * 100).toFixed(1)}% | <strong>Uncertainty:</strong> ${evalRes.uncertainty.toFixed(2)}</div>
+            <div><strong>Perplexity:</strong> ${evalRes.perplexity.toFixed(2)} | <strong>Lexical Complexity:</strong> ${evalRes.lexical_complexity.toFixed(2)}</div>
+            <div style="margin-top:4px;"><strong>Reasoning Budget Allocation:</strong> Max ${evalRes.reasoning_budget.max_iterations} iterations, beam width ${evalRes.reasoning_budget.search_beam_width}</div>
+          `;
+        }
+        await loadMetacognitiveData();
+      } catch (err) {
+        alert(`Introspection failed: ${err.message}`);
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '🧠 Evaluate Confidence'; }
+      }
+    });
+  }
+
+  // Form: Swarm Consensus
+  const swarmForm = document.getElementById('swarm-consensus-form');
+  if (swarmForm) {
+    swarmForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('btn-submit-swarm');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '🐝 Running Consensus...'; }
+      try {
+        const payload = {
+          task_prompt: document.getElementById('swarm-prompt-input').value.trim(),
+          max_rounds: parseInt(document.getElementById('swarm-rounds-input').value, 10) || 2,
+        };
+        const res = await fetch('/api/swarm/consensus', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${res.status}`);
+        }
+        const session = await res.json();
+        const resultBox = document.getElementById('swarm-results-box');
+        const badge = document.getElementById('swarm-status-badge');
+        const details = document.getElementById('swarm-result-details');
+        if (resultBox && badge && details) {
+          resultBox.style.display = 'block';
+          badge.textContent = session.status.toUpperCase();
+          badge.className = session.status === 'completed' ? 'badge badge-success' : 'badge badge-warning';
+          details.innerHTML = `
+            <div><strong>Leader:</strong> <code>${escapeHtml(session.leader_id)}</code> | <strong>Quorum:</strong> ${(session.quorum_ratio * 100).toFixed(0)}%</div>
+            <div><strong>Verdict:</strong> ${escapeHtml(session.verdict)}</div>
+            <div><strong>Proof-of-Reasoning Hash:</strong> <code style="font-size:0.75rem;">${escapeHtml(session.proof_hash)}</code></div>
+          `;
+        }
+        await loadSwarmData();
+      } catch (err) {
+        alert(`Swarm consensus failed: ${err.message}`);
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '🐝 Run Consensus'; }
+      }
+    });
+  }
+
+  // Form: Pareto Optimization
+  const paretoForm = document.getElementById('pareto-optimize-form');
+  if (paretoForm) {
+    paretoForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('btn-submit-pareto');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '📈 Optimizing Frontier...'; }
+      try {
+        const payload = {
+          name: document.getElementById('pareto-exp-name').value.trim(),
+          population_size: parseInt(document.getElementById('pareto-pop-size').value, 10) || 16,
+          generations: parseInt(document.getElementById('pareto-generations').value, 10) || 4,
+        };
+        const res = await fetch('/api/pareto/optimize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${res.status}`);
+        }
+        const out = await res.json();
+        const exp = out.experiment;
+        const front = out.frontier || [];
+        const resultBox = document.getElementById('pareto-results-box');
+        const badge = document.getElementById('pareto-status-badge');
+        const details = document.getElementById('pareto-result-details');
+        if (resultBox && badge && details) {
+          resultBox.style.display = 'block';
+          badge.textContent = `${front.length} Optimal Points`;
+          badge.className = 'badge badge-success';
+          details.innerHTML = `
+            <div><strong>Experiment:</strong> ${escapeHtml(exp.name)} (ID: <code>${escapeHtml(exp.id)}</code>)</div>
+            <div><strong>Frontier Size:</strong> ${exp.frontier_size} non-dominated configurations discovered</div>
+            <div style="margin-top:6px;"><strong>Sample Non-Dominated Points:</strong></div>
+            <div style="margin-top:4px;">
+              ${front.slice(0, 3).map(p => `
+                <span class="pareto-point-chip">
+                  Latency: ${p.latency_ms.toFixed(0)}ms | VRAM: ${p.vram_mb.toFixed(0)}MB | TPS: ${p.throughput_tps.toFixed(0)}
+                </span>
+              `).join('')}
+            </div>
+          `;
+        }
+        await loadParetoData();
+      } catch (err) {
+        alert(`Pareto search failed: ${err.message}`);
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '📈 Run Pareto Search'; }
       }
     });
   }

@@ -70,6 +70,9 @@
         <button class="nav-tab" data-tab="world" id="tab-world-btn">
           <span class="tab-icon">🌌</span> World &amp; Dreams
         </button>
+        <button class="nav-tab" data-tab="metaswarm" id="tab-metaswarm-btn">
+          <span class="tab-icon">🐝</span> Metacognition &amp; Swarms
+        </button>
         <button class="nav-tab" data-tab="hardware" id="tab-hardware-btn">
           <span class="tab-icon">⚡</span> System &amp; Hardware
         </button>
@@ -2058,6 +2061,169 @@
             </div>
           </div>
 
+      <!-- PANE 16: Metacognition, Swarm Consensus & Pareto Optimization -->
+      <section class="tab-content" id="pane-metaswarm">
+        <div class="view-header">
+          <div>
+            <h2>🐝 Autonomous Metacognition &amp; Decentralized Swarm Consensus</h2>
+            <p class="subtitle">Self-calibrating epistemic uncertainty, Byzantine-tolerant swarm dialectics, JIT self-compiler, and 4D Pareto frontier optimization.</p>
+          </div>
+          <div class="view-actions">
+            <button class="btn btn-outline" id="btn-open-introspect-modal">🧠 Evaluate Confidence</button>
+            <button class="btn btn-primary" id="btn-open-swarm-modal">🐝 Swarm Consensus</button>
+            <button class="btn btn-secondary" id="btn-open-pareto-modal">📈 Pareto Search</button>
+          </div>
+        </div>
+
+        <div class="grid-layout">
+
+          <!-- 1. Metacognitive Calibration Metrics Card -->
+          <div class="card col-12">
+            <div class="card-header">
+              <h3>🧠 Metacognitive Epistemic Calibration &amp; Cognitive Load</h3>
+              <div class="actions">
+                <button class="btn btn-sm btn-outline" id="btn-refresh-metacog">Refresh Calibration</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="stats-grid mb-3" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+                <div class="stat-box" style="background:var(--bg-secondary); padding:12px; border-radius:8px;">
+                  <span class="stat-label">Total Introspections</span>
+                  <h3 id="stat-metacog-total">0</h3>
+                </div>
+                <div class="stat-box" style="background:var(--bg-secondary); padding:12px; border-radius:8px;">
+                  <span class="stat-label">Avg Epistemic Confidence</span>
+                  <h3 id="stat-metacog-conf">0.00</h3>
+                </div>
+                <div class="stat-box" style="background:var(--bg-secondary); padding:12px; border-radius:8px;">
+                  <span class="stat-label">Expected Calibration Error (ECE)</span>
+                  <h3 id="stat-metacog-ece">0.00</h3>
+                </div>
+                <div class="stat-box" style="background:var(--bg-secondary); padding:12px; border-radius:8px;">
+                  <span class="stat-label">Avg Perplexity</span>
+                  <h3 id="stat-metacog-ppl">1.00</h3>
+                </div>
+              </div>
+
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Prompt</th>
+                      <th>Confidence</th>
+                      <th>Uncertainty</th>
+                      <th>Perplexity</th>
+                      <th>Complexity</th>
+                      <th>Decision</th>
+                      <th>Latency</th>
+                    </tr>
+                  </thead>
+                  <tbody id="metacog-evals-tbody">
+                    <tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:20px;">No metacognitive introspections recorded yet. Click 'Evaluate Confidence' to run.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Decentralized Swarm Consensus Arena Card -->
+          <div class="card col-12">
+            <div class="card-header">
+              <h3>🐝 Decentralized Swarm Reasoning Arena (BFT Quorum &amp; Proof-of-Reasoning)</h3>
+              <div class="actions">
+                <button class="btn btn-sm btn-outline" id="btn-refresh-swarm">Refresh Sessions</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <strong style="font-size:0.85rem; color:var(--text-muted);">Registered Swarm Peer Nodes:</strong>
+                <div id="swarm-nodes-badges" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:6px;">
+                  <span class="badge">Loading nodes...</span>
+                </div>
+              </div>
+
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Session ID</th>
+                      <th>Task Prompt</th>
+                      <th>Leader Node</th>
+                      <th>Rounds</th>
+                      <th>Quorum</th>
+                      <th>Confidence</th>
+                      <th>Consensus Verdict</th>
+                      <th>Proof Hash</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="swarm-sessions-tbody">
+                    <tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding:20px;">No swarm sessions run yet. Click 'Swarm Consensus' to execute.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Self-Hosting Evolutionary Compiler Optimization Card -->
+          <div class="card col-12">
+            <div class="card-header">
+              <h3>⚙️ Self-Hosting Compiler Targets (Hot-Path Native SIMD Kernels)</h3>
+              <div class="actions">
+                <button class="btn btn-sm btn-primary" id="btn-recompile-targets">⚡ Recompile All Targets</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Target Name</th>
+                      <th>Internal Module</th>
+                      <th>Status</th>
+                      <th>Compiler Used</th>
+                      <th>Speedup Factor</th>
+                      <th>Max Numerical Error</th>
+                      <th>Checksum</th>
+                    </tr>
+                  </thead>
+                  <tbody id="self-compiler-tbody">
+                    <tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:20px;">No self-compiled targets registered. Click 'Recompile All Targets' to profile and optimize.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Continuous Multi-Objective Pareto Frontier Explorer Card -->
+          <div class="card col-12">
+            <div class="card-header">
+              <h3>📈 Multi-Objective Pareto Frontier Optimization (RTX 2000 Ada VRAM &amp; Latency)</h3>
+              <div class="actions">
+                <button class="btn btn-sm btn-outline" id="btn-refresh-pareto">Refresh Experiments</button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Experiment</th>
+                      <th>Pop / Gens</th>
+                      <th>Frontier Size</th>
+                      <th>Status</th>
+                      <th>Optimal Configuration Points (Rank 0)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="pareto-experiments-tbody">
+                    <tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">No Pareto optimization runs recorded yet. Click 'Pareto Search' to launch.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
     </main>
@@ -3006,6 +3172,113 @@
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" id="btn-cancel-mcts-modal">Cancel</button>
           <button type="submit" class="btn btn-primary" id="btn-submit-mcts">🌲 Start Tree Search</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Metacognitive Confidence Introspection (Phase 16) -->
+  <div class="modal-backdrop" id="introspect-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3>🧠 Metacognitive Confidence Introspection</h3>
+        <button class="modal-close-btn" id="btn-close-introspect-modal">&times;</button>
+      </div>
+      <form id="introspect-form" class="standard-form">
+        <div class="form-group">
+          <label for="introspect-prompt-input">Task Prompt / Query:</label>
+          <textarea id="introspect-prompt-input" class="form-textarea" rows="2" placeholder="e.g. Derive the gradient of the cross-entropy loss function..." required>Derive the gradient of the cross-entropy loss function with respect to logits in a multi-class softmax classification model.</textarea>
+        </div>
+        <div class="form-group">
+          <label for="introspect-candidate-output">Candidate Output (Optional):</label>
+          <textarea id="introspect-candidate-output" class="form-textarea" rows="3" placeholder="Provide model output to evaluate perplexity, complexity, and epistemic uncertainty...">The softmax probability is p_i = exp(z_i) / sum(exp(z_j)). The cross-entropy loss is L = -sum(y_i * log(p_i)). Taking the derivative dL/dz_k yields p_k - y_k.</textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="introspect-acc-input">Historical Domain Accuracy (0.0 - 1.0):</label>
+            <input type="number" id="introspect-acc-input" class="form-input" value="0.88" min="0.0" max="1.0" step="0.05">
+          </div>
+        </div>
+        <div id="introspect-results-box" class="card mt-3" style="display:none; background:var(--bg-secondary); padding:12px; border:1px solid var(--border-color);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong>Introspection Verdict:</strong>
+            <span id="introspect-decision-badge" class="badge">fast_path</span>
+          </div>
+          <div style="font-size:0.85rem;" id="introspect-result-details"></div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-introspect-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-introspect">🧠 Evaluate Confidence</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Swarm Multi-Agent BFT Consensus (Phase 16) -->
+  <div class="modal-backdrop" id="swarm-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 720px;">
+      <div class="modal-header">
+        <h3>🐝 Execute Swarm Consensus Session</h3>
+        <button class="modal-close-btn" id="btn-close-swarm-modal">&times;</button>
+      </div>
+      <form id="swarm-consensus-form" class="standard-form">
+        <div class="form-group">
+          <label for="swarm-prompt-input">Task Proposition / Directive:</label>
+          <textarea id="swarm-prompt-input" class="form-textarea" rows="2" placeholder="e.g. Propose optimal cache replacement policy under high write pressure" required>Determine the optimal KV cache eviction strategy for 7B models on 8GB VRAM under 32k context windows.</textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="swarm-rounds-input">Max Consensus Rounds (1-5):</label>
+            <input type="number" id="swarm-rounds-input" class="form-input" value="2" min="1" max="5">
+          </div>
+        </div>
+        <div id="swarm-results-box" class="card mt-3" style="display:none; background:var(--bg-secondary); padding:12px; border:1px solid var(--border-color);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong>Session Result:</strong>
+            <span id="swarm-status-badge" class="badge">approved</span>
+          </div>
+          <div style="font-size:0.85rem;" id="swarm-result-details"></div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-swarm-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-swarm">🐝 Run Consensus</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Multi-Objective Pareto Frontier Optimization (Phase 16) -->
+  <div class="modal-backdrop" id="pareto-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3>📈 Launch Multi-Objective Pareto Search</h3>
+        <button class="modal-close-btn" id="btn-close-pareto-modal">&times;</button>
+      </div>
+      <form id="pareto-optimize-form" class="standard-form">
+        <div class="form-group">
+          <label for="pareto-exp-name">Experiment Name:</label>
+          <input type="text" id="pareto-exp-name" class="form-input" value="Ada-2000-Inference-Frontier" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="pareto-pop-size">Population Size (4-64):</label>
+            <input type="number" id="pareto-pop-size" class="form-input" value="16" min="4" max="64">
+          </div>
+          <div class="form-group flex-1">
+            <label for="pareto-generations">NSGA-II Generations (1-20):</label>
+            <input type="number" id="pareto-generations" class="form-input" value="4" min="1" max="20">
+          </div>
+        </div>
+        <div id="pareto-results-box" class="card mt-3" style="display:none; background:var(--bg-secondary); padding:12px; border:1px solid var(--border-color);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong>Optimization Result:</strong>
+            <span id="pareto-status-badge" class="badge">completed</span>
+          </div>
+          <div style="font-size:0.85rem;" id="pareto-result-details"></div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-pareto-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-pareto">📈 Run Pareto Search</button>
         </div>
       </form>
     </div>

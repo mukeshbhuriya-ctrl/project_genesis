@@ -16,7 +16,7 @@ def create_app() -> FastAPI:
     from genesis import __version__
     from genesis.core import get_settings
     from genesis.core.logging import setup_logging
-    from genesis.api.routes import health, chat, memory, models, knowledge, backup, tools, tasks, evaluation, training, research, deployment, meta, agents, graph, multimodal, papers, compiler, fleet, merging, kernel_synthesis, steering, continual, symbolic, pruning, quantization, speculative, world_model
+    from genesis.api.routes import health, chat, memory, models, knowledge, backup, tools, tasks, evaluation, training, research, deployment, meta, agents, graph, multimodal, papers, compiler, fleet, merging, kernel_synthesis, steering, continual, symbolic, pruning, quantization, speculative, world_model, metaswarm
 
     settings = get_settings()
     setup_logging(level=settings.log_level, log_dir=settings.data_dir / "logs")
@@ -67,6 +67,7 @@ def create_app() -> FastAPI:
     app.include_router(quantization.router, prefix="/api", tags=["Hardware-Targeted Micro-Quantization"])
     app.include_router(speculative.router, prefix="/api", tags=["Self-Speculative Decoding"])
     app.include_router(world_model.router, prefix="/api", tags=["World Model & Latent Dreams"])
+    app.include_router(metaswarm.router, tags=["Metacognition, Swarm Consensus & Pareto"])
 
 
     # Static Web UI Assets

@@ -2,6 +2,23 @@
 
 All notable changes to Project Genesis will be documented in this file.
 
+## [0.17.0] — 2026-10-15
+
+### Added
+- **Autonomous Metacognitive Compiler, Decentralized Swarm Consensus, and Multi-Objective Pareto Frontier Optimization (Phase 16)**:
+  - **Metacognitive Epistemic Introspector & Uncertainty Calibration**: Implemented `MetacognitiveIntrospector` (`genesis/models/metacognition.py`) computing token perplexity $PPL = \exp(-\frac{1}{N}\sum \log p_i)$, lexical complexity, epistemic confidence $C \in [0.0, 1.0]$, and Expected Calibration Error (ECE) across confidence bins. Features multi-tier reasoning budget router dynamically directing tasks between `fast_path`, `reflective_repair`, and `swarm_escalation`.
+  - **Decentralized Swarm Consensus Engine & Proof-of-Reasoning**: Implemented `SwarmConsensusEngine` (`genesis/tasks/swarm.py`) coordinating multi-agent deliberation with Byzantine fault detection (flagging destructive instructions, malicious deletions, system sabotage), dynamic reputation-weighted leader election, >2/3 non-faulty quorum consensus, and cryptographic SHA-256 proof-of-reasoning hash chaining.
+  - **Self-Hosting Evolutionary Native JIT Compiler**: Implemented `SelfHostingCompilerEngine` (`genesis/core/self_compiler.py`) profiling and optimizing internal algorithmic hot-paths (`cosine_similarity`, `mcts_ucb1`, `pareto_dominance`). Generates ANSI C extensions, verifies numerical invariance against pure Python references (<1e-5 error), benchmarks speedups, and dynamically dispatches native shared libraries via `ctypes.CDLL`.
+  - **Continuous Multi-Objective Pareto Frontier Optimizer**: Implemented `ParetoOptimizer` (`genesis/research/pareto.py`) executing NSGA-II fast non-dominated sorting and crowding distance assignment across 4 conflicting hardware objectives: minimizing latency, strictly bounding VRAM below the RTX 2000 Ada 8,188 MB ceiling, maximizing generation throughput (tokens/sec), and maximizing benchmark accuracy.
+  - **Database Schema V16**: Added `metacognitive_evaluations`, `swarm_nodes`, `swarm_consensus_sessions`, `self_compiled_targets`, `pareto_experiments`, and `pareto_frontiers` relational tables in SQLite WAL mode with automated migration logic (`genesis/core/database.py`).
+  - **Phase 16 REST API Endpoints**: Mounted `/api/metacognition/*`, `/api/swarm/*`, `/api/self-compiler/*`, and `/api/pareto/*` in `genesis/api/routes/metaswarm.py` and `genesis/api/app.py`.
+  - **Interactive Web Dashboard UI**: Dedicated "Metacognition & Swarms" navigation tab (`#pane-metaswarm`), live Epistemic Calibration stats, Swarm Consensus Arena, Self-Compiler Targets table with recompilation trigger, Pareto Frontier Explorer with configuration chips, and 3 interactive modals (`#introspect-modal`, `#swarm-modal`, `#pareto-modal`) in `genesis/web/`.
+  - **Architecture Decision Record**: ADR-017 Autonomous Metacognitive Compiler, Decentralized Swarm Consensus, and Multi-Objective Pareto Frontier Optimization (`docs/decisions/ADR-017-autonomous-metacognitive-compiler-and-decentralized-swarm-consensus.md`).
+  - **Comprehensive Test Suite**: 25 new unit and integration tests across epistemic calibration, Byzantine swarm consensus, proof chaining, self-compiler benchmarking, Pareto sorting, and REST APIs (`tests/test_metacognition.py`, `tests/test_swarm.py`, `tests/test_self_compiler.py`, `tests/test_pareto.py`, `tests/test_api_metaswarm.py`), expanding repository baseline to 336 passing tests (100% pass rate).
+
+### Fixed
+- **Web Frontend Event Listener Syntax**: Fixed unclosed `if (steeringForm)` block in `genesis/web/app.js` and verified zero syntax errors via Node.js compiler (`node -c`).
+
 ## [0.16.0] — 2026-10-15
 
 ### Added
