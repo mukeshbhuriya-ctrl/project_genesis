@@ -16,7 +16,7 @@ def create_app() -> FastAPI:
     from genesis import __version__
     from genesis.core import get_settings
     from genesis.core.logging import setup_logging
-    from genesis.api.routes import health, chat, memory, models, knowledge, backup, tools, tasks
+    from genesis.api.routes import health, chat, memory, models, knowledge, backup, tools, tasks, evaluation
 
     settings = get_settings()
     setup_logging(level=settings.log_level, log_dir=settings.data_dir / "logs")
@@ -47,6 +47,7 @@ def create_app() -> FastAPI:
     app.include_router(backup.router, prefix="/api", tags=["Backups"])
     app.include_router(tools.router, prefix="/api", tags=["Tools"])
     app.include_router(tasks.router, prefix="/api", tags=["Tasks"])
+    app.include_router(evaluation.router, prefix="/api", tags=["Evaluation"])
 
     # Static Web UI Assets
     web_dir = Path(__file__).parent.parent / "web"

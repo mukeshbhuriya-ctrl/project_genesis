@@ -15,7 +15,7 @@ from genesis.core.logging import get_logger
 log = get_logger("database")
 
 # ── Schema version history ──
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 SCHEMA_V1 = """
 -- Conversations
@@ -169,6 +169,65 @@ CREATE TABLE IF NOT EXISTS task_steps (
 CREATE INDEX IF NOT EXISTS idx_task_steps_task ON task_steps(task_id, step_number);
 """
 
+SCHEMA_V4 = """
+-- Evaluation benchmarks
+CREATE TABLE IF NOT EXISTS eval_benchmarks (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    category TEXT NOT NULL CHECK (category IN ('reasoning', 'coding', 'tools', 'knowledge', 'memory', 'custom')),
+    description TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Evaluation benchmark test cases
+CREATE TABLE IF NOT EXISTS eval_cases (
+    id TEXT PRIMARY KEY,
+    benchmark_id TEXT NOT NULL REFERENCES eval_benchmarks(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    prompt TEXT NOT NULL,
+    expected_output TEXT,
+    eval_type TEXT NOT NULL CHECK (eval_type IN ('exact_match', 'contains', 'regex', 'numeric_tolerance', 'tool_call', 'llm_rubric')),
+    criteria TEXT DEFAULT '{}',
+    weight REAL NOT NULL DEFAULT 1.0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_eval_cases_benchmark ON eval_cases(benchmark_id);
+
+-- Evaluation runs
+CREATE TABLE IF NOT EXISTS eval_runs (
+    id TEXT PRIMARY KEY,
+    benchmark_id TEXT NOT NULL REFERENCES eval_benchmarks(id) ON DELETE CASCADE,
+    model_id TEXT NOT NULL,
+    status TEXT NOT NULL CHECK (status IN ('pending', 'running', 'completed', 'failed')),
+    total_cases INTEGER NOT NULL DEFAULT 0,
+    passed_cases INTEGER NOT NULL DEFAULT 0,
+    failed_cases INTEGER NOT NULL DEFAULT 0,
+    score REAL NOT NULL DEFAULT 0.0,
+    duration_ms REAL NOT NULL DEFAULT 0.0,
+    started_at TEXT NOT NULL DEFAULT (datetime('now')),
+    completed_at TEXT,
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_eval_runs_benchmark ON eval_runs(benchmark_id, started_at);
+
+-- Evaluation results per case
+CREATE TABLE IF NOT EXISTS eval_results (
+    id TEXT PRIMARY KEY,
+    run_id TEXT NOT NULL REFERENCES eval_runs(id) ON DELETE CASCADE,
+    case_id TEXT NOT NULL REFERENCES eval_cases(id) ON DELETE CASCADE,
+    passed INTEGER NOT NULL DEFAULT 0,
+    score REAL NOT NULL DEFAULT 0.0,
+    actual_output TEXT,
+    error TEXT,
+    latency_ms REAL NOT NULL DEFAULT 0.0,
+    tokens_generated INTEGER NOT NULL DEFAULT 0,
+    failure_category TEXT NOT NULL DEFAULT 'none',
+    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_eval_results_run ON eval_results(run_id);
+"""
+
 
 def get_sync_connection(db_path: str | Path) -> sqlite3.Connection:
     """Create a synchronous SQLite connection with recommended pragmas."""
@@ -230,6 +289,16 @@ def initialize_database(db_path: str | Path) -> None:
             )
             conn.commit()
             log.info("Schema v3 applied successfully.")
+
+        if current_version < 4:
+            log.info("Applying schema v4...")
+            conn.executescript(SCHEMA_V4)
+            conn.execute(
+                "INSERT OR REPLACE INTO schema_migrations (version, description) "
+                "VALUES (4, 'Schema v4: evaluation benchmarks, test cases, runs, and results')"
+            )
+            conn.commit()
+            log.info("Schema v4 applied successfully.")
         else:
             log.info(f"Database schema is at version {current_version}, up to date.")
 

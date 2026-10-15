@@ -39,6 +39,10 @@ class TestDatabaseInitialization:
             assert "knowledge_chunks" in tables
             assert "tasks" in tables
             assert "task_steps" in tables
+            assert "eval_benchmarks" in tables
+            assert "eval_cases" in tables
+            assert "eval_runs" in tables
+            assert "eval_results" in tables
         finally:
             conn.close()
 

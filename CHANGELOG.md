@@ -2,6 +2,21 @@
 
 All notable changes to Project Genesis will be documented in this file.
 
+## [0.5.0] — 2026-10-15
+
+### Added
+- **Evaluation and Feedback Subsystem (Phase 4)**:
+  - Standard Baseline Benchmark Suites: Seeded multi-domain suites for Reasoning (`bm-reasoning-v1`), Python Coding (`bm-coding-v1`), and Tool Invocation (`bm-tools-v1`).
+  - Deterministic Evaluation Rubrics: Support for exact match, substring inclusion, regular expressions, numeric tolerance, and structured tool invocation checks (`genesis/evaluation/benchmarks.py`).
+  - Failure Analysis & Error Taxonomy: Automated failure categorization into `SYNTAX_ERROR`, `TOOL_MISUSE`, `TIMEOUT`, `FORMAT_ERROR`, `INCORRECT_ANSWER`, and `HALLUCINATION` with frequency distributions and actionable engineering recommendations (`genesis/evaluation/analysis.py`).
+  - Automated Regression Detection: `RegressionDetector` comparing candidate runs against baselines, detecting score drops, tracking regressed test cases and resolved cases, monitoring latency spikes (> 50%), and issuing verdicts (`PASSED`, `IMPROVED`, `REGRESSED`, `BASELINE_ESTABLISHED`) (`genesis/evaluation/regression.py`).
+  - Evaluation Reporter: Automated Markdown and JSON report generator with executive summaries, case breakdown tables, failure distributions, and diff comparisons (`genesis/evaluation/reports.py`).
+  - REST Endpoints: `/api/evaluation/benchmarks`, `/api/evaluation/benchmarks/{id}`, `/api/evaluation/run`, `/api/evaluation/runs`, `/api/evaluation/runs/{id}`, `/api/evaluation/runs/{id}/report`, `/api/evaluation/compare` (`genesis/api/routes/evaluation.py`).
+  - Interactive Web Dashboard Integration: Dedicated "Evaluation & Benchmarks" tab in `genesis/web/` featuring benchmark execution, history tracking, detailed failure inspection, and side-by-side regression comparison views.
+  - Database Schema V4: Added `eval_benchmarks`, `eval_cases`, `eval_runs`, and `eval_results` tables with automatic migrations and foreign key cascades (`genesis/core/database.py`).
+  - Architecture Decision Record: ADR-005 Repeatable Benchmarking, Failure Taxonomies, and Automated Regression Defense.
+  - Comprehensive Test Suite: 23 new unit, integration, REST API, and live model E2E tests (`test_evaluation.py`, `test_regression.py`, `test_api_evaluation.py`, `test_evaluation_e2e.py`).
+
 ## [0.4.0] — 2026-10-15
 
 ### Added

@@ -1,6 +1,6 @@
 # ROADMAP
 
-## Current Milestone: Phase 2 — Memory and Knowledge
+## Current Milestone: Phase 5 — Dataset and Fine-Tuning Infrastructure (Active)
 
 ## Phase 0: Discovery and Baseline ✅
 - [x] Inspect repository and environment
@@ -49,13 +49,15 @@
 
 **Acceptance criterion:** Verified (AI decomposes goals with local model, executes safe bounded steps using real local tools, verifies disk artifacts with TaskVerifier, and records full audit log in SQLite).
 
-## Phase 4: Evaluation and Feedback 🔄 (Active)
-- [ ] Fixed baseline benchmarks
-- [ ] Task outcome recording
-- [ ] Failure analysis
-- [ ] Regression test suite
-- [ ] Versioned skill candidates
-- [ ] Comparison reports
+## Phase 4: Evaluation and Feedback ✅
+- [x] Fixed baseline benchmarks (Reasoning, Coding, Tools v1)
+- [x] Task outcome recording (eval_benchmarks, eval_cases, eval_runs, eval_results)
+- [x] Failure analysis and error taxonomy classification
+- [x] Regression test suite and automated baseline comparison
+- [x] Structured reporting (Markdown, JSON, summary metrics)
+- [x] Web dashboard integration (Evaluation & Benchmarks tab)
+
+**Acceptance criterion:** Verified (The platform executes repeatable evaluation benchmarks against a local model, classifies failure modes into an actionable error taxonomy, detects regressions against historical baselines, and outputs structured comparison reports).
 
 ## Phase 5: Dataset and Fine-Tuning Infrastructure ⏳
 - [ ] Dataset management with versioning

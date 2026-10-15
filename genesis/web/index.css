@@ -897,3 +897,26 @@ body {
   color: #f87171;
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
+.badge-read {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.badge-danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.text-success {
+  color: #34d399;
+}
+.text-danger {
+  color: #f87171;
+}
+.text-warning {
+  color: #fbbf24;
+}
+.mb-4 {
+  margin-bottom: 24px;
+}
+

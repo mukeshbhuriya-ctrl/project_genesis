@@ -1,10 +1,10 @@
 # PROJECT STATE
 
-> Last updated: 2026-10-15 by Senior AI/ML Engineer (Phase 2 completion & Phase 3 activation)
+> Last updated: 2026-10-15 by Senior AI/ML Engineer (Phase 4 completion & Phase 5 activation)
 
 ## Current Phase
 
-**Phase 3 Complete (Verified) → Phase 4: Evaluation and Feedback (Active)**
+**Phase 4 Complete (Verified) → Phase 5: Dataset and Fine-Tuning Infrastructure (Active)**
 
 ## Implemented
 
@@ -19,7 +19,7 @@
 - [x] `ROADMAP.md` — milestone tracker
 - [x] `CHANGELOG.md` — change log
 - [x] `docs/architecture.md` — modular architecture specification
-- [x] `docs/decisions/` — ADR-001 (Tech selection), ADR-002 (Ollama/Storage isolation), ADR-003 (Vector memory & indexing), ADR-004 (Tool registry & orchestration)
+- [x] `docs/decisions/` — ADR-001 (Tech selection), ADR-002 (Ollama/Storage isolation), ADR-003 (Vector memory & indexing), ADR-004 (Tool registry & orchestration), ADR-005 (Repeatable benchmarking & regression defense)
 - [x] Python package scaffolding (`genesis/`)
 - [x] Core configuration module (`genesis/core/__init__.py`)
 - [x] Logging module (`genesis/core/logging.py`)
@@ -29,7 +29,7 @@
 - [x] Ollama v0.40.4 installed, persistent service running with storage on `D:\project_genesis\data\models\ollama`
 - [x] Models pulled & verified: `qwen2.5:7b` (4.7 GB), `qwen2.5-coder:7b` (4.7 GB), `qwen2.5-coder:1.5b-base` (986 MB), `nomic-embed-text` (274 MB)
 - [x] CLI entry point (`genesis/cli.py`) with init, hardware, status, and serve commands
-- [x] Database initialization (`genesis/core/database.py`) with Schema Version 3 migrations
+- [x] Database initialization (`genesis/core/database.py`) with Schema Version 4 migrations
 
 ### Memory & Knowledge Subsystem (Phase 2)
 - [x] Persistent structured memory store (`genesis/memory/__init__.py`) with CRUD, categories, confidence, metadata, versioning
@@ -51,11 +51,22 @@
 - [x] Task verifier (`genesis/tasks/verifier.py`) with file existence, non-empty byte count, substring content, and numeric tolerance validation
 - [x] REST API endpoints (`genesis/api/routes/`): `/api/tools`, `/api/tools/execute`, `/api/tasks`, `/api/tasks/plan`, `/api/tasks/run`, `/api/tasks/{task_id}`, `/api/tasks/{task_id}/verify`
 - [x] Interactive Web Dashboard Tools & Tasks tab (`genesis/web/`): live tool registry browser, permission badges, and real-time task execution monitor
-- [x] Comprehensive test suite in `tests/`: 88 tests covering all subsystems (100% passing)
+
+### Evaluation and Feedback Subsystem (Phase 4)
+- [x] Deterministic baseline benchmarks (`genesis/evaluation/benchmarks.py`): standard seeded suites for Reasoning (`bm-reasoning-v1`), Python Coding (`bm-coding-v1`), and Tool Invocation (`bm-tools-v1`)
+- [x] Deterministic grading rubrics (`genesis/evaluation/benchmarks.py`): exact match, contains, regex pattern matching, numeric tolerance, and tool call criteria
+- [x] Automated failure analysis & error taxonomy (`genesis/evaluation/analysis.py`): classification into `syntax_error`, `tool_misuse`, `timeout`, `format_error`, `incorrect_answer`, and `hallucination` with actionable engineering recommendations
+- [x] Regression detection engine (`genesis/evaluation/regression.py`): automated comparison against baseline runs, tracking score drops, regressed cases, resolved cases, and latency degradation spikes
+- [x] Evaluation reporting engine (`genesis/evaluation/reports.py`): formatted Markdown reports, structured JSON export, and disk persistence
+- [x] SQLite database schema v4 (`eval_benchmarks`, `eval_cases`, `eval_runs`, `eval_results` tables)
+- [x] REST API endpoints (`genesis/api/routes/evaluation.py`): `/api/evaluation/benchmarks`, `/api/evaluation/benchmarks/{id}`, `/api/evaluation/run`, `/api/evaluation/runs`, `/api/evaluation/runs/{id}`, `/api/evaluation/runs/{id}/report`, `/api/evaluation/compare`
+- [x] Interactive Web Dashboard Evaluation tab (`genesis/web/`): suite runner, pass rate metrics, error taxonomy visualizer, and side-by-side regression comparison views
+- [x] Comprehensive test suite in `tests/`: 111 tests covering all subsystems (100% passing)
 
 ## Verified
 
-- [x] **88/88 unit and integration tests pass (100% passing)** across all modules
+- [x] **111/111 unit and integration tests pass (100% passing)** across all modules
+- [x] **Phase 4 Acceptance Criterion verified**: Repeatable benchmarks execute against local GPU model (`qwen2.5:7b`), failure modes categorized into error taxonomy, regressions detected against historical baselines, and structured reports generated
 - [x] **Local model responds** — `qwen2.5:7b` verified via Ollama API and Python `OllamaProvider`
 - [x] **GPU acceleration verified** via `nvidia-smi` (all 29 layers offloaded, ~4.6 GB VRAM utilized on RTX 2000 Ada)
 - [x] **Dense vector embeddings verified** — `nomic-embed-text` produces 768-dimensional embeddings via Ollama `/api/embed`
@@ -89,10 +100,10 @@
 | Node.js | 24.17.0 |
 | Git | 2.54.0 |
 
-## Next Steps (Phase 4: Evaluation and Feedback)
+## Next Steps (Phase 5: Dataset and Fine-Tuning Infrastructure)
 
-1. **Fixed Baseline Benchmarks (`genesis/evaluation/benchmarks.py`):** Define standard reasoning, coding, and tool invocation benchmark tasks with deterministic evaluation rubrics.
-2. **Task Outcome Recording (`genesis/evaluation/models.py`):** Track benchmark pass rates, latencies, token consumption, and regression metrics over time in SQLite.
-3. **Failure Analysis Engine (`genesis/evaluation/analysis.py`):** Automatic error taxonomy categorization (syntax error, tool misuse, timeout, hallucination, missing parameter).
-4. **Regression Test Runner (`genesis/evaluation/regression.py`):** Automated benchmark verification before and after prompt updates, model swaps, or fine-tuning runs.
-5. **Comparison Reports (`genesis/evaluation/reports.py`):** Generate markdown and visual evaluation comparisons between baseline and candidate configurations.
+1. **Dataset Manager (`genesis/training/datasets.py`):** Ingestion of training datasets in JSONL, Parquet, and CSV; schema validation (prompt-completion, chat template, Alpaca/ShareGPT format), token count histograms, and deterministic train/validation/test splits.
+2. **Data Quality & Filtering Pipeline (`genesis/training/preprocessing.py`):** Deduplication (exact & MinHash/vector similarity), length filtering, automated syntax linting for code samples, and benchmark data contamination checks.
+3. **Experiment & Metadata Tracker (`genesis/training/experiments.py`):** SQLite Schema Version 5 tracking fine-tuning experiments, base model identifiers, LoRA rank/alpha/target modules, learning rates, loss curves, and artifact checkpoints.
+4. **Local Fine-Tuning Execution Engine (`genesis/training/trainer.py`):** VRAM-bounded LoRA/QLoRA training loop (4-bit/8-bit quantization via bitsandbytes/PEFT/transformers or Ollama Modelfile tuning) optimized for 8 GB VRAM on NVIDIA RTX 2000 Ada.
+5. **Model Checkpoint Exporter (`genesis/training/export.py`):** GGUF export, adapter fusion, automated Modelfile generation, and registration into local Ollama service.
