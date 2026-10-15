@@ -1,6 +1,6 @@
 # ROADMAP
 
-## Current Milestone: Phase 5 — Dataset and Fine-Tuning Infrastructure (Active)
+## Current Milestone: Phase 6 — Research and Capability Expansion (Active)
 
 ## Phase 0: Discovery and Baseline ✅
 - [x] Inspect repository and environment
@@ -59,13 +59,16 @@
 
 **Acceptance criterion:** Verified (The platform executes repeatable evaluation benchmarks against a local model, classifies failure modes into an actionable error taxonomy, detects regressions against historical baselines, and outputs structured comparison reports).
 
-## Phase 5: Dataset and Fine-Tuning Infrastructure ⏳
-- [ ] Dataset management with versioning
-- [ ] Data quality pipeline
-- [ ] Experiment tracking
-- [ ] LoRA/QLoRA training workflow
-- [ ] Checkpoint management
-- [ ] Baseline comparison and rollback
+## Phase 5: Dataset and Fine-Tuning Infrastructure ✅
+- [x] Dataset management with versioning (multi-format normalization: Alpaca, ShareGPT, Chat, Completion)
+- [x] Data quality pipeline (SHA-256 deduplication, length filtering, AST syntax verification, and 8-gram benchmark contamination guard)
+- [x] Experiment tracking (LoRA hyperparameters, SQLite metrics logging, and step loss trajectory)
+- [x] LoRA/QLoRA training workflow (VRAM-bounded execution loop under 4.8 GB, callback reporting)
+- [x] Checkpoint management (best checkpoint selection, Ollama Modelfile synthesis, local model registration)
+- [x] Baseline comparison and rollback (automated rollback restoration to baseline model upon regression detection)
+- [x] Web dashboard integration (Datasets & Fine-Tuning tab with ingestion modal, launch form, loss table, and deploy buttons)
+
+**Acceptance criterion:** Verified (The platform curates and preprocesses multi-format datasets, defends against evaluation contamination, executes VRAM-bounded LoRA adaptation, logs loss trajectories, exports Ollama Modelfiles, and triggers automatic rollback when regressions are detected).
 
 ## Phase 6: Research and Capability Expansion ⏳
 - [ ] Improved inference (vLLM, TensorRT-LLM)

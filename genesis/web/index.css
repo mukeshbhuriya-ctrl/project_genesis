@@ -892,6 +892,12 @@ body {
   color: #fbbf24;
   border: 1px solid rgba(245, 158, 11, 0.3);
 }
+.status-indicator.warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  animation: pulse-glow 2s infinite ease-in-out;
+}
 .status-indicator.offline {
   background: rgba(239, 68, 68, 0.15);
   color: #f87171;
@@ -916,7 +922,26 @@ body {
 .text-warning {
   color: #fbbf24;
 }
+.text-dim {
+  color: var(--text-dim);
+}
+.text-sm {
+  font-size: 0.8rem;
+}
 .mb-4 {
   margin-bottom: 24px;
+}
+.mt-1 {
+  margin-top: 4px;
+}
+.mt-2 {
+  margin-top: 8px;
+}
+.mt-3 {
+  margin-top: 12px;
+}
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 

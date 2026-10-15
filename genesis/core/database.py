@@ -228,6 +228,64 @@ CREATE TABLE IF NOT EXISTS eval_results (
 CREATE INDEX IF NOT EXISTS idx_eval_results_run ON eval_results(run_id);
 """
 
+SCHEMA_V5 = """
+-- Training datasets
+CREATE TABLE IF NOT EXISTS training_datasets (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
+    description TEXT,
+    format TEXT NOT NULL CHECK (format IN ('instruction', 'chat', 'completion', 'raw')),
+    file_path TEXT NOT NULL,
+    sample_count INTEGER NOT NULL DEFAULT 0,
+    total_tokens INTEGER NOT NULL DEFAULT 0,
+    checksum TEXT NOT NULL,
+    version TEXT NOT NULL DEFAULT '1.0.0',
+    metadata TEXT DEFAULT '{}',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- Training experiments / runs
+CREATE TABLE IF NOT EXISTS training_experiments (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    base_model TEXT NOT NULL,
+    dataset_id TEXT NOT NULL REFERENCES training_datasets(id),
+    status TEXT NOT NULL CHECK (status IN ('pending', 'preparing', 'training', 'completed', 'failed', 'cancelled')),
+    hyperparameters TEXT DEFAULT '{}',
+    current_epoch INTEGER NOT NULL DEFAULT 0,
+    total_epochs INTEGER NOT NULL DEFAULT 1,
+    current_step INTEGER NOT NULL DEFAULT 0,
+    total_steps INTEGER NOT NULL DEFAULT 0,
+    training_loss REAL,
+    eval_loss REAL,
+    duration_ms REAL NOT NULL DEFAULT 0.0,
+    error TEXT,
+    metrics TEXT DEFAULT '[]',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    completed_at TEXT,
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_training_experiments_dataset ON training_experiments(dataset_id);
+
+-- Checkpoints and exported models
+CREATE TABLE IF NOT EXISTS training_checkpoints (
+    id TEXT PRIMARY KEY,
+    experiment_id TEXT NOT NULL REFERENCES training_experiments(id) ON DELETE CASCADE,
+    step INTEGER NOT NULL,
+    epoch REAL NOT NULL,
+    training_loss REAL,
+    eval_loss REAL,
+    file_path TEXT NOT NULL,
+    format TEXT NOT NULL DEFAULT 'adapter',
+    is_best INTEGER NOT NULL DEFAULT 0,
+    deployed_name TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_training_checkpoints_exp ON training_checkpoints(experiment_id, step);
+"""
+
 
 def get_sync_connection(db_path: str | Path) -> sqlite3.Connection:
     """Create a synchronous SQLite connection with recommended pragmas."""
@@ -299,6 +357,16 @@ def initialize_database(db_path: str | Path) -> None:
             )
             conn.commit()
             log.info("Schema v4 applied successfully.")
+
+        if current_version < 5:
+            log.info("Applying schema v5...")
+            conn.executescript(SCHEMA_V5)
+            conn.execute(
+                "INSERT OR REPLACE INTO schema_migrations (version, description) "
+                "VALUES (5, 'Schema v5: training datasets, experiments, and checkpoints')"
+            )
+            conn.commit()
+            log.info("Schema v5 applied successfully.")
         else:
             log.info(f"Database schema is at version {current_version}, up to date.")
 

@@ -43,6 +43,9 @@ class TestDatabaseInitialization:
             assert "eval_cases" in tables
             assert "eval_runs" in tables
             assert "eval_results" in tables
+            assert "training_datasets" in tables
+            assert "training_experiments" in tables
+            assert "training_checkpoints" in tables
         finally:
             conn.close()
 

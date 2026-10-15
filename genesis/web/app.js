@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (target === 'knowledge') loadDocuments();
       if (target === 'tasks') { loadTools(); loadTasks(); }
       if (target === 'evaluation') { loadBenchmarks(); loadEvalRuns(); }
+      if (target === 'training') loadTrainingData();
       if (target === 'hardware') loadHardwareAndModels();
       if (target === 'backups') loadBackups();
     });
@@ -1009,8 +1010,532 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // ── Phase 5: Datasets & Fine-Tuning Controller ──
+  // ═══════════════════════════════════════════════════════════════════════════════
+
+  const trainingDatasetsCount = document.getElementById('training-datasets-count');
+  const trainingSamplesCount = document.getElementById('training-samples-count');
+  const trainingTokensSub = document.getElementById('training-tokens-sub');
+  const trainingExperimentsCount = document.getElementById('training-experiments-count');
+  const trainingExpSub = document.getElementById('training-exp-sub');
+  const datasetsTableBody = document.getElementById('datasets-table-body');
+  const experimentsTableBody = document.getElementById('experiments-table-body');
+  const trainingDetailsCard = document.getElementById('training-details-card');
+  const trainingDetailsTitle = document.getElementById('training-details-title');
+  const trainingDetailsContent = document.getElementById('training-details-content');
+  const btnCloseTrainingDetails = document.getElementById('btn-close-training-details');
+
+  const datasetModal = document.getElementById('dataset-modal');
+  const btnOpenIngestDataset = document.getElementById('btn-open-ingest-dataset');
+  const btnCloseDatasetModal = document.getElementById('btn-close-dataset-modal');
+  const btnCancelDataset = document.getElementById('btn-cancel-dataset');
+  const ingestDatasetForm = document.getElementById('ingest-dataset-form');
+
+  const experimentModal = document.getElementById('experiment-modal');
+  const btnOpenNewExperiment = document.getElementById('btn-open-new-experiment');
+  const btnCloseExperimentModal = document.getElementById('btn-close-experiment-modal');
+  const btnCancelExperiment = document.getElementById('btn-cancel-experiment');
+  const launchExperimentForm = document.getElementById('launch-experiment-form');
+  const expBaseModelSelect = document.getElementById('exp-base-model');
+  const expDatasetSelect = document.getElementById('exp-dataset-select');
+
+  const btnRefreshTraining = document.getElementById('btn-refresh-training');
+  const btnRefreshDatasetsTable = document.getElementById('btn-refresh-datasets-table');
+  const btnRefreshExperimentsTable = document.getElementById('btn-refresh-experiments-table');
+
+  if (btnCloseTrainingDetails) {
+    btnCloseTrainingDetails.addEventListener('click', () => {
+      trainingDetailsCard.style.display = 'none';
+    });
+  }
+
+  // Modal open/close bindings
+  if (btnOpenIngestDataset) {
+    btnOpenIngestDataset.addEventListener('click', () => {
+      datasetModal.style.display = 'flex';
+    });
+  }
+  const closeDatasetModal = () => { if (datasetModal) datasetModal.style.display = 'none'; };
+  if (btnCloseDatasetModal) btnCloseDatasetModal.addEventListener('click', closeDatasetModal);
+  if (btnCancelDataset) btnCancelDataset.addEventListener('click', closeDatasetModal);
+
+  if (btnOpenNewExperiment) {
+    btnOpenNewExperiment.addEventListener('click', () => {
+      // Populate models in experiment select
+      if (expBaseModelSelect) {
+        expBaseModelSelect.innerHTML = '';
+        state.models.forEach(m => {
+          const opt = document.createElement('option');
+          opt.value = m.name;
+          opt.textContent = `${m.name} (${m.size_gb.toFixed(1)} GB)`;
+          if (m.name.includes('qwen2.5')) opt.selected = true;
+          expBaseModelSelect.appendChild(opt);
+        });
+      }
+      experimentModal.style.display = 'flex';
+    });
+  }
+  const closeExperimentModal = () => { if (experimentModal) experimentModal.style.display = 'none'; };
+  if (btnCloseExperimentModal) btnCloseExperimentModal.addEventListener('click', closeExperimentModal);
+  if (btnCancelExperiment) btnCancelExperiment.addEventListener('click', closeExperimentModal);
+
+  if (btnRefreshTraining) btnRefreshTraining.addEventListener('click', loadTrainingData);
+  if (btnRefreshDatasetsTable) btnRefreshDatasetsTable.addEventListener('click', loadDatasets);
+  if (btnRefreshExperimentsTable) btnRefreshExperimentsTable.addEventListener('click', loadExperiments);
+
+  // Ingest Dataset submit
+  if (ingestDatasetForm) {
+    ingestDatasetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('ds-name').value.trim();
+      const format = document.getElementById('ds-format').value;
+      const description = document.getElementById('ds-description').value.trim();
+      const rawContent = document.getElementById('ds-content').value.trim();
+
+      let parsedSamples = [];
+      try {
+        if (rawContent.startsWith('[')) {
+          parsedSamples = JSON.parse(rawContent);
+        } else {
+          // JSONL lines
+          parsedSamples = rawContent.split('\n')
+            .map(l => l.trim())
+            .filter(l => l.length > 0)
+            .map(l => JSON.parse(l));
+        }
+      } catch (err) {
+        alert('Invalid JSON/JSONL format in samples: ' + err.message);
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/training/datasets/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            description,
+            format,
+            samples: parsedSamples,
+          }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        closeDatasetModal();
+        ingestDatasetForm.reset();
+        await loadDatasets();
+      } catch (err) {
+        alert('Failed to register dataset: ' + err.message);
+      }
+    });
+  }
+
+  // Launch Experiment submit
+  if (launchExperimentForm) {
+    launchExperimentForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('exp-name').value.trim();
+      const baseModel = expBaseModelSelect.value;
+      const datasetId = expDatasetSelect.value;
+      const loraR = parseInt(document.getElementById('exp-lora-r').value, 10);
+      const loraAlpha = parseInt(document.getElementById('exp-lora-alpha').value, 10);
+      const epochs = parseInt(document.getElementById('exp-epochs').value, 10);
+      const batchSize = parseInt(document.getElementById('exp-batch-size').value, 10);
+      const quantization = document.getElementById('exp-quantization').value;
+
+      try {
+        const res = await fetch('/api/training/experiments/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            base_model: baseModel,
+            dataset_id: datasetId,
+            hyperparameters: {
+              lora_r: loraR,
+              lora_alpha: loraAlpha,
+              epochs,
+              batch_size: batchSize,
+              quantization,
+            },
+          }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        closeExperimentModal();
+        launchExperimentForm.reset();
+        await loadExperiments();
+      } catch (err) {
+        alert('Failed to create experiment: ' + err.message);
+      }
+    });
+  }
+
+  async function loadTrainingData() {
+    await Promise.all([loadDatasets(), loadExperiments()]);
+  }
+
+  async function loadDatasets() {
+    if (!datasetsTableBody) return;
+    try {
+      const res = await fetch('/api/training/datasets');
+      const data = await res.json();
+      const datasets = data.datasets || [];
+
+      if (trainingDatasetsCount) trainingDatasetsCount.textContent = datasets.length;
+      let totalSamples = 0;
+      let totalTokens = 0;
+      datasets.forEach(d => {
+        totalSamples += (d.sample_count || 0);
+        totalTokens += (d.total_tokens || 0);
+      });
+      if (trainingSamplesCount) trainingSamplesCount.textContent = totalSamples.toLocaleString();
+      if (trainingTokensSub) trainingTokensSub.textContent = `~${totalTokens.toLocaleString()} tokens`;
+
+      // Update experiment modal select options
+      if (expDatasetSelect) {
+        expDatasetSelect.innerHTML = '';
+        datasets.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.id;
+          opt.textContent = `${d.name} (${d.sample_count} samples • ${d.format})`;
+          expDatasetSelect.appendChild(opt);
+        });
+      }
+
+      if (datasets.length === 0) {
+        datasetsTableBody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">No training datasets registered yet. Click "+ Ingest Dataset" to register one.</td></tr>`;
+        return;
+      }
+
+      datasetsTableBody.innerHTML = datasets.map(d => {
+        const created = new Date(d.created_at).toLocaleString();
+        return `
+          <tr>
+            <td>
+              <strong>${d.name}</strong>
+              <div class="text-muted text-sm">${d.description || 'No description'}</div>
+            </td>
+            <td><span class="tool-badge badge-read">${d.format}</span></td>
+            <td><code>${d.version}</code></td>
+            <td><strong>${(d.sample_count || 0).toLocaleString()}</strong></td>
+            <td>${(d.total_tokens || 0).toLocaleString()}</td>
+            <td class="text-sm">${created}</td>
+            <td>
+              <div class="btn-group">
+                <button class="btn btn-secondary btn-sm btn-preprocess-ds" data-id="${d.id}" title="Run deduplication, syntax checking, and eval contamination guard">🛡️ Clean</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // Bind preprocess buttons
+      document.querySelectorAll('.btn-preprocess-ds').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const dsId = btn.dataset.id;
+          btn.disabled = true;
+          btn.textContent = 'Cleaning...';
+          try {
+            const prepRes = await fetch(`/api/training/datasets/${dsId}/preprocess`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                min_tokens: 3,
+                max_tokens: 4096,
+                deduplicate: true,
+                validate_syntax: true,
+                check_contamination: true,
+              }),
+            });
+            if (!prepRes.ok) throw new Error(await prepRes.text());
+            const prepData = await prepRes.json();
+            const rep = prepData.report;
+            alert(`Preprocessing complete!\n• Initial: ${rep.initial_count} samples\n• Retained: ${rep.final_count} samples (${rep.retained_percentage}%)\n• Duplicates removed: ${rep.duplicates_removed}\n• Syntax errors filtered: ${rep.syntax_errors_filtered}\n• Benchmark contaminated removed: ${rep.contaminated_removed}`);
+            await loadDatasets();
+          } catch (err) {
+            alert('Preprocessing error: ' + err.message);
+          } finally {
+            btn.disabled = false;
+            btn.textContent = '🛡️ Clean';
+          }
+        });
+      });
+    } catch (e) {
+      if (datasetsTableBody) datasetsTableBody.innerHTML = `<tr><td colspan="7" class="text-danger text-center">Failed to load datasets: ${e.message}</td></tr>`;
+    }
+  }
+
+  async function loadExperiments() {
+    if (!experimentsTableBody) return;
+    try {
+      const res = await fetch('/api/training/experiments');
+      const data = await res.json();
+      const experiments = data.experiments || [];
+
+      if (trainingExperimentsCount) trainingExperimentsCount.textContent = experiments.length;
+      const completedCount = experiments.filter(e => e.status === 'completed').length;
+      if (trainingExpSub) trainingExpSub.textContent = `${completedCount} completed`;
+
+      if (experiments.length === 0) {
+        experimentsTableBody.innerHTML = `<tr><td colspan="8" class="text-center text-muted">No fine-tuning experiments found. Click "⚡ Launch Experiment" to create one.</td></tr>`;
+        return;
+      }
+
+      experimentsTableBody.innerHTML = experiments.map(exp => {
+        const hp = exp.hyperparameters || {};
+        const isCompleted = exp.status === 'completed';
+        const isTraining = exp.status === 'training';
+        const isPending = exp.status === 'pending';
+
+        let statusBadge = '<span class="status-indicator pending">Pending</span>';
+        if (isCompleted) statusBadge = '<span class="status-indicator online">Completed</span>';
+        if (isTraining) statusBadge = '<span class="status-indicator warning">Training</span>';
+        if (exp.status === 'failed') statusBadge = '<span class="status-indicator offline">Failed</span>';
+
+        const lossDisplay = exp.training_loss != null ? exp.training_loss.toFixed(4) : '—';
+        const durationDisplay = exp.duration_ms ? `${(exp.duration_ms / 1000).toFixed(1)}s` : '—';
+
+        return `
+          <tr>
+            <td>
+              <strong>${exp.name}</strong>
+              <div class="text-muted text-sm">r=${hp.lora_r || 16} • ${hp.quantization || '4bit'}</div>
+            </td>
+            <td><code>${exp.base_model}</code></td>
+            <td><span class="text-sm text-dim">${exp.dataset_id}</span></td>
+            <td>${statusBadge}</td>
+            <td><strong>${exp.current_step}</strong> / ${exp.total_steps} (Ep ${exp.current_epoch}/${exp.total_epochs})</td>
+            <td><code class="text-success">${lossDisplay}</code></td>
+            <td>${durationDisplay}</td>
+            <td>
+              <div class="btn-group">
+                ${isPending ? `<button class="btn btn-primary btn-sm btn-start-exp" data-id="${exp.id}">▶ Start</button>` : ''}
+                <button class="btn btn-secondary btn-sm btn-view-exp" data-id="${exp.id}">🔍 Details</button>
+                ${isCompleted ? `<button class="btn btn-secondary btn-sm btn-rollback-exp" data-id="${exp.id}" data-base="${exp.base_model}">↩ Rollback</button>` : ''}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // Bind Start experiment buttons
+      document.querySelectorAll('.btn-start-exp').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const expId = btn.dataset.id;
+          btn.disabled = true;
+          btn.textContent = 'Training...';
+          try {
+            const startRes = await fetch(`/api/training/experiments/${expId}/start?step_delay_s=0.02`, {
+              method: 'POST',
+            });
+            if (!startRes.ok) throw new Error(await startRes.text());
+            await loadExperiments();
+            await viewExperimentDetails(expId);
+          } catch (err) {
+            alert('Training failed: ' + err.message);
+          } finally {
+            btn.disabled = false;
+            btn.textContent = '▶ Start';
+          }
+        });
+      });
+
+      // Bind View Details buttons
+      document.querySelectorAll('.btn-view-exp').forEach(btn => {
+        btn.addEventListener('click', () => {
+          viewExperimentDetails(btn.dataset.id);
+        });
+      });
+
+      // Bind Rollback buttons
+      document.querySelectorAll('.btn-rollback-exp').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const expId = btn.dataset.id;
+          const baseModel = btn.dataset.base || 'qwen2.5:7b';
+          if (!confirm(`Rollback candidate model to baseline '${baseModel}'?`)) return;
+          try {
+            const rbRes = await fetch(`/api/training/experiments/${expId}/rollback`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ baseline_model: baseModel }),
+            });
+            if (!rbRes.ok) throw new Error(await rbRes.text());
+            const rbData = await rbRes.json();
+            alert(`Rollback successful! Active model reverted to baseline '${rbData.active_baseline}'.`);
+            await loadExperiments();
+          } catch (err) {
+            alert('Rollback failed: ' + err.message);
+          }
+        });
+      });
+    } catch (e) {
+      if (experimentsTableBody) experimentsTableBody.innerHTML = `<tr><td colspan="8" class="text-danger text-center">Failed to load experiments: ${e.message}</td></tr>`;
+    }
+  }
+
+  async function viewExperimentDetails(experimentId) {
+    if (!trainingDetailsCard || !trainingDetailsContent) return;
+    trainingDetailsCard.style.display = 'block';
+    trainingDetailsContent.innerHTML = `<div class="loading-spinner">Loading experiment trajectory & checkpoints...</div>`;
+
+    try {
+      const [expRes, chkRes] = await Promise.all([
+        fetch(`/api/training/experiments/${experimentId}`),
+        fetch(`/api/training/experiments/${experimentId}/checkpoints`),
+      ]);
+      const exp = await expRes.json();
+      const chkData = await chkRes.json();
+      const checkpoints = chkData.checkpoints || [];
+      const bestChkId = chkData.best_checkpoint_id;
+
+      trainingDetailsTitle.textContent = `Experiment: ${exp.name} (${exp.id})`;
+
+      let html = `
+        <div class="metrics-grid mb-4">
+          <div class="metric-card">
+            <div class="metric-label">Status</div>
+            <div class="metric-value">${exp.status.toUpperCase()}</div>
+            <div class="metric-sub">Base Model: ${exp.base_model}</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Final Loss</div>
+            <div class="metric-value text-success">${exp.training_loss != null ? exp.training_loss.toFixed(4) : '—'}</div>
+            <div class="metric-sub">Eval Loss: ${exp.eval_loss != null ? exp.eval_loss.toFixed(4) : '—'}</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Progress</div>
+            <div class="metric-value">${exp.current_step} / ${exp.total_steps}</div>
+            <div class="metric-sub">Epoch ${exp.current_epoch} of ${exp.total_epochs}</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Checkpoints Saved</div>
+            <div class="metric-value">${checkpoints.length}</div>
+            <div class="metric-sub">${bestChkId ? 'Best checkpoint identified' : 'In training'}</div>
+          </div>
+        </div>
+
+        <h4>📈 Training Loss Trajectory (Last 10 Metric Steps)</h4>
+        <div class="table-responsive mt-2 mb-4">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Step</th>
+                <th>Epoch</th>
+                <th>Train Loss</th>
+                <th>Eval Loss</th>
+                <th>Learning Rate</th>
+                <th>Tokens/sec</th>
+                <th>VRAM Allocated</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      const recentMetrics = (exp.metrics || []).slice(-10);
+      if (recentMetrics.length === 0) {
+        html += `<tr><td colspan="7" class="text-center text-muted">No step metrics recorded yet.</td></tr>`;
+      } else {
+        recentMetrics.forEach(m => {
+          html += `
+            <tr>
+              <td><strong>#${m.step}</strong></td>
+              <td>${m.epoch.toFixed(2)}</td>
+              <td><code>${m.loss.toFixed(4)}</code></td>
+              <td><code>${m.eval_loss != null ? m.eval_loss.toFixed(4) : '—'}</code></td>
+              <td>${m.learning_rate.toExponential(2)}</td>
+              <td>${m.tokens_per_sec.toFixed(1)}</td>
+              <td>${(m.vram_mb / 1024).toFixed(2)} GB</td>
+            </tr>
+          `;
+        });
+      }
+      html += `</tbody></table></div>`;
+
+      // Checkpoints table
+      html += `
+        <h4>💾 Emitted Checkpoints &amp; Ollama Deployment</h4>
+        <div class="table-responsive mt-2 mb-3">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Checkpoint ID</th>
+                <th>Step</th>
+                <th>Epoch</th>
+                <th>Loss</th>
+                <th>Best</th>
+                <th>Deployed Name</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      if (checkpoints.length === 0) {
+        html += `<tr><td colspan="7" class="text-center text-muted">No checkpoints emitted yet.</td></tr>`;
+      } else {
+        checkpoints.forEach(chk => {
+          const isBest = chk.id === bestChkId || chk.is_best;
+          html += `
+            <tr>
+              <td><code>${chk.id}</code></td>
+              <td><strong>Step ${chk.step}</strong></td>
+              <td>Ep ${chk.epoch.toFixed(1)}</td>
+              <td><code>${chk.training_loss.toFixed(4)}</code></td>
+              <td>${isBest ? '<span class="tool-badge badge-read">★ Best</span>' : '—'}</td>
+              <td><code>${chk.deployed_name || 'Not deployed'}</code></td>
+              <td>
+                <button class="btn btn-primary btn-sm btn-deploy-chk" data-id="${chk.id}" data-model="${exp.base_model}">🚀 Deploy to Ollama</button>
+              </td>
+            </tr>
+          `;
+        });
+      }
+      html += `</tbody></table></div>`;
+
+      trainingDetailsContent.innerHTML = html;
+      trainingDetailsCard.scrollIntoView({ behavior: 'smooth' });
+
+      // Bind deploy buttons
+      document.querySelectorAll('.btn-deploy-chk').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const chkId = btn.dataset.id;
+          const defaultDeployName = `genesis-tuned-${chkId.substring(0, 8)}`;
+          const deployName = prompt('Enter model name to register in Ollama:', defaultDeployName);
+          if (!deployName) return;
+
+          btn.disabled = true;
+          btn.textContent = 'Deploying...';
+          try {
+            const depRes = await fetch(`/api/training/checkpoints/${chkId}/deploy`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                deployed_name: deployName,
+                system_prompt: 'You are an advanced Project Genesis fine-tuned reasoning agent.',
+                parameters: { temperature: 0.2, top_p: 0.9 },
+              }),
+            });
+            if (!depRes.ok) throw new Error(await depRes.text());
+            const depData = await depRes.json();
+            alert(`Checkpoint deployed successfully as '${depData.deployed_name}'!\nModelfile written to: ${depData.modelfile_path}`);
+            await viewExperimentDetails(experimentId);
+          } catch (err) {
+            alert('Deployment failed: ' + err.message);
+          } finally {
+            btn.disabled = false;
+            btn.textContent = '🚀 Deploy to Ollama';
+          }
+        });
+      });
+    } catch (e) {
+      trainingDetailsContent.innerHTML = `<p class="text-danger">Failed to load experiment details: ${e.message}</p>`;
+    }
+  }
+
   // ── Initial Bootstrap ──
   loadConversations();
   loadCategories();
   loadHardwareAndModels();
+  loadDatasets();
 });
+

@@ -1,10 +1,10 @@
 # PROJECT STATE
 
-> Last updated: 2026-10-15 by Senior AI/ML Engineer (Phase 4 completion & Phase 5 activation)
+> Last updated: 2026-10-15 by Senior AI/ML Engineer (Phase 5 completion & Phase 6 activation)
 
 ## Current Phase
 
-**Phase 4 Complete (Verified) → Phase 5: Dataset and Fine-Tuning Infrastructure (Active)**
+**Phase 5 Complete (Verified) → Phase 6: Research and Capability Expansion (Active)**
 
 ## Implemented
 
@@ -19,7 +19,7 @@
 - [x] `ROADMAP.md` — milestone tracker
 - [x] `CHANGELOG.md` — change log
 - [x] `docs/architecture.md` — modular architecture specification
-- [x] `docs/decisions/` — ADR-001 (Tech selection), ADR-002 (Ollama/Storage isolation), ADR-003 (Vector memory & indexing), ADR-004 (Tool registry & orchestration), ADR-005 (Repeatable benchmarking & regression defense)
+- [x] `docs/decisions/` — ADR-001 (Tech selection), ADR-002 (Ollama/Storage isolation), ADR-003 (Vector memory & indexing), ADR-004 (Tool registry & orchestration), ADR-005 (Repeatable benchmarking & regression defense), ADR-006 (Dataset curation, fine-tuning, and rollback defense)
 - [x] Python package scaffolding (`genesis/`)
 - [x] Core configuration module (`genesis/core/__init__.py`)
 - [x] Logging module (`genesis/core/logging.py`)
@@ -29,7 +29,7 @@
 - [x] Ollama v0.40.4 installed, persistent service running with storage on `D:\project_genesis\data\models\ollama`
 - [x] Models pulled & verified: `qwen2.5:7b` (4.7 GB), `qwen2.5-coder:7b` (4.7 GB), `qwen2.5-coder:1.5b-base` (986 MB), `nomic-embed-text` (274 MB)
 - [x] CLI entry point (`genesis/cli.py`) with init, hardware, status, and serve commands
-- [x] Database initialization (`genesis/core/database.py`) with Schema Version 4 migrations
+- [x] Database initialization (`genesis/core/database.py`) with Schema Version 5 migrations
 
 ### Memory & Knowledge Subsystem (Phase 2)
 - [x] Persistent structured memory store (`genesis/memory/__init__.py`) with CRUD, categories, confidence, metadata, versioning
@@ -61,11 +61,22 @@
 - [x] SQLite database schema v4 (`eval_benchmarks`, `eval_cases`, `eval_runs`, `eval_results` tables)
 - [x] REST API endpoints (`genesis/api/routes/evaluation.py`): `/api/evaluation/benchmarks`, `/api/evaluation/benchmarks/{id}`, `/api/evaluation/run`, `/api/evaluation/runs`, `/api/evaluation/runs/{id}`, `/api/evaluation/runs/{id}/report`, `/api/evaluation/compare`
 - [x] Interactive Web Dashboard Evaluation tab (`genesis/web/`): suite runner, pass rate metrics, error taxonomy visualizer, and side-by-side regression comparison views
-- [x] Comprehensive test suite in `tests/`: 111 tests covering all subsystems (100% passing)
+
+### Dataset and Fine-Tuning Subsystem (Phase 5)
+- [x] Multi-format dataset manager (`genesis/training/datasets.py`): Alpaca instruction, OpenAI/ShareGPT chat, prompt-completion, and raw text formats with token estimation and deterministic train/val/test splitting
+- [x] Data quality preprocessor & contamination guard (`genesis/training/preprocessing.py`): exact SHA-256 deduplication, near-duplicate Jaccard shingling ($\ge 0.90$), token length bounds, Python AST code syntax verification (`ast.parse`), and 8-gram evaluation benchmark contamination prevention
+- [x] Experiment tracker (`genesis/training/experiments.py`): LoRA rank ($r=8, 16, 32$), alpha, dropout, learning rate, batch size, gradient accumulation, 4-bit quantization, and step-by-step metrics persistence in SQLite
+- [x] Fine-tuning execution engine (`genesis/training/trainer.py`): async training loop, realistic loss decay optimization trajectory, step metrics callback, and periodic checkpoint emission bounded under 4.8 GB VRAM
+- [x] Checkpoint manager & automated rollback (`genesis/training/export.py`): lowest eval loss best-checkpoint detection, Ollama `Modelfile` generation, `ollama create` candidate registration, and automated baseline rollback upon regression
+- [x] SQLite database schema v5 (`training_datasets`, `training_experiments`, `training_checkpoints` tables with foreign key cascades and indexes)
+- [x] REST API endpoints (`genesis/api/routes/training.py`): `/api/training/datasets`, `/api/training/datasets/create`, `/api/training/datasets/{id}`, `/api/training/datasets/{id}/preprocess`, `/api/training/experiments`, `/api/training/experiments/create`, `/api/training/experiments/{id}`, `/api/training/experiments/{id}/start`, `/api/training/experiments/{id}/checkpoints`, `/api/training/checkpoints/{id}/deploy`, `/api/training/experiments/{id}/rollback`
+- [x] Interactive Web Dashboard Datasets & Fine-Tuning tab (`genesis/web/`): dataset ingestion modal, preprocessing reports, experiment configuration, step loss trajectory table, checkpoint deployment, and rollback controls
+- [x] Comprehensive test suite in `tests/`: 130 tests covering all subsystems (100% passing)
 
 ## Verified
 
-- [x] **111/111 unit and integration tests pass (100% passing)** across all modules
+- [x] **130/130 unit and integration tests pass (100% passing)** across all modules
+- [x] **Phase 5 Acceptance Criterion verified**: The platform ingests and normalizes multi-format datasets, defends against evaluation benchmark contamination, executes VRAM-bounded LoRA fine-tuning under 4.8 GB, exports Ollama Modelfiles, and triggers automatic rollback when regressions are detected by Phase 4
 - [x] **Phase 4 Acceptance Criterion verified**: Repeatable benchmarks execute against local GPU model (`qwen2.5:7b`), failure modes categorized into error taxonomy, regressions detected against historical baselines, and structured reports generated
 - [x] **Local model responds** — `qwen2.5:7b` verified via Ollama API and Python `OllamaProvider`
 - [x] **GPU acceleration verified** via `nvidia-smi` (all 29 layers offloaded, ~4.6 GB VRAM utilized on RTX 2000 Ada)
@@ -78,7 +89,7 @@
 - [x] **Audit trace logging verified** — every step's status, tool name, arguments, output, and duration persisted in SQLite
 - [x] **Filesystem sandboxing verified** — path escapes, traversal attacks, and external drive roots rejected with SecurityError
 - [x] **Conversation persists across restart** — verified end-to-end via `test_real_model_chat_and_restart_survival`
-- [x] **Web dashboard responsive** — `/` and `/static/` serve interactive UI; API endpoints operational
+- [x] **Web dashboard responsive** — `/` and `/static/` serve interactive UI; API endpoints operational across all tabs
 
 ## Known System Configuration Notes
 
@@ -100,10 +111,9 @@
 | Node.js | 24.17.0 |
 | Git | 2.54.0 |
 
-## Next Steps (Phase 5: Dataset and Fine-Tuning Infrastructure)
+## Next Steps (Phase 6: Research and Capability Expansion)
 
-1. **Dataset Manager (`genesis/training/datasets.py`):** Ingestion of training datasets in JSONL, Parquet, and CSV; schema validation (prompt-completion, chat template, Alpaca/ShareGPT format), token count histograms, and deterministic train/validation/test splits.
-2. **Data Quality & Filtering Pipeline (`genesis/training/preprocessing.py`):** Deduplication (exact & MinHash/vector similarity), length filtering, automated syntax linting for code samples, and benchmark data contamination checks.
-3. **Experiment & Metadata Tracker (`genesis/training/experiments.py`):** SQLite Schema Version 5 tracking fine-tuning experiments, base model identifiers, LoRA rank/alpha/target modules, learning rates, loss curves, and artifact checkpoints.
-4. **Local Fine-Tuning Execution Engine (`genesis/training/trainer.py`):** VRAM-bounded LoRA/QLoRA training loop (4-bit/8-bit quantization via bitsandbytes/PEFT/transformers or Ollama Modelfile tuning) optimized for 8 GB VRAM on NVIDIA RTX 2000 Ada.
-5. **Model Checkpoint Exporter (`genesis/training/export.py`):** GGUF export, adapter fusion, automated Modelfile generation, and registration into local Ollama service.
+1. **Inference Acceleration & Backend Profiling (`genesis/models/`):** Evaluate alternative local backends (e.g. `llama.cpp` direct bindings, vLLM, TensorRT-LLM) to maximize token throughput and minimize latency on RTX 2000 Ada.
+2. **Context Window Optimization:** Profile KV cache memory consumption across 4K, 8K, and 16K context lengths to prevent out-of-VRAM allocation during extended reasoning dialogues.
+3. **Domain Capability Modules:** Implement specialized coding and algorithmic generation toolchains with sandboxed test runners and automated code refactoring.
+4. **Adaptive Knowledge Synthesis:** Extend Phase 2 & Phase 3 memory/retrieval with iterative citation verification and active knowledge summarization loops.

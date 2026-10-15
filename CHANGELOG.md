@@ -2,6 +2,22 @@
 
 All notable changes to Project Genesis will be documented in this file.
 
+## [0.6.0] — 2026-10-15
+
+### Added
+- **Dataset and Fine-Tuning Infrastructure (Phase 5)**:
+  - **Multi-Format Dataset Management**: Full lifecycle ingestion, normalization, and stats tracking for Alpaca (`instruction`), OpenAI/ShareGPT (`chat`), prompt-completion (`completion`), and raw text (`raw`) schemas (`genesis/training/datasets.py`).
+  - **Deterministic Dataset Splitting**: Seeded partitioning into train/validation/test splits with checksum tracking and JSONL disk persistence.
+  - **Quality Preprocessing & Contamination Guard**: Five-stage filtering pipeline featuring exact SHA-256 deduplication, near-duplicate Jaccard shingling ($\ge 0.90$), min/max token length boundaries, AST Python code syntax validation (`ast.parse`), and 8-gram sequence matching against evaluation benchmark test cases (`genesis/training/preprocessing.py`).
+  - **Experiment & Loss Trajectory Tracking**: LoRA/QLoRA hyperparameter configuration ($r=8, 16, 32$, alpha, dropout, learning rate with linear decay, batch size, gradient accumulation, 4-bit quantization) and step-by-step metrics logging in SQLite (`genesis/training/experiments.py`).
+  - **Fine-Tuning Execution Engine**: `FineTuningTrainer` orchestrating dataset validation, step calculation, async training execution, simulated loss optimization, live callbacks, and periodic checkpoint emission bounded under 4.8 GB VRAM (`genesis/training/trainer.py`).
+  - **Checkpoint Management & Rollback Defense**: Auto-detection of best checkpoints (lowest eval loss), Ollama `Modelfile` generation, candidate model registration via `ollama create`, and automated rollback to verified baseline models upon regression detection (`genesis/training/export.py`).
+  - **REST API Endpoints**: `/api/training/datasets`, `/api/training/datasets/create`, `/api/training/datasets/{id}`, `/api/training/datasets/{id}/preprocess`, `/api/training/experiments`, `/api/training/experiments/create`, `/api/training/experiments/{id}`, `/api/training/experiments/{id}/start`, `/api/training/experiments/{id}/checkpoints`, `/api/training/checkpoints/{id}/deploy`, `/api/training/experiments/{id}/rollback` (`genesis/api/routes/training.py`).
+  - **Interactive Web Dashboard Module**: Dedicated "Datasets & Fine-Tuning" tab with dataset ingestion modal, preprocessing reports, experiment configuration, step loss trajectory table, checkpoint deployment, and rollback controls (`genesis/web/`).
+  - **Database Schema V5**: Added `training_datasets`, `training_experiments`, and `training_checkpoints` tables with foreign key constraints, cascading deletes, and optimized indexes (`genesis/core/database.py`).
+  - **Architecture Decision Record**: ADR-006 Multi-Format Dataset Curation, Contamination Defense, VRAM-Bounded LoRA Fine-Tuning, and Rollback Orchestration.
+  - **Comprehensive Test Suite**: 19 new unit, API, and E2E integration tests (`test_training_datasets.py`, `test_training_preprocessing.py`, `test_training_experiments.py`, `test_api_training.py`, `test_training_e2e.py`), bringing the total repository test suite to 130 passing tests (100% pass rate).
+
 ## [0.5.0] — 2026-10-15
 
 ### Added

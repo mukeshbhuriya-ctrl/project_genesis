@@ -23,7 +23,7 @@
         </div>
         <div class="brand-title">
           <span class="brand-name">GENESIS</span>
-          <span class="brand-tag">v0.5.0 • Local-First</span>
+          <span class="brand-tag">v0.6.0 • Local-First</span>
         </div>
       </div>
 
@@ -42,6 +42,9 @@
         </button>
         <button class="nav-tab" data-tab="evaluation" id="tab-evaluation-btn">
           <span class="tab-icon">📊</span> Evaluation &amp; Benchmarks
+        </button>
+        <button class="nav-tab" data-tab="training" id="tab-training-btn">
+          <span class="tab-icon">🎯</span> Datasets &amp; Fine-Tuning
         </button>
         <button class="nav-tab" data-tab="hardware" id="tab-hardware-btn">
           <span class="tab-icon">⚡</span> System &amp; Hardware
@@ -448,7 +451,133 @@
         </div>
       </section>
 
-      <!-- 6. BACKUPS TAB -->
+      <!-- 6. TRAINING & DATASETS TAB -->
+      <section class="tab-content" id="pane-training">
+        <div class="module-container">
+          <div class="module-header">
+            <div>
+              <h2>Training Datasets, Fine-Tuning &amp; Rollback Defense</h2>
+              <p>Curate multi-format instruction data, verify syntax, prevent eval contamination, execute VRAM-bounded LoRA adaptation, and enforce automated rollback.</p>
+            </div>
+            <div class="btn-group">
+              <button class="btn btn-secondary" id="btn-refresh-training">🔄 Refresh</button>
+              <button class="btn btn-primary" id="btn-open-ingest-dataset">+ Ingest Dataset</button>
+              <button class="btn btn-primary" id="btn-open-new-experiment" style="background: linear-gradient(135deg, var(--accent-indigo), var(--accent-cyan));">⚡ Launch Experiment</button>
+            </div>
+          </div>
+
+          <!-- Training Metrics Grid -->
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-label">Registered Datasets</span>
+                <span class="metric-badge">SQLite</span>
+              </div>
+              <div class="metric-value" id="training-datasets-count">0</div>
+              <div class="metric-sub">Instruction &amp; Chat datasets</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-label">Total Samples</span>
+                <span class="metric-badge">Cleaned</span>
+              </div>
+              <div class="metric-value" id="training-samples-count">0</div>
+              <div class="metric-sub" id="training-tokens-sub">0 estimated tokens</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-label">Fine-Tuning Experiments</span>
+                <span class="metric-badge">LoRA / QLoRA</span>
+              </div>
+              <div class="metric-value" id="training-experiments-count">0</div>
+              <div class="metric-sub" id="training-exp-sub">0 completed</div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-header">
+                <span class="metric-label">Hardware Profile</span>
+                <span class="metric-badge">8 GB VRAM</span>
+              </div>
+              <div class="metric-value">RTX 2000 Ada</div>
+              <div class="metric-sub">Rank 16 • 4-bit Quantization</div>
+            </div>
+          </div>
+
+          <!-- Datasets Section -->
+          <div class="card mt-4">
+            <div class="card-header-flex">
+              <div>
+                <h3>Curated Training Datasets</h3>
+                <p class="text-muted text-sm">Alpaca, ShareGPT, Chat messages, and completion formats with deduplication and contamination guards.</p>
+              </div>
+              <button class="btn btn-secondary btn-sm" id="btn-refresh-datasets-table">🔄 Refresh Datasets</button>
+            </div>
+            <div class="table-responsive mt-3">
+              <table class="data-table" id="datasets-table">
+                <thead>
+                  <tr>
+                    <th>Dataset Name</th>
+                    <th>Format</th>
+                    <th>Version</th>
+                    <th>Samples</th>
+                    <th>Tokens</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="datasets-table-body">
+                  <tr><td colspan="7" class="text-center">Loading datasets...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Experiments Section -->
+          <div class="card mt-4">
+            <div class="card-header-flex">
+              <div>
+                <h3>Fine-Tuning Experiments &amp; Optimization Trajectory</h3>
+                <p class="text-muted text-sm">VRAM-bounded parameter optimization, live step-loss tracking, and best checkpoint selection.</p>
+              </div>
+              <button class="btn btn-secondary btn-sm" id="btn-refresh-experiments-table">🔄 Refresh Experiments</button>
+            </div>
+            <div class="table-responsive mt-3">
+              <table class="data-table" id="experiments-table">
+                <thead>
+                  <tr>
+                    <th>Experiment</th>
+                    <th>Base Model</th>
+                    <th>Dataset</th>
+                    <th>Status</th>
+                    <th>Step / Epoch</th>
+                    <th>Loss</th>
+                    <th>Duration</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="experiments-table-body">
+                  <tr><td colspan="8" class="text-center">Loading experiments...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Experiment Details & Loss Curve Inspection -->
+          <div class="card mt-4" id="training-details-card" style="display: none;">
+            <div class="card-header-flex">
+              <h3 id="training-details-title">Experiment Details</h3>
+              <button class="btn btn-secondary btn-sm" id="btn-close-training-details">✕ Close</button>
+            </div>
+            <div id="training-details-content" class="mt-3">
+              <!-- Dynamically populated metrics & loss trajectory -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. BACKUPS TAB -->
       <section class="tab-content" id="pane-backups">
         <div class="module-container">
           <div class="module-header">
@@ -523,7 +652,102 @@
         </div>
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" id="btn-cancel-memory">Cancel</button>
-          <button type="submit" class="btn btn-primary" id="btn-save-memory">Save Memory Record</button>
+  <!-- Modal for Ingesting Dataset -->
+  <div class="modal-backdrop" id="dataset-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 640px;">
+      <div class="modal-header">
+        <h3>Ingest Training Dataset</h3>
+        <button class="modal-close-btn" id="btn-close-dataset-modal">&times;</button>
+      </div>
+      <form id="ingest-dataset-form" class="standard-form">
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="ds-name">Dataset Name:</label>
+            <input type="text" id="ds-name" class="form-input" placeholder="e.g. reasoning-alpaca-v1" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="ds-format">Format Type:</label>
+            <select id="ds-format" class="form-select">
+              <option value="instruction">Instruction (Alpaca / Genesis)</option>
+              <option value="chat">Chat Messages (OpenAI / ShareGPT)</option>
+              <option value="completion">Prompt-Completion</option>
+              <option value="raw">Raw Text Chunks</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="ds-description">Description:</label>
+          <input type="text" id="ds-description" class="form-input" placeholder="Brief summary of dataset content and task domain">
+        </div>
+        <div class="form-group">
+          <label for="ds-content">Samples (JSON array or JSONL lines):</label>
+          <textarea id="ds-content" class="form-textarea" rows="7" placeholder='[&#10;  {"instruction": "Explain LoRA adapter rank", "output": "Rank r determines low-rank projection bottleneck dimensions."}&#10;]' required></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-dataset">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-dataset">Ingest &amp; Register Dataset</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Launching Fine-Tuning Experiment -->
+  <div class="modal-backdrop" id="experiment-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 640px;">
+      <div class="modal-header">
+        <h3>Configure Fine-Tuning Experiment</h3>
+        <button class="modal-close-btn" id="btn-close-experiment-modal">&times;</button>
+      </div>
+      <form id="launch-experiment-form" class="standard-form">
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="exp-name">Experiment Name:</label>
+            <input type="text" id="exp-name" class="form-input" placeholder="e.g. qwen-lora-reasoning-r16" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="exp-base-model">Target Base Model:</label>
+            <select id="exp-base-model" class="form-select"></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="exp-dataset-select">Training Dataset:</label>
+          <select id="exp-dataset-select" class="form-select" required></select>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="exp-lora-r">LoRA Rank (r):</label>
+            <select id="exp-lora-r" class="form-select">
+              <option value="8">8 (Low VRAM)</option>
+              <option value="16" selected>16 (Standard Recommended)</option>
+              <option value="32">32 (High Capacity)</option>
+            </select>
+          </div>
+          <div class="form-group flex-1">
+            <label for="exp-lora-alpha">LoRA Alpha:</label>
+            <input type="number" id="exp-lora-alpha" class="form-input" value="32" min="1" max="128">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="exp-epochs">Epochs:</label>
+            <input type="number" id="exp-epochs" class="form-input" value="2" min="1" max="10">
+          </div>
+          <div class="form-group flex-1">
+            <label for="exp-batch-size">Batch Size:</label>
+            <input type="number" id="exp-batch-size" class="form-input" value="2" min="1" max="8">
+          </div>
+          <div class="form-group flex-1">
+            <label for="exp-quantization">Quantization:</label>
+            <select id="exp-quantization" class="form-select">
+              <option value="4bit" selected>4-bit (QLoRA ~4.2GB VRAM)</option>
+              <option value="8bit">8-bit (~6.5GB VRAM)</option>
+              <option value="none">None (Full FP16)</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-experiment">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-experiment">Create &amp; Initialize Run</button>
         </div>
       </form>
     </div>

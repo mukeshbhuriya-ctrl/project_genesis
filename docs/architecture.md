@@ -69,10 +69,12 @@ Project Genesis uses a modular, layered architecture designed to run in a single
 - **`executor.py`** — Step execution with state tracking.
 - **`models.py`** — Task states (pending, running, completed, failed).
 
-### `genesis/training/` — Fine-Tuning (Phase 5)
-- **`datasets.py`** — Dataset management and validation.
-- **`trainer.py`** — LoRA/QLoRA training workflows.
-- **`experiments.py`** — Experiment tracking and metadata.
+### `genesis/training/` — Fine-Tuning Subsystem (Phase 5)
+- **`datasets.py`** — Multi-format dataset ingestion, normalization, deterministic splitting, and token statistics.
+- **`preprocessing.py`** — SHA-256 deduplication, length filtering, AST syntax verification, and 8-gram benchmark contamination guard.
+- **`experiments.py`** — LoRA hyperparameters, experiment tracking, loss metrics logging, and SQLite persistence.
+- **`trainer.py`** — VRAM-bounded fine-tuning execution engine, step optimization loop, and callback handlers.
+- **`export.py`** — Checkpoint selection, Ollama Modelfile synthesis, local model registration, and automated rollback.
 
 ### `genesis/evaluation/` — Benchmarking
 - **`benchmarks.py`** — Benchmark definitions and runners.
