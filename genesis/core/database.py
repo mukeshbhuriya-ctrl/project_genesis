@@ -770,6 +770,67 @@ CREATE INDEX IF NOT EXISTS idx_speculative_models ON speculative_runs(target_mod
 CREATE INDEX IF NOT EXISTS idx_speculative_status ON speculative_runs(status);
 """
 
+SCHEMA_V15 = """
+-- Multimodal Environment Transition Predictions & Error Verifications
+CREATE TABLE IF NOT EXISTS world_transitions (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    action_type TEXT NOT NULL CHECK (action_type IN ('file_write', 'file_delete', 'ast_mutation', 'command_exec', 'tool_call')),
+    predicted_state_json TEXT NOT NULL DEFAULT '{}',
+    actual_state_json TEXT DEFAULT '{}',
+    transition_error_score REAL NOT NULL DEFAULT 0.0,
+    safety_predicted INTEGER NOT NULL DEFAULT 1,
+    safety_actual INTEGER DEFAULT 1,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_world_transitions_session ON world_transitions(session_id);
+CREATE INDEX IF NOT EXISTS idx_world_transitions_action ON world_transitions(action_type);
+
+-- Latent Dream Trajectories & Synthetic Mental Rollouts
+CREATE TABLE IF NOT EXISTS dream_trajectories (
+    id TEXT PRIMARY KEY,
+    prompt TEXT NOT NULL,
+    steps_count INTEGER NOT NULL DEFAULT 1,
+    total_value_score REAL NOT NULL DEFAULT 0.0,
+    pruned_branches INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL CHECK (status IN ('imagining', 'completed', 'pruned', 'failed')),
+    trajectory_json TEXT NOT NULL DEFAULT '[]',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_dream_trajectories_status ON dream_trajectories(status);
+CREATE INDEX IF NOT EXISTS idx_dream_trajectories_value ON dream_trajectories(total_value_score DESC);
+
+-- Speculative Monte Carlo Tree Search (MCTS) Runs
+CREATE TABLE IF NOT EXISTS mcts_search_runs (
+    id TEXT PRIMARY KEY,
+    root_task TEXT NOT NULL,
+    iterations INTEGER NOT NULL DEFAULT 10,
+    nodes_explored INTEGER NOT NULL DEFAULT 0,
+    best_path_json TEXT NOT NULL DEFAULT '[]',
+    best_value REAL NOT NULL DEFAULT 0.0,
+    fork_rollbacks INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL CHECK (status IN ('searching', 'completed', 'aborted', 'failed')),
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_mcts_search_status ON mcts_search_runs(status);
+
+-- Cross-Modal Latent Alignments
+CREATE TABLE IF NOT EXISTS modal_alignments (
+    id TEXT PRIMARY KEY,
+    text_prompt TEXT NOT NULL,
+    ast_symbol TEXT NOT NULL,
+    visual_token TEXT NOT NULL,
+    similarity_score REAL NOT NULL DEFAULT 0.0,
+    projection_dim INTEGER NOT NULL DEFAULT 64,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    metadata TEXT DEFAULT '{}'
+);
+CREATE INDEX IF NOT EXISTS idx_modal_alignments_score ON modal_alignments(similarity_score DESC);
+"""
+
 
 def get_sync_connection(db_path: str | Path) -> sqlite3.Connection:
     """Create a synchronous SQLite connection with recommended pragmas."""
@@ -941,6 +1002,16 @@ def initialize_database(db_path: str | Path) -> None:
             )
             conn.commit()
             log.info("Schema v14 applied successfully.")
+
+        if current_version < 15:
+            log.info("Applying schema v15...")
+            conn.executescript(SCHEMA_V15)
+            conn.execute(
+                "INSERT OR REPLACE INTO schema_migrations (version, description) "
+                "VALUES (15, 'Schema v15: world transitions, dream trajectories, mcts search runs, and modal alignments')"
+            )
+            conn.commit()
+            log.info("Schema v15 applied successfully.")
         else:
             log.info(f"Database schema is at version {current_version}, up to date.")
 

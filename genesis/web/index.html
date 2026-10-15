@@ -67,6 +67,9 @@
         <button class="nav-tab" data-tab="architect" id="tab-architect-btn">
           <span class="tab-icon">📐</span> NAS &amp; Micro-Quant
         </button>
+        <button class="nav-tab" data-tab="world" id="tab-world-btn">
+          <span class="tab-icon">🌌</span> World &amp; Dreams
+        </button>
         <button class="nav-tab" data-tab="hardware" id="tab-hardware-btn">
           <span class="tab-icon">⚡</span> System &amp; Hardware
         </button>
@@ -1931,6 +1934,132 @@
 
         </div>
       </section>
+
+      <!-- 14. WORLD MODEL & LATENT DREAMS TAB (Phase 15) -->
+      <section class="tab-content" id="pane-world">
+        <div class="standard-pane">
+          <!-- Overview Banner -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h3 style="font-size:1.15rem; margin:0;">🌌 Cross-Modal Synthetic World Models &amp; Continuous Latent Dream Exploration</h3>
+                <p style="color:var(--text-muted); font-size:0.85rem; margin:4px 0 0 0;">
+                  Multimodal environment transition prediction, continuous mental rollouts with value estimation and branch pruning, and speculative MCTS with atomic rollback.
+                </p>
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-sm btn-primary" id="btn-open-transition-modal">🔮 Predict Transition</button>
+                <button class="btn btn-sm btn-primary" id="btn-open-dream-modal">💭 Simulate Dream</button>
+                <button class="btn btn-sm btn-primary" id="btn-open-mcts-modal">🌲 Launch MCTS</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 1: Multimodal Environment Transition Predictor -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h3 style="font-size:1.05rem; margin:0;">🔮 Environment Transition Predictions &amp; Invariant Defense</h3>
+                <p style="color:var(--text-muted); font-size:0.8rem; margin:2px 0 0 0;">
+                  Pre-execution simulation of filesystem deltas, code AST mutations, stdout/stderr streams, and safety invariant violations.
+                </p>
+              </div>
+              <button class="btn btn-sm btn-secondary" id="btn-refresh-transitions-table">🔄 Refresh</button>
+            </div>
+            <div class="card-body">
+              <div class="table-container">
+                <table class="data-table" id="transitions-table">
+                  <thead>
+                    <tr>
+                      <th>Record ID</th>
+                      <th>Session ID</th>
+                      <th>Action Type</th>
+                      <th>Predicted State</th>
+                      <th>Actual State</th>
+                      <th>Error Score</th>
+                      <th>Safety Pred</th>
+                      <th>Safety Act</th>
+                      <th>Created At</th>
+                    </tr>
+                  </thead>
+                  <tbody id="transitions-tbody">
+                    <tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding:20px;">No transitions recorded yet. Click 'Predict Transition' to test.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Latent Dream Trajectories -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h3 style="font-size:1.05rem; margin:0;">💭 Continuous Latent Dream Trajectories</h3>
+                <p style="color:var(--text-muted); font-size:0.8rem; margin:2px 0 0 0;">
+                  Counterfactual mental problem-solving rollouts evaluated with V(s) value estimation and automatic replay buffer consolidation.
+                </p>
+              </div>
+              <button class="btn btn-sm btn-secondary" id="btn-refresh-trajectories-table">🔄 Refresh</button>
+            </div>
+            <div class="card-body">
+              <div class="table-container">
+                <table class="data-table" id="trajectories-table">
+                  <thead>
+                    <tr>
+                      <th>Trajectory ID</th>
+                      <th>Prompt</th>
+                      <th>Steps Count</th>
+                      <th>Total Value</th>
+                      <th>Pruned Branches</th>
+                      <th>Status</th>
+                      <th>Created At</th>
+                    </tr>
+                  </thead>
+                  <tbody id="trajectories-tbody">
+                    <tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:20px;">No dream trajectories imagined yet. Click 'Simulate Dream' to explore.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Speculative MCTS Exploration Runs -->
+          <div class="card">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <h3 style="font-size:1.05rem; margin:0;">🌲 Speculative Monte Carlo Tree Search (MCTS) Runs</h3>
+                <p style="color:var(--text-muted); font-size:0.8rem; margin:2px 0 0 0;">
+                  State-forking and rollback tree search exploring code mutations and refactorings with UCB1 exploration balancing.
+                </p>
+              </div>
+              <button class="btn btn-sm btn-secondary" id="btn-refresh-mcts-table">🔄 Refresh</button>
+            </div>
+            <div class="card-body">
+              <div class="table-container">
+                <table class="data-table" id="mcts-runs-table">
+                  <thead>
+                    <tr>
+                      <th>Run ID</th>
+                      <th>Root Task</th>
+                      <th>Iterations</th>
+                      <th>Nodes Explored</th>
+                      <th>Best Value</th>
+                      <th>Fork Rollbacks</th>
+                      <th>Status</th>
+                      <th>Best Path Preview</th>
+                      <th>Created At</th>
+                    </tr>
+                  </thead>
+                  <tbody id="mcts-runs-tbody">
+                    <tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding:20px;">No MCTS runs launched yet. Click 'Launch MCTS' to start.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
     </main>
 
   </div>
@@ -2756,6 +2885,127 @@
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" id="btn-cancel-speculative-modal">Cancel</button>
           <button type="submit" class="btn btn-primary" id="btn-submit-speculative">🚀 Execute Speculative Run</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Environment Transition Prediction (Phase 15) -->
+  <div class="modal-backdrop" id="transition-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 660px;">
+      <div class="modal-header">
+        <h3>🔮 Predict Environment State Transition</h3>
+        <button class="modal-close-btn" id="btn-close-transition-modal">&times;</button>
+      </div>
+      <form id="transition-predict-form" class="standard-form">
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="trans-action-type">Action Type:</label>
+            <select id="trans-action-type" class="form-select" required>
+              <option value="file_write" selected>file_write (Synthesize or Edit File)</option>
+              <option value="file_delete">file_delete (Remove File Artifact)</option>
+              <option value="ast_mutation">ast_mutation (Mutate Specific Code Function)</option>
+              <option value="command_exec">command_exec (Execute Shell Command)</option>
+              <option value="tool_call">tool_call (Invoke Subsystem Tool)</option>
+            </select>
+          </div>
+          <div class="form-group flex-1">
+            <label for="trans-target">Target Identifier / Relative Path:</label>
+            <input type="text" id="trans-target" class="form-input" value="models/attention.py" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="trans-payload">Action Payload (Code, Command, or Content):</label>
+          <textarea id="trans-payload" class="form-textarea" rows="4" placeholder="Enter Python code, shell command, or data payload..." required>def scaled_dot_product_attention(q, k, v, mask=None):
+    scores = (q @ k.T) / (k.shape[-1] ** 0.5)
+    return scores @ v</textarea>
+        </div>
+        <div id="trans-result-box" class="card mt-3" style="display:none; background:var(--bg-secondary); padding:12px; border:1px solid var(--border-color);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong>Simulation Verdict:</strong>
+            <span id="trans-safety-badge" class="badge">Safe (1.00)</span>
+          </div>
+          <div style="font-size:0.85rem;" id="trans-result-details"></div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-transition-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-transition">🔮 Predict Transition</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Continuous Latent Dream Simulation (Phase 15) -->
+  <div class="modal-backdrop" id="dream-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3>💭 Simulate Continuous Latent Dream Rollout</h3>
+        <button class="modal-close-btn" id="btn-close-dream-modal">&times;</button>
+      </div>
+      <form id="dream-rollout-form" class="standard-form">
+        <div class="form-group">
+          <label for="dream-prompt-input">Goal / Research Proposition:</label>
+          <textarea id="dream-prompt-input" class="form-textarea" rows="3" placeholder="Enter problem-solving prompt to simulate mental counterfactual trajectories..." required>Verify and benchmark distributed consensus barrier algorithm under high packet loss</textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="dream-depth">Rollout Depth (Steps):</label>
+            <input type="number" id="dream-depth" class="form-input" value="4" min="2" max="6" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="dream-prune-threshold">Branch Prune Threshold (&tau;):</label>
+            <input type="number" id="dream-prune-threshold" class="form-input" value="0.25" min="-1.0" max="1.0" step="0.05" required>
+          </div>
+          <div class="form-group flex-1" style="display:flex; align-items:center; padding-top:24px;">
+            <label style="cursor:pointer; display:flex; align-items:center; gap:6px;">
+              <input type="checkbox" id="dream-export-replay" checked>
+              Export to Replay Buffer
+            </label>
+          </div>
+        </div>
+        <div id="dream-trajectory-view" class="mt-3" style="display:none; max-height:280px; overflow-y:auto;">
+          <!-- Trajectory Steps rendered here -->
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-dream-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-dream">💭 Launch Mental Rollout</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for Speculative MCTS Tree Search (Phase 15) -->
+  <div class="modal-backdrop" id="mcts-modal" style="display:none;">
+    <div class="modal-card" style="max-width: 680px;">
+      <div class="modal-header">
+        <h3>🌲 Launch Speculative MCTS Exploration</h3>
+        <button class="modal-close-btn" id="btn-close-mcts-modal">&times;</button>
+      </div>
+      <form id="mcts-search-form" class="standard-form">
+        <div class="form-group">
+          <label for="mcts-task-input">Root Refactoring / Engineering Task:</label>
+          <textarea id="mcts-task-input" class="form-textarea" rows="2" placeholder="Describe the goal for tree-search exploration..." required>Synthesize robust SIMD vector dot product with zero-division and boundary guards</textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label for="mcts-iterations">Iteration Budget:</label>
+            <input type="number" id="mcts-iterations" class="form-input" value="12" min="4" max="50" required>
+          </div>
+          <div class="form-group flex-1">
+            <label for="mcts-depth">Max Tree Depth:</label>
+            <input type="number" id="mcts-depth" class="form-input" value="4" min="2" max="8" required>
+          </div>
+        </div>
+        <div id="mcts-result-box" class="card mt-3" style="display:none; background:var(--bg-secondary); padding:12px; border:1px solid var(--border-color);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong>MCTS Search Result:</strong>
+            <span id="mcts-status-badge" class="badge">Completed</span>
+          </div>
+          <div style="font-size:0.85rem;" id="mcts-result-details"></div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-mcts-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-mcts">🌲 Start Tree Search</button>
         </div>
       </form>
     </div>

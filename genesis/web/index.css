@@ -1382,3 +1382,38 @@ body {
   color: #38bdf8;
   margin-right: 4px;
 }
+
+/* Phase 15: Cross-Modal World Model, Latent Dreams & MCTS Tree Search */
+.dream-step-card {
+  padding: 10px 14px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  transition: border-color 0.15s ease;
+}
+
+.dream-step-card.pruned {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.badge-world {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(14, 165, 233, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+.mcts-path-preview {
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8rem;
+  color: var(--text-main);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 8px;
+  border-radius: 4px;
+  margin-top: 6px;
+}

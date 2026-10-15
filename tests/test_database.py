@@ -73,6 +73,10 @@ class TestDatabaseInitialization:
             assert "pruning_experiments" in tables
             assert "quantization_profiles" in tables
             assert "speculative_runs" in tables
+            assert "world_transitions" in tables
+            assert "dream_trajectories" in tables
+            assert "mcts_search_runs" in tables
+            assert "modal_alignments" in tables
         finally:
             conn.close()
 

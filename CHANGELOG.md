@@ -2,6 +2,20 @@
 
 All notable changes to Project Genesis will be documented in this file.
 
+## [0.16.0] — 2026-10-15
+
+### Added
+- **Cross-Modal Synthetic World Models & Continuous Latent Dream Exploration (Phase 15)**:
+  - **Environment State Transition Modeling**: Implemented `StateTransitionModel` (`genesis/world_model/transition.py`) predicting forward environment states from candidate action sequences (file writes, AST mutations, command runs, file deletions) without physical execution risk. Computes diff size metrics, extracts AST symbol definitions, enforces strict safety invariants (blocking recursive deletions, root directory writes, directory traversals), and persists structured transition records in SQLite.
+  - **Continuous Latent Dream & Generative Imagination Engine**: Implemented `LatentDreamEngine` (`genesis/world_model/dream.py`) enabling agent ensembles to simulate multi-turn problem-solving trajectories in memory. Incorporates heuristic value estimation $V(s) \in [-1.0, 1.0]$ and epistemic uncertainty metrics $U(s) \in [0.0, 1.0]$, prunes unpromising counterfactual branches below threshold ($V(s) < 0.20$), injects autonomous self-repair steps upon detecting hallucination or divergence, and exports high-reward synthetic dreams ($V \ge 0.45$) directly into Phase 13 prioritized experience replay buffers for continual offline rehearsal.
+  - **Cross-Modal Representation Alignment**: Implemented `CrossModalAligner` (`genesis/world_model/alignment.py`) projecting heterogeneous modalities—natural language reasoning tokens, AST syntax nodes, and visual UI layout primitives—into a unified normalized latent vector space $\mathbb{R}^{64}$. Leverages AST boilerplate filtering, semantic token weighting, cosine similarity calculation, and cross-modal retrieval to ground code and visual interfaces in conceptual reasoning.
+  - **State-Forking & Sandboxed MCTS Tree Search**: Implemented `MCTSSearchEngine` (`genesis/world_model/mcts.py`) with `StateSnapshot` directory checkpointing, SHA-256 state hashing, and deep-copy state forking. Executes 4-phase Monte Carlo Tree Search (Selection with Upper Confidence Bound for Trees UCB1, Expansion, Simulation, Backpropagation) with automatic rollback and branch penalty upon encountering invariant violations or syntax errors.
+  - **Database Schema V15**: Added `world_transitions`, `dream_trajectories`, `mcts_search_runs`, and `modal_alignments` relational tables in SQLite WAL mode with index coverage and automated migration logic (`genesis/core/database.py`).
+  - **Phase 15 REST API Endpoints**: Mounted `/api/world/*` (`/predict-transition`, `/record-transition`, `/transitions`, `/transitions/{id}`, `/dream-rollout`, `/trajectories`, `/trajectories/{id}`, `/trajectories/{id}/export-replay`, `/align-modalities`, `/alignments`, `/cross-modal-retrieve`, `/mcts-search`, `/mcts-runs`, `/mcts-runs/{id}`) in `genesis/api/app.py`.
+  - **Interactive Web Dashboard Module**: Dedicated "World Model & Dreams" navigation tab (`#pane-world`), State Transitions inspector, Latent Dream Trajectories viewer, MCTS Tree Search monitor, and 3 interactive modals for transition prediction, dream rollouts, and MCTS search planning (`genesis/web/`).
+  - **Architecture Decision Record**: ADR-016 Cross-Modal Synthetic World Models, Latent Dream Exploration, and Tree-Search Rollback (`docs/decisions/ADR-016-cross-modal-synthetic-world-models-and-latent-dream-exploration.md`).
+  - **Comprehensive Test Suite**: 24 new unit and integration tests across state transitions, safety invariants, dream rollouts, replay exports, token alignment, cosine retrieval, MCTS UCB1 selection, rollback on syntax error, and REST endpoints (`tests/test_world_transition.py`, `tests/test_world_dream.py`, `tests/test_world_alignment.py`, `tests/test_world_mcts.py`, `tests/test_api_world_model.py`), expanding repository baseline to 311 passing tests (100% pass rate).
+
 ## [0.15.0] — 2026-10-15
 
 ### Added

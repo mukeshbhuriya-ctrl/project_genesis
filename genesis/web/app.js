@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (target === 'graph') loadGraphData();
       if (target === 'fleet') loadFleetData();
       if (target === 'architect') loadArchitectData();
+      if (target === 'world') loadWorldData();
     });
   });
 
@@ -4478,6 +4479,328 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(`Speculative run failed: ${err.message}`);
       } finally {
         if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '🚀 Execute Speculative Run'; }
+      }
+    });
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // ── PHASE 15: WORLD MODELS, LATENT DREAMS & SPECULATIVE MCTS ──
+  // ══════════════════════════════════════════════════════════════
+
+  async function loadWorldData() {
+    await Promise.all([
+      loadWorldTransitions(),
+      loadDreamTrajectories(),
+      loadMCTSRuns(),
+    ]);
+  }
+
+  // 1. Multimodal Environment Transitions
+  async function loadWorldTransitions() {
+    const tbody = document.getElementById('transitions-tbody');
+    if (!tbody) return;
+    try {
+      const res = await fetch('/api/world/transitions');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding:20px;">No transitions recorded yet. Click \'Predict Transition\' to test.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(t => {
+        const errBadge = t.transition_error_score === 0.0
+          ? '<span class="badge badge-success">0.000 (Exact)</span>'
+          : `<span class="badge badge-warning">${t.transition_error_score.toFixed(3)}</span>`;
+        const predBadge = t.safety_predicted
+          ? '<span class="badge badge-success">✓ Pass</span>'
+          : '<span class="badge badge-danger">✗ Violated</span>';
+        const actBadge = t.safety_actual
+          ? '<span class="badge badge-success">✓ Pass</span>'
+          : '<span class="badge badge-danger">✗ Violated</span>';
+        const predFiles = Object.keys(t.predicted_state.files || {}).join(', ') || 'none';
+        const actFiles = Object.keys(t.actual_state.files || {}).join(', ') || 'none';
+        return `
+          <tr>
+            <td><code>${escapeHtml(t.id)}</code></td>
+            <td><code>${escapeHtml(t.session_id)}</code></td>
+            <td><span class="badge badge-info">${escapeHtml(t.action_type)}</span></td>
+            <td><small>${escapeHtml(predFiles)}</small></td>
+            <td><small>${escapeHtml(actFiles)}</small></td>
+            <td>${errBadge}</td>
+            <td>${predBadge}</td>
+            <td>${actBadge}</td>
+            <td style="color:var(--text-muted); font-size:0.75rem;">${escapeHtml((t.created_at || '').slice(0, 19).replace('T', ' '))}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--accent-danger); padding:20px;">Failed to load transitions: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  // 2. Latent Dream Trajectories
+  async function loadDreamTrajectories() {
+    const tbody = document.getElementById('trajectories-tbody');
+    if (!tbody) return;
+    try {
+      const res = await fetch('/api/world/trajectories');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:var(--text-muted); padding:20px;">No dream trajectories imagined yet. Click \'Simulate Dream\' to explore.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(t => {
+        const valBadge = t.total_value_score >= 0.60
+          ? `<strong style="color:var(--accent-success);">${t.total_value_score.toFixed(3)}</strong>`
+          : `<span style="color:var(--accent-warning);">${t.total_value_score.toFixed(3)}</span>`;
+        const statusBadge = t.status === 'completed'
+          ? '<span class="badge badge-success">Completed</span>'
+          : `<span class="badge badge-warning">${escapeHtml(t.status)}</span>`;
+        return `
+          <tr>
+            <td><code>${escapeHtml(t.id)}</code></td>
+            <td><strong>${escapeHtml(t.prompt)}</strong></td>
+            <td>${t.steps ? t.steps.length : t.steps_count}</td>
+            <td>${valBadge}</td>
+            <td>${t.pruned_branches}</td>
+            <td>${statusBadge}</td>
+            <td style="color:var(--text-muted); font-size:0.75rem;">${escapeHtml((t.created_at || '').slice(0, 19).replace('T', ' '))}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:var(--accent-danger); padding:20px;">Failed to load dream trajectories: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  // 3. Speculative MCTS Runs
+  async function loadMCTSRuns() {
+    const tbody = document.getElementById('mcts-runs-tbody');
+    if (!tbody) return;
+    try {
+      const res = await fetch('/api/world/mcts-runs');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding:20px;">No MCTS runs launched yet. Click \'Launch MCTS\' to start.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = data.map(r => {
+        const statusBadge = r.status === 'completed'
+          ? '<span class="badge badge-success">Completed</span>'
+          : `<span class="badge badge-warning">${escapeHtml(r.status)}</span>`;
+        const pathPreview = (r.best_path || []).slice(0, 2).map(escapeHtml).join(' &rarr; ') || 'Direct Root';
+        return `
+          <tr>
+            <td><code>${escapeHtml(r.id)}</code></td>
+            <td><strong>${escapeHtml(r.root_task)}</strong></td>
+            <td>${r.iterations}</td>
+            <td>${r.nodes_explored}</td>
+            <td><strong style="color:var(--accent-success);">${r.best_value.toFixed(3)}</strong></td>
+            <td><span style="color:var(--accent-warning);">${r.fork_rollbacks}</span></td>
+            <td>${statusBadge}</td>
+            <td><small>${pathPreview}</small></td>
+            <td style="color:var(--text-muted); font-size:0.75rem;">${escapeHtml((r.created_at || '').slice(0, 19).replace('T', ' '))}</td>
+          </tr>
+        `;
+      }).join('');
+    } catch (err) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--accent-danger); padding:20px;">Failed to load MCTS runs: ${escapeHtml(err.message)}</td></tr>`;
+    }
+  }
+
+  // Modals & Forms
+  const transModal = document.getElementById('transition-modal');
+  const dreamModal = document.getElementById('dream-modal');
+  const mctsModal = document.getElementById('mcts-modal');
+
+  const btnOpenTrans = document.getElementById('btn-open-transition-modal');
+  if (btnOpenTrans && transModal) btnOpenTrans.addEventListener('click', () => { transModal.style.display = 'flex'; });
+  const btnCloseTrans = document.getElementById('btn-close-transition-modal');
+  if (btnCloseTrans && transModal) btnCloseTrans.addEventListener('click', () => { transModal.style.display = 'none'; });
+  const btnCancelTrans = document.getElementById('btn-cancel-transition-modal');
+  if (btnCancelTrans && transModal) btnCancelTrans.addEventListener('click', () => { transModal.style.display = 'none'; });
+
+  const btnOpenDream = document.getElementById('btn-open-dream-modal');
+  if (btnOpenDream && dreamModal) btnOpenDream.addEventListener('click', () => { dreamModal.style.display = 'flex'; });
+  const btnCloseDream = document.getElementById('btn-close-dream-modal');
+  if (btnCloseDream && dreamModal) btnCloseDream.addEventListener('click', () => { dreamModal.style.display = 'none'; });
+  const btnCancelDream = document.getElementById('btn-cancel-dream-modal');
+  if (btnCancelDream && dreamModal) btnCancelDream.addEventListener('click', () => { dreamModal.style.display = 'none'; });
+
+  const btnOpenMCTS = document.getElementById('btn-open-mcts-modal');
+  if (btnOpenMCTS && mctsModal) btnOpenMCTS.addEventListener('click', () => { mctsModal.style.display = 'flex'; });
+  const btnCloseMCTS = document.getElementById('btn-close-mcts-modal');
+  if (btnCloseMCTS && mctsModal) btnCloseMCTS.addEventListener('click', () => { mctsModal.style.display = 'none'; });
+  const btnCancelMCTS = document.getElementById('btn-cancel-mcts-modal');
+  if (btnCancelMCTS && mctsModal) btnCancelMCTS.addEventListener('click', () => { mctsModal.style.display = 'none'; });
+
+  const btnRefreshTrans = document.getElementById('btn-refresh-transitions-table');
+  if (btnRefreshTrans) btnRefreshTrans.addEventListener('click', () => loadWorldTransitions());
+  const btnRefreshDream = document.getElementById('btn-refresh-trajectories-table');
+  if (btnRefreshDream) btnRefreshDream.addEventListener('click', () => loadDreamTrajectories());
+  const btnRefreshMCTS = document.getElementById('btn-refresh-mcts-table');
+  if (btnRefreshMCTS) btnRefreshMCTS.addEventListener('click', () => loadMCTSRuns());
+
+  // Form: Transition prediction
+  const transForm = document.getElementById('transition-predict-form');
+  if (transForm) {
+    transForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('btn-submit-transition');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '⏳ Simulating...'; }
+      try {
+        const payload = {
+          current_state: { files: {}, ast_symbols: {} },
+          action: {
+            action_type: document.getElementById('trans-action-type').value,
+            target: document.getElementById('trans-target').value,
+            payload: document.getElementById('trans-payload').value,
+          },
+        };
+        const res = await fetch('/api/world/predict-transition', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${res.status}`);
+        }
+        const pred = await res.json();
+        const resultBox = document.getElementById('trans-result-box');
+        const badge = document.getElementById('trans-safety-badge');
+        const details = document.getElementById('trans-result-details');
+        if (resultBox && badge && details) {
+          resultBox.style.display = 'block';
+          badge.className = pred.safety_score >= 0.8 ? 'badge badge-success' : 'badge badge-danger';
+          badge.textContent = `Safety: ${(pred.safety_score * 100).toFixed(0)}%`;
+          details.innerHTML = `
+            <div><strong>Exit Code:</strong> <code>${pred.predicted_exit_code}</code></div>
+            <div><strong>Files Mutated:</strong> ${(pred.delta_files || []).join(', ') || 'None'}</div>
+            <div><strong>AST Symbols Added:</strong> ${(pred.delta_ast || []).join('; ') || 'None'}</div>
+            ${pred.safety_violations && pred.safety_violations.length > 0 ? `<div style="color:var(--accent-danger); margin-top:4px;"><strong>Violations:</strong> ${pred.safety_violations.map(escapeHtml).join('; ')}</div>` : ''}
+          `;
+        }
+
+        // Auto-record transition
+        await fetch('/api/world/record-transition', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            session_id: 'web-session',
+            action: payload.action,
+            prediction: pred,
+            actual_state: pred.predicted_state,
+          }),
+        });
+
+        await loadWorldTransitions();
+      } catch (err) {
+        alert(`Transition prediction failed: ${err.message}`);
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '🔮 Predict Transition'; }
+      }
+    });
+  }
+
+  // Form: Dream rollout
+  const dreamForm = document.getElementById('dream-rollout-form');
+  if (dreamForm) {
+    dreamForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('btn-submit-dream');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '💭 Imagining Trajectory...'; }
+      try {
+        const payload = {
+          prompt: document.getElementById('dream-prompt-input').value,
+          depth: parseInt(document.getElementById('dream-depth').value, 10),
+          prune_threshold: parseFloat(document.getElementById('dream-prune-threshold').value) || 0.25,
+          export_to_replay: document.getElementById('dream-export-replay').checked,
+        };
+        const res = await fetch('/api/world/dream-rollout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${res.status}`);
+        }
+        const traj = await res.json();
+        const view = document.getElementById('dream-trajectory-view');
+        if (view) {
+          view.style.display = 'block';
+          view.innerHTML = (traj.steps || []).map(s => {
+            const stepClass = s.pruned ? 'border:1px solid var(--accent-danger); opacity:0.75;' : 'border:1px solid var(--border-color);';
+            const badge = s.pruned
+              ? '<span class="badge badge-danger">Pruned</span>'
+              : `<span class="badge badge-success">V=${s.value_estimate.toFixed(2)}</span>`;
+            return `
+              <div class="card" style="margin-bottom:8px; padding:8px 12px; background:var(--bg-secondary); ${stepClass}">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <strong>Step ${s.step_index}: ${escapeHtml(s.hypothesis_action)}</strong>
+                  ${badge}
+                </div>
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">${escapeHtml(s.imagined_outcome)}</div>
+              </div>
+            `;
+          }).join('');
+        }
+        await loadDreamTrajectories();
+      } catch (err) {
+        alert(`Dream simulation failed: ${err.message}`);
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '💭 Launch Mental Rollout'; }
+      }
+    });
+  }
+
+  // Form: MCTS search
+  const mctsForm = document.getElementById('mcts-search-form');
+  if (mctsForm) {
+    mctsForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const submitBtn = document.getElementById('btn-submit-mcts');
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = '🌲 Exploring Tree...'; }
+      try {
+        const payload = {
+          root_task: document.getElementById('mcts-task-input').value,
+          iterations: parseInt(document.getElementById('mcts-iterations').value, 10),
+          max_depth: parseInt(document.getElementById('mcts-depth').value, 10),
+        };
+        const res = await fetch('/api/world/mcts-search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${res.status}`);
+        }
+        const run = await res.json();
+        const resultBox = document.getElementById('mcts-result-box');
+        const badge = document.getElementById('mcts-status-badge');
+        const details = document.getElementById('mcts-result-details');
+        if (resultBox && badge && details) {
+          resultBox.style.display = 'block';
+          badge.className = run.status === 'completed' ? 'badge badge-success' : 'badge badge-warning';
+          badge.textContent = `${run.status.toUpperCase()} (Value: ${run.best_value.toFixed(2)})`;
+          details.innerHTML = `
+            <div><strong>Nodes Explored:</strong> ${run.nodes_explored} across ${run.iterations} iterations</div>
+            <div><strong>Rollbacks Defended:</strong> ${run.fork_rollbacks}</div>
+            <div style="margin-top:6px;"><strong>Best Speculative Trajectory:</strong></div>
+            <ol style="margin:4px 0 0 16px; padding:0;">
+              ${(run.best_path || []).map(p => `<li>${escapeHtml(p)}</li>`).join('')}
+            </ol>
+          `;
+        }
+        await loadMCTSRuns();
+      } catch (err) {
+        alert(`MCTS search failed: ${err.message}`);
+      } finally {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = '🌲 Start Tree Search'; }
       }
     });
   }

@@ -8,12 +8,17 @@ import pytest
 from fastapi.testclient import TestClient
 
 from genesis.api.app import create_app
-from genesis.core import get_settings
+from genesis.core import get_settings, reset_settings
 from genesis.core.database import initialize_database
 
 
 @pytest.fixture
-def client():
+def client(tmp_path: Path, monkeypatch) -> TestClient:
+    db_file = tmp_path / "api_continual_test.db"
+    initialize_database(db_file)
+    monkeypatch.setenv("GENESIS_DB_URL", f"sqlite:///{db_file}")
+    reset_settings()
+
     app = create_app()
     return TestClient(app)
 
